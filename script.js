@@ -1,12 +1,11 @@
-// Google API 客户端
-let gapi = null;
-let googleAuth = null;
+// 全局变量
+let accessToken = null;
 let mainFolderId = null;
 let dataFileId = null;
 let imagesFolderId = null;
 
-// 状态
-let imageDisplayState = 'preview';
+// 状态 - 默认隐藏图片
+let imageDisplayState = 'hidden';
 let allPosts = [];
 let currentLightboxImages = [];
 let currentLightboxIndex = 0;
@@ -14,102 +13,113 @@ let uploadedImageFiles = [];
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('页面加载完成');
     setupImageToggle();
     setupLightbox();
     setupImageUpload();
     setupModal();
-    initGoogleAPI();
+    initializeGoogleAuth();
 });
 
-// 初始化 Google API
-function initGoogleAPI() {
-    const script = document.createElement('script');
-    script.src = 'https://apis.google.com/js/api.js';
-    script.onload = () => {
-        window.gapi.load('client:auth2', initClient);
-    };
-    document.body.appendChild(script);
+// 初始化 Google 认证
+function initializeGoogleAuth() {
+    console.log('初始化 Google 认证');
+    
+    const checkGIS = setInterval(() => {
+        if (window.google && window.google.accounts) {
+            clearInterval(checkGIS);
+            console.log('Google Identity Services 已加载');
+            setupGoogleSignIn();
+        }
+    }, 100);
+    
+    setTimeout(() => {
+        clearInterval(checkGIS);
+        if (!window.google || !window.google.accounts) {
+            showError('无法加载 Google 认证服务，请刷新页面');
+        }
+    }, 10000);
 }
 
-// 初始化 Google API 客户端（移除 apiKey）
-async function initClient() {
-    try {
-        await window.gapi.client.init({
-            clientId: GOOGLE_CONFIG.clientId,
-            discoveryDocs: GOOGLE_CONFIG.discoveryDocs,
-            scope: GOOGLE_CONFIG.scope
-        });
-        
-        gapi = window.gapi;
-        googleAuth = gapi.auth2.getAuthInstance();
-        
-        googleAuth.isSignedIn.listen(updateSigninStatus);
-        updateSigninStatus(googleAuth.isSignedIn.get());
-        
-    } catch (error) {
-        console.error('Google API 初始化失败:', error);
-        showError('Google API 初始化失败，请刷新页面重试');
-    }
-}
-
-// 更新登录状态
-function updateSigninStatus(isSignedIn) {
-    if (isSignedIn) {
-        showSignedIn();
-        loadTimeline();
-    } else {
-        showSignedOut();
-    }
-}
-
-// 显示已登录状态
-function showSignedIn() {
+// 设置 Google 登录
+function setupGoogleSignIn() {
+    const client = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CONFIG.clientId,
+        scope: GOOGLE_CONFIG.scope,
+        callback: (response) => {
+            console.log('认证响应:', response);
+            if (response.access_token) {
+                accessToken = response.access_token;
+                console.log('获取到 access token');
+                onSignIn();
+            } else if (response.error) {
+                console.error('认证错误:', response.error);
+                showError('登录失败: ' + response.error);
+            }
+        }
+    });
+    
     const header = document.querySelector('.header');
-    const existingBtn = document.getElementById('signInBtn');
-    if (existingBtn) {
-        existingBtn.remove();
+    const signInBtn = document.createElement('button');
+    signInBtn.id = 'signInBtn';
+    signInBtn.className = 'add-btn';
+    signInBtn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+        <span>登录 Google</span>
+    `;
+    
+    signInBtn.addEventListener('click', () => {
+        console.log('点击登录按钮');
+        client.requestAccessToken();
+    });
+    
+    header.querySelector('.header-controls').appendChild(signInBtn);
+    showSignedOut();
+}
+
+// 登录成功处理
+async function onSignIn() {
+    console.log('用户已登录');
+    
+    const signInBtn = document.getElementById('signInBtn');
+    if (signInBtn) {
+        signInBtn.remove();
     }
     
     document.getElementById('addPostBtn').style.display = 'flex';
     
-    const userEmail = googleAuth.currentUser.get().getBasicProfile().getEmail();
-    if (!document.getElementById('userInfo')) {
-        const userInfo = document.createElement('div');
-        userInfo.id = 'userInfo';
-        userInfo.style.cssText = 'font-size: 12px; color: var(--text-tertiary); font-family: var(--font-sans);';
-        userInfo.textContent = userEmail;
-        header.appendChild(userInfo);
+    try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const user = await userInfo.json();
+        console.log('用户信息:', user);
+        
+        const header = document.querySelector('.header');
+        if (!document.getElementById('userInfo')) {
+            const userInfoDiv = document.createElement('div');
+            userInfoDiv.id = 'userInfo';
+            userInfoDiv.style.cssText = 'font-size: 12px; color: var(--text-tertiary); font-family: var(--font-sans);';
+            userInfoDiv.textContent = user.email;
+            header.appendChild(userInfoDiv);
+        }
+        
+        loadTimeline();
+    } catch (error) {
+        console.error('获取用户信息失败:', error);
     }
 }
 
 // 显示未登录状态
 function showSignedOut() {
-    const header = document.querySelector('.header');
-    
-    document.getElementById('addPostBtn').style.display = 'none';
-    
-    const userInfo = document.getElementById('userInfo');
-    if (userInfo) {
-        userInfo.remove();
-    }
-    
-    if (!document.getElementById('signInBtn')) {
-        const signInBtn = document.createElement('button');
-        signInBtn.id = 'signInBtn';
-        signInBtn.className = 'add-btn';
-        signInBtn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                <polyline points="10 17 15 12 10 7"></polyline>
-                <line x1="15" y1="12" x2="3" y2="12"></line>
-            </svg>
-            <span>登录 Google</span>
-        `;
-        signInBtn.addEventListener('click', () => googleAuth.signIn());
-        header.querySelector('.header-controls').appendChild(signInBtn);
-    }
-    
     const timelineContent = document.getElementById('timelineContent');
+    const loading = document.getElementById('loading');
+    loading.classList.add('hidden');
+    
     timelineContent.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
             <p style="font-size: 18px; margin-bottom: 12px;">请先登录 Google 账号</p>
@@ -121,94 +131,113 @@ function showSignedOut() {
     `;
 }
 
-// 显示错误信息
+// 显示错误
 function showError(message) {
+    console.error('错误:', message);
+    
     const timelineContent = document.getElementById('timelineContent');
+    const loading = document.getElementById('loading');
+    loading.classList.add('hidden');
+    
     timelineContent.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
             <p style="font-size: 18px; margin-bottom: 12px; color: #d32f2f;">${message}</p>
+            <p style="font-size: 14px; margin-top: 12px;">
+                <button onclick="location.reload()" style="padding: 8px 16px; background: #8b7355; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    刷新页面
+                </button>
+            </p>
         </div>
     `;
 }
 
+// Google Drive API 调用
+async function driveRequest(endpoint, options = {}) {
+    const response = await fetch(`https://www.googleapis.com/drive/v3${endpoint}`, {
+        ...options,
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            ...options.headers
+        }
+    });
+    
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Drive API 错误: ${error}`);
+    }
+    
+    return response.json();
+}
+
 // 获取或创建主文件夹
 async function getOrCreateMainFolder() {
+    if (mainFolderId) return mainFolderId;
+    
     try {
-        const response = await gapi.client.drive.files.list({
-            q: `name='${GOOGLE_CONFIG.mainFolderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-            spaces: 'drive',
-            fields: 'files(id, name)'
-        });
+        const query = encodeURIComponent(`name='${GOOGLE_CONFIG.mainFolderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const result = await driveRequest(`/files?q=${query}&fields=files(id,name)`);
         
-        const folders = response.result.files;
-        
-        if (folders && folders.length > 0) {
-            mainFolderId = folders[0].id;
-            return mainFolderId;
-        } else {
-            const folderMetadata = {
-                name: GOOGLE_CONFIG.mainFolderName,
-                mimeType: 'application/vnd.google-apps.folder'
-            };
-            
-            const folder = await gapi.client.drive.files.create({
-                resource: folderMetadata,
-                fields: 'id'
-            });
-            
-            mainFolderId = folder.result.id;
-            console.log(`已创建主文件夹: ${GOOGLE_CONFIG.mainFolderName}`);
+        if (result.files && result.files.length > 0) {
+            mainFolderId = result.files[0].id;
+            console.log('找到主文件夹:', mainFolderId);
             return mainFolderId;
         }
+        
+        const folder = await driveRequest('/files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: GOOGLE_CONFIG.mainFolderName,
+                mimeType: 'application/vnd.google-apps.folder'
+            })
+        });
+        
+        mainFolderId = folder.id;
+        console.log('创建主文件夹:', mainFolderId);
+        return mainFolderId;
     } catch (error) {
-        console.error('创建主文件夹失败:', error);
+        console.error('获取主文件夹失败:', error);
         throw error;
     }
 }
 
 // 获取或创建数据文件
 async function getOrCreateDataFile() {
+    if (dataFileId) return dataFileId;
+    
     try {
         const folderId = await getOrCreateMainFolder();
         
-        const response = await gapi.client.drive.files.list({
-            q: `name='${GOOGLE_CONFIG.dataFileName}' and '${folderId}' in parents and mimeType='application/json' and trashed=false`,
-            spaces: 'drive',
-            fields: 'files(id, name)'
-        });
+        const query = encodeURIComponent(`name='${GOOGLE_CONFIG.dataFileName}' and '${folderId}' in parents and trashed=false`);
+        const result = await driveRequest(`/files?q=${query}&fields=files(id,name)`);
         
-        const files = response.result.files;
-        
-        if (files && files.length > 0) {
-            dataFileId = files[0].id;
-            return dataFileId;
-        } else {
-            const fileMetadata = {
-                name: GOOGLE_CONFIG.dataFileName,
-                mimeType: 'application/json',
-                parents: [folderId]
-            };
-            
-            const initialData = {
-                posts: []
-            };
-            
-            const file = new Blob([JSON.stringify(initialData, null, 2)], { type: 'application/json' });
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
-            form.append('file', file);
-            
-            const createResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: new Headers({ 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }),
-                body: form
-            });
-            
-            const result = await createResponse.json();
-            dataFileId = result.id;
-            console.log(`已创建数据文件: ${GOOGLE_CONFIG.mainFolderName}/${GOOGLE_CONFIG.dataFileName}`);
+        if (result.files && result.files.length > 0) {
+            dataFileId = result.files[0].id;
+            console.log('找到数据文件:', dataFileId);
             return dataFileId;
         }
+        
+        const initialData = { posts: [] };
+        const metadata = {
+            name: GOOGLE_CONFIG.dataFileName,
+            mimeType: 'application/json',
+            parents: [folderId]
+        };
+        
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', new Blob([JSON.stringify(initialData, null, 2)], { type: 'application/json' }));
+        
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${accessToken}` },
+            body: form
+        });
+        
+        const file = await response.json();
+        dataFileId = file.id;
+        console.log('创建数据文件:', dataFileId);
+        return dataFileId;
     } catch (error) {
         console.error('获取数据文件失败:', error);
         throw error;
@@ -217,38 +246,34 @@ async function getOrCreateDataFile() {
 
 // 获取或创建图片文件夹
 async function getOrCreateImagesFolder() {
+    if (imagesFolderId) return imagesFolderId;
+    
     try {
         const mainFolder = await getOrCreateMainFolder();
         
-        const response = await gapi.client.drive.files.list({
-            q: `name='${GOOGLE_CONFIG.imagesFolderName}' and '${mainFolder}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-            spaces: 'drive',
-            fields: 'files(id, name)'
-        });
+        const query = encodeURIComponent(`name='${GOOGLE_CONFIG.imagesFolderName}' and '${mainFolder}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const result = await driveRequest(`/files?q=${query}&fields=files(id,name)`);
         
-        const folders = response.result.files;
-        
-        if (folders && folders.length > 0) {
-            imagesFolderId = folders[0].id;
+        if (result.files && result.files.length > 0) {
+            imagesFolderId = result.files[0].id;
             return imagesFolderId;
-        } else {
-            const folderMetadata = {
+        }
+        
+        const folder = await driveRequest('/files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 name: GOOGLE_CONFIG.imagesFolderName,
                 mimeType: 'application/vnd.google-apps.folder',
                 parents: [mainFolder]
-            };
-            
-            const folder = await gapi.client.drive.files.create({
-                resource: folderMetadata,
-                fields: 'id'
-            });
-            
-            imagesFolderId = folder.result.id;
-            console.log(`已创建图片文件夹: ${GOOGLE_CONFIG.mainFolderName}/${GOOGLE_CONFIG.imagesFolderName}`);
-            return imagesFolderId;
-        }
+            })
+        });
+        
+        imagesFolderId = folder.id;
+        console.log('创建图片文件夹:', imagesFolderId);
+        return imagesFolderId;
     } catch (error) {
-        console.error('创建图片文件夹失败:', error);
+        console.error('获取图片文件夹失败:', error);
         throw error;
     }
 }
@@ -256,12 +281,10 @@ async function getOrCreateImagesFolder() {
 // 读取数据文件
 async function readDataFile(fileId) {
     try {
-        const response = await gapi.client.drive.files.get({
-            fileId: fileId,
-            alt: 'media'
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
         });
-        
-        return response.result;
+        return await response.json();
     } catch (error) {
         console.error('读取数据失败:', error);
         return { posts: [] };
@@ -271,17 +294,14 @@ async function readDataFile(fileId) {
 // 写入数据文件
 async function writeDataFile(fileId, data) {
     try {
-        const file = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        
         const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
             method: 'PATCH',
-            headers: new Headers({ 
-                'Authorization': 'Bearer ' + gapi.auth.getToken().access_token,
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
-            }),
-            body: file
+            },
+            body: JSON.stringify(data, null, 2)
         });
-        
         return await response.json();
     } catch (error) {
         console.error('写入数据失败:', error);
@@ -289,38 +309,43 @@ async function writeDataFile(fileId, data) {
     }
 }
 
-// 上传图片到 Drive
+// 上传图片（支持所有格式包括GIF）
 async function uploadImageToDrive(file) {
     try {
         const folderId = await getOrCreateImagesFolder();
         
-        const fileMetadata = {
+        const metadata = {
             name: `${Date.now()}_${file.name}`,
             parents: [folderId]
         };
         
         const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
-        form.append('file', file);
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', file); // 保持原始文件类型
         
-        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink', {
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
             method: 'POST',
-            headers: new Headers({ 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }),
+            headers: { Authorization: `Bearer ${accessToken}` },
             body: form
         });
         
         const result = await response.json();
         
-        await gapi.client.drive.permissions.create({
-            fileId: result.id,
-            resource: {
+        // 设置公开权限
+        await fetch(`https://www.googleapis.com/drive/v3/files/${result.id}/permissions`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
                 type: 'anyone',
                 role: 'reader'
-            }
+            })
         });
         
-        console.log(`图片已上传: ${GOOGLE_CONFIG.mainFolderName}/${GOOGLE_CONFIG.imagesFolderName}/${fileMetadata.name}`);
-        return `https://drive.google.com/uc?export=view&id=${result.id}`;
+        // 使用 uc?export=download 来正确显示GIF
+        return `https://drive.google.com/uc?export=download&id=${result.id}`;
     } catch (error) {
         console.error('上传图片失败:', error);
         throw error;
@@ -330,8 +355,6 @@ async function uploadImageToDrive(file) {
 // 加载时间线
 async function loadTimeline() {
     const loading = document.getElementById('loading');
-    const timelineContent = document.getElementById('timelineContent');
-    
     loading.classList.remove('hidden');
     
     try {
@@ -345,7 +368,7 @@ async function loadTimeline() {
         loading.classList.add('hidden');
     } catch (error) {
         console.error('加载失败:', error);
-        showError('加载数据失败，请刷新页面重试');
+        showError('加载数据失败');
         loading.classList.add('hidden');
     }
 }
@@ -360,9 +383,6 @@ function renderTimeline(posts) {
             <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
                 <p style="font-size: 16px;">还没有任何记录</p>
                 <p style="font-size: 14px; margin-top: 8px;">点击右上角"添加记录"开始记录生活</p>
-                <p style="font-size: 13px; margin-top: 12px; color: var(--text-tertiary);">
-                    数据将保存在: Google Drive / ${GOOGLE_CONFIG.mainFolderName}
-                </p>
             </div>
         `;
         return;
@@ -372,23 +392,22 @@ function renderTimeline(posts) {
     posts.forEach(post => {
         const date = convertToTargetTimezone(new Date(post.timestamp));
         const year = date.getFullYear();
-        if (!groupedByYear[year]) {
-            groupedByYear[year] = [];
-        }
+        if (!groupedByYear[year]) groupedByYear[year] = [];
         groupedByYear[year].push(post);
     });
     
     Object.keys(groupedByYear).sort((a, b) => b - a).forEach(year => {
-        const yearSection = createYearSection(year, groupedByYear[year]);
-        timelineContent.appendChild(yearSection);
+        timelineContent.appendChild(createYearSection(year, groupedByYear[year]));
     });
+    
+    // 应用当前图片显示状态
+    applyImageDisplayState();
 }
 
 // 创建年份区块
 function createYearSection(year, posts) {
     const section = document.createElement('div');
     section.className = 'year-section';
-    section.dataset.year = year;
     
     const yearHeader = document.createElement('div');
     yearHeader.className = 'year-header';
@@ -410,22 +429,16 @@ function createYearSection(year, posts) {
     posts.forEach(post => {
         const date = convertToTargetTimezone(new Date(post.timestamp));
         const month = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (!groupedByMonth[month]) {
-            groupedByMonth[month] = [];
-        }
+        if (!groupedByMonth[month]) groupedByMonth[month] = [];
         groupedByMonth[month].push(post);
     });
     
     Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a)).forEach(month => {
-        const monthSection = createMonthSection(month, groupedByMonth[month]);
-        monthsContainer.appendChild(monthSection);
+        monthsContainer.appendChild(createMonthSection(month, groupedByMonth[month]));
     });
     
     section.appendChild(monthsContainer);
-    
-    yearHeader.addEventListener('click', () => {
-        toggleCollapse(yearHeader, monthsContainer);
-    });
+    yearHeader.addEventListener('click', () => toggleCollapse(yearHeader, monthsContainer));
     
     return section;
 }
@@ -434,11 +447,9 @@ function createYearSection(year, posts) {
 function createMonthSection(month, posts) {
     const section = document.createElement('div');
     section.className = 'month-section';
-    section.dataset.month = month;
     
     const [year, monthNum] = month.split('-');
-    const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
-                       '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
     
     const monthHeader = document.createElement('div');
     monthHeader.className = 'month-header';
@@ -460,22 +471,16 @@ function createMonthSection(month, posts) {
     posts.forEach(post => {
         const date = convertToTargetTimezone(new Date(post.timestamp));
         const day = `${month}-${String(date.getDate()).padStart(2, '0')}`;
-        if (!groupedByDay[day]) {
-            groupedByDay[day] = [];
-        }
+        if (!groupedByDay[day]) groupedByDay[day] = [];
         groupedByDay[day].push(post);
     });
     
     Object.keys(groupedByDay).sort((a, b) => b.localeCompare(a)).forEach(day => {
-        const daySection = createDaySection(day, groupedByDay[day]);
-        daysContainer.appendChild(daySection);
+        daysContainer.appendChild(createDaySection(day, groupedByDay[day]));
     });
     
     section.appendChild(daysContainer);
-    
-    monthHeader.addEventListener('click', () => {
-        toggleCollapse(monthHeader, daysContainer);
-    });
+    monthHeader.addEventListener('click', () => toggleCollapse(monthHeader, daysContainer));
     
     return section;
 }
@@ -484,7 +489,6 @@ function createMonthSection(month, posts) {
 function createDaySection(day, posts) {
     const section = document.createElement('div');
     section.className = 'day-section';
-    section.dataset.day = day;
     
     const [year, month, dayNum] = day.split('-');
     const sampleDate = convertToTargetTimezone(new Date(posts[0].timestamp));
@@ -508,20 +512,15 @@ function createDaySection(day, posts) {
     
     posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
          .forEach((post, index) => {
-        const item = createTimelineItem(post, index);
-        postsContainer.appendChild(item);
+        postsContainer.appendChild(createTimelineItem(post, index));
     });
     
     section.appendChild(postsContainer);
-    
-    dayHeader.addEventListener('click', () => {
-        toggleCollapse(dayHeader, postsContainer);
-    });
+    dayHeader.addEventListener('click', () => toggleCollapse(dayHeader, postsContainer));
     
     return section;
 }
 
-// 切换折叠
 function toggleCollapse(header, container) {
     if (container.style.display === 'none') {
         container.style.display = 'block';
@@ -532,12 +531,10 @@ function toggleCollapse(header, container) {
     }
 }
 
-// 转换时区
 function convertToTargetTimezone(date) {
     return new Date(date.toLocaleString('en-US', { timeZone: CONFIG.targetTimezone }));
 }
 
-// 创建时间线条目
 function createTimelineItem(post, index) {
     const item = document.createElement('div');
     item.className = `timeline-item ${index % 2 === 0 ? 'left' : 'right'}`;
@@ -571,11 +568,19 @@ function createTimelineItem(post, index) {
     return item;
 }
 
-// 创建图片HTML
+// 创建图片HTML（默认隐藏，显示提示）
 function createImagesHTML(images) {
     const count = images.length;
     return `
-        <div class="content-images count-${count}">
+        <div class="content-images count-${count}" data-image-count="${count}">
+            <div class="images-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span>${count} 张图片</span>
+            </div>
             ${images.map((img, idx) => `
                 <div class="image-wrapper" data-images='${JSON.stringify(images)}' data-index="${idx}">
                     <img src="${img}" alt="照片" loading="lazy">
@@ -591,16 +596,11 @@ function formatWeekday(date) {
 }
 
 function formatTime(date) {
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
 function formatText(text) {
-    return text.split('\n')
-        .filter(line => line.trim())
-        .map(line => `<p>${escapeHtml(line)}</p>`)
-        .join('');
+    return text.split('\n').filter(line => line.trim()).map(line => `<p>${escapeHtml(line)}</p>`).join('');
 }
 
 function escapeHtml(text) {
@@ -609,33 +609,53 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// 图片切换
+// 图片显示切换（隐藏/显示）
 function setupImageToggle() {
     const toggleBtn = document.getElementById('toggleImages');
     
     toggleBtn.addEventListener('click', () => {
-        if (imageDisplayState === 'preview') {
-            imageDisplayState = 'full';
-            toggleBtn.setAttribute('data-state', 'full');
-            toggleBtn.querySelector('span').textContent = '完整显示';
-        } else if (imageDisplayState === 'full') {
+        if (imageDisplayState === 'hidden') {
+            imageDisplayState = 'visible';
+            toggleBtn.setAttribute('data-state', 'visible');
+            toggleBtn.querySelector('span').textContent = '隐藏图片';
+            toggleBtn.querySelector('svg').innerHTML = `
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+            `;
+        } else {
             imageDisplayState = 'hidden';
             toggleBtn.setAttribute('data-state', 'hidden');
-            toggleBtn.querySelector('span').textContent = '隐藏图片';
-        } else {
-            imageDisplayState = 'preview';
-            toggleBtn.setAttribute('data-state', 'preview');
-            toggleBtn.querySelector('span').textContent = '预览模式';
+            toggleBtn.querySelector('span').textContent = '显示图片';
+            toggleBtn.querySelector('svg').innerHTML = `
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            `;
         }
         
-        toggleBtn.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            toggleBtn.style.transform = 'scale(1)';
-        }, 150);
+        applyImageDisplayState();
     });
 }
 
-// 灯箱
+// 应用图片显示状态
+function applyImageDisplayState() {
+    const allImageContainers = document.querySelectorAll('.content-images');
+    
+    allImageContainers.forEach(container => {
+        const placeholder = container.querySelector('.images-placeholder');
+        const images = container.querySelectorAll('.image-wrapper');
+        
+        if (imageDisplayState === 'hidden') {
+            // 隐藏图片，显示提示
+            if (placeholder) placeholder.style.display = 'flex';
+            images.forEach(img => img.style.display = 'none');
+        } else {
+            // 显示图片，隐藏提示
+            if (placeholder) placeholder.style.display = 'none';
+            images.forEach(img => img.style.display = 'block');
+        }
+    });
+}
+
 function setupLightbox() {
     const lightbox = document.getElementById('lightbox');
     const lightboxImage = document.getElementById('lightboxImage');
@@ -654,9 +674,7 @@ function setupLightbox() {
     });
     
     closeBtn.addEventListener('click', hideLightbox);
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) hideLightbox();
-    });
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hideLightbox(); });
     
     prevBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -691,18 +709,10 @@ function setupLightbox() {
     function updateLightbox() {
         lightboxImage.src = currentLightboxImages[currentLightboxIndex];
         counter.textContent = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
-        
-        if (currentLightboxImages.length === 1) {
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-        } else {
-            prevBtn.style.display = 'flex';
-            nextBtn.style.display = 'flex';
-        }
+        prevBtn.style.display = nextBtn.style.display = currentLightboxImages.length === 1 ? 'none' : 'flex';
     }
 }
 
-// 模态框
 function setupModal() {
     const modal = document.getElementById('addPostModal');
     const addBtn = document.getElementById('addPostBtn');
@@ -716,8 +726,7 @@ function setupModal() {
         
         const now = new Date();
         const offset = now.getTimezoneOffset() * 60000;
-        const localISOTime = new Date(now - offset).toISOString().slice(0, 16);
-        document.getElementById('postTime').value = localISOTime;
+        document.getElementById('postTime').value = new Date(now - offset).toISOString().slice(0, 16);
     });
     
     const closeModal = () => {
@@ -730,9 +739,7 @@ function setupModal() {
     
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -750,8 +757,7 @@ function setupModal() {
             const imageUrls = [];
             for (const file of uploadedImageFiles) {
                 submitBtn.textContent = `上传图片 ${imageUrls.length + 1}/${uploadedImageFiles.length}...`;
-                const url = await uploadImageToDrive(file);
-                imageUrls.push(url);
+                imageUrls.push(await uploadImageToDrive(file));
             }
             
             const newPost = {
@@ -783,18 +789,15 @@ function setupModal() {
     });
 }
 
-// 图片上传
 function setupImageUpload() {
     const fileInput = document.getElementById('postImages');
     const preview = document.getElementById('imagePreview');
     
     fileInput.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files);
-        uploadedImageFiles = files;
-        
+        uploadedImageFiles = Array.from(e.target.files);
         preview.innerHTML = '';
         
-        files.forEach((file, index) => {
+        uploadedImageFiles.forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const div = document.createElement('div');
@@ -818,8 +821,7 @@ function setupImageUpload() {
             uploadedImageFiles.forEach(file => dt.items.add(file));
             document.getElementById('postImages').files = dt.files;
             
-            const event = new Event('change', { bubbles: true });
-            document.getElementById('postImages').dispatchEvent(event);
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
 }

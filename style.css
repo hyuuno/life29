@@ -533,7 +533,28 @@ body {
 
 /* 隐藏模式 */
 .toggle-btn[data-state="hidden"] ~ .timeline .content-images {
-    display: none;
+    display: grid;
+}
+
+/* 图片占位符 */
+.images-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 32px;
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    cursor: default;
+    grid-column: 1 / -1;
+}
+
+.images-placeholder svg {
+    opacity: 0.6;
 }
 
 /* 图片灯箱 */
