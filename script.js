@@ -11,13 +11,6 @@ const CONFIG = {
 // 图片显示状态
 let imageDisplayState = 'preview';
 
-// 收缩状态存储
-const collapseState = {
-    years: new Set(),
-    months: new Set(),
-    days: new Set()
-};
-
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     loadTimeline();
@@ -87,17 +80,17 @@ function createYearSection(year, posts) {
     section.className = 'year-section';
     section.dataset.year = year;
     
-    // 年份标题
+    // 年份标题（节点样式）
     const yearHeader = document.createElement('div');
     yearHeader.className = 'year-header';
     yearHeader.innerHTML = `
-        <button class="collapse-btn" data-level="year" data-key="${year}">
+        <div class="year-node">
             <svg class="collapse-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
-        </button>
-        <h2 class="year-title">${year}</h2>
-        <span class="year-count">${posts.length} 条记录</span>
+            <h2 class="year-title">${year}</h2>
+            <span class="year-count">${posts.length}</span>
+        </div>
     `;
     section.appendChild(yearHeader);
     
@@ -125,9 +118,8 @@ function createYearSection(year, posts) {
     section.appendChild(monthsContainer);
     
     // 添加折叠事件
-    yearHeader.querySelector('.collapse-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleCollapse('year', year, section);
+    yearHeader.addEventListener('click', () => {
+        toggleCollapse(yearHeader, monthsContainer);
     });
     
     return section;
@@ -143,17 +135,17 @@ function createMonthSection(month, posts) {
     const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
                        '七月', '八月', '九月', '十月', '十一月', '十二月'];
     
-    // 月份标题
+    // 月份标题（节点样式）
     const monthHeader = document.createElement('div');
     monthHeader.className = 'month-header';
     monthHeader.innerHTML = `
-        <button class="collapse-btn" data-level="month" data-key="${month}">
+        <div class="month-node">
             <svg class="collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
-        </button>
-        <h3 class="month-title">${monthNames[parseInt(monthNum) - 1]}</h3>
-        <span class="month-count">${posts.length} 条</span>
+            <h3 class="month-title">${monthNames[parseInt(monthNum) - 1]}</h3>
+            <span class="month-count">${posts.length}</span>
+        </div>
     `;
     section.appendChild(monthHeader);
     
@@ -181,9 +173,8 @@ function createMonthSection(month, posts) {
     section.appendChild(daysContainer);
     
     // 添加折叠事件
-    monthHeader.querySelector('.collapse-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleCollapse('month', month, section);
+    monthHeader.addEventListener('click', () => {
+        toggleCollapse(monthHeader, daysContainer);
     });
     
     return section;
@@ -199,17 +190,17 @@ function createDaySection(day, posts) {
     const sampleDate = convertToTargetTimezone(new Date(posts[0].timestamp));
     const weekday = formatWeekday(sampleDate);
     
-    // 日期标题
+    // 日期标题（节点样式）
     const dayHeader = document.createElement('div');
     dayHeader.className = 'day-header';
     dayHeader.innerHTML = `
-        <button class="collapse-btn" data-level="day" data-key="${day}">
+        <div class="day-node">
             <svg class="collapse-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
-        </button>
-        <h4 class="day-title">${month}.${dayNum} ${weekday}</h4>
-        <span class="day-count">${posts.length} 条</span>
+            <h4 class="day-title">${month}.${dayNum} ${weekday}</h4>
+            <span class="day-count">${posts.length}</span>
+        </div>
     `;
     section.appendChild(dayHeader);
     
@@ -227,33 +218,21 @@ function createDaySection(day, posts) {
     section.appendChild(postsContainer);
     
     // 添加折叠事件
-    dayHeader.querySelector('.collapse-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleCollapse('day', day, section);
+    dayHeader.addEventListener('click', () => {
+        toggleCollapse(dayHeader, postsContainer);
     });
     
     return section;
 }
 
 // 切换折叠状态
-function toggleCollapse(level, key, element) {
-    const container = level === 'year' ? '.months-container' : 
-                     level === 'month' ? '.days-container' : 
-                     '.posts-container';
-    
-    const contentEl = element.querySelector(container);
-    const btn = element.querySelector('.collapse-btn');
-    
-    if (collapseState[level + 's'].has(key)) {
-        // 展开
-        collapseState[level + 's'].delete(key);
-        contentEl.style.display = 'block';
-        btn.classList.remove('collapsed');
+function toggleCollapse(header, container) {
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        header.classList.remove('collapsed');
     } else {
-        // 折叠
-        collapseState[level + 's'].add(key);
-        contentEl.style.display = 'none';
-        btn.classList.add('collapsed');
+        container.style.display = 'none';
+        header.classList.add('collapsed');
     }
 }
 
@@ -272,7 +251,6 @@ function createTimelineItem(post, index) {
     const userName = CONFIG.users[post.user] || post.user;
     
     item.innerHTML = `
-        <div class="timeline-dot"></div>
         <div class="content-card">
             <div class="card-header">
                 <div class="user-badge">${userName}</div>

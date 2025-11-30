@@ -9,6 +9,7 @@
     /* 时间线 */
     --timeline-color: #d4c5b0;
     --timeline-dot: #8b7355;
+    --timeline-accent: #b8a394;
     
     /* 用户颜色 */
     --user1-color: #b8a394;
@@ -18,7 +19,8 @@
     
     /* 阴影和边框 */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
     --border-color: #e8e4de;
     
     /* 字体 */
@@ -41,7 +43,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -52,7 +54,7 @@ body {
     top: 0;
     background: rgba(253, 251, 247, 0.95);
     backdrop-filter: blur(10px);
-    padding: 24px 0;
+    padding: 20px 0;
     margin-bottom: 60px;
     display: flex;
     justify-content: space-between;
@@ -62,7 +64,7 @@ body {
 }
 
 .site-title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 300;
     letter-spacing: 3px;
     color: var(--text-primary);
@@ -71,13 +73,13 @@ body {
 .toggle-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
+    gap: 6px;
+    padding: 8px 16px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 24px;
+    border-radius: 20px;
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -88,204 +90,283 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-.toggle-btn svg {
-    transition: transform 0.3s ease;
-}
-
-.toggle-btn:hover svg {
-    transform: scale(1.1);
-}
-
-/* 时间线容器 */
+/* 时间线主容器 */
 .timeline {
     position: relative;
-    padding: 40px 0 80px;
+    padding: 20px 0 80px;
+}
+
+/* 中央时间轴 */
+.timeline-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, 
+        transparent 0%, 
+        var(--timeline-color) 3%, 
+        var(--timeline-color) 97%, 
+        transparent 100%);
+    transform: translateX(-50%);
+    z-index: 0;
 }
 
 .timeline-content {
     position: relative;
 }
 
-/* 年份区块 */
+/* 年份节点 */
 .year-section {
-    margin-bottom: 60px;
-    animation: fadeInUp 0.6s ease forwards;
+    position: relative;
+    margin-bottom: 40px;
+    animation: fadeIn 0.5s ease forwards;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .year-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 30px;
-    padding: 16px 24px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
-    border-left: 4px solid var(--timeline-dot);
-}
-
-.year-title {
-    font-size: 32px;
-    font-weight: 300;
-    color: var(--text-primary);
-    letter-spacing: 2px;
-    flex: 1;
-}
-
-.year-count {
-    font-size: 14px;
-    color: var(--text-tertiary);
-    font-family: var(--font-sans);
-}
-
-/* 月份区块 */
-.month-section {
-    margin-bottom: 40px;
-    margin-left: 40px;
-}
-
-.month-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding: 12px 20px;
-    background: var(--bg-secondary);
-    border-radius: 10px;
-    border-left: 3px solid var(--user1-color);
-}
-
-.month-title {
-    font-size: 22px;
-    font-weight: 400;
-    color: var(--text-primary);
-    flex: 1;
-}
-
-.month-count {
-    font-size: 13px;
-    color: var(--text-tertiary);
-    font-family: var(--font-sans);
-}
-
-/* 日期区块 */
-.day-section {
-    margin-bottom: 30px;
-    margin-left: 40px;
-}
-
-.day-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    padding: 8px 16px;
-    background: white;
-    border-radius: 8px;
-    border-left: 2px solid var(--user2-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.day-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    flex: 1;
-    font-family: var(--font-sans);
-}
-
-.day-count {
-    font-size: 12px;
-    color: var(--text-tertiary);
-    font-family: var(--font-sans);
-}
-
-/* 折叠按钮 */
-.collapse-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-secondary);
-    transition: all 0.3s ease;
-    border-radius: 4px;
+    margin-bottom: 30px;
+    cursor: pointer;
+    user-select: none;
 }
 
-.collapse-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--text-primary);
+.year-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    background: white;
+    border: 2px solid var(--timeline-dot);
+    border-radius: 24px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.year-header:hover .year-node {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.year-node::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% + 16px);
+    height: calc(100% + 16px);
+    border: 1px solid var(--timeline-color);
+    border-radius: 28px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.year-header:hover .year-node::before {
+    opacity: 1;
 }
 
 .collapse-icon {
     transition: transform 0.3s ease;
+    color: var(--timeline-dot);
+    flex-shrink: 0;
 }
 
-.collapse-btn.collapsed .collapse-icon {
+.year-header.collapsed .collapse-icon {
     transform: rotate(-90deg);
 }
 
-/* 容器 */
-.months-container,
-.days-container,
-.posts-container {
+.year-title {
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+}
+
+.year-count {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+    background: var(--bg-secondary);
+    padding: 2px 10px;
+    border-radius: 10px;
+}
+
+/* 月份节点 */
+.months-container {
     transition: all 0.3s ease;
 }
 
-/* 时间线条目 */
-.posts-container {
+.month-section {
     position: relative;
-    padding-left: 40px;
+    margin-bottom: 32px;
 }
 
-.posts-container::before {
-    content: '';
-    position: absolute;
-    left: 20px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--timeline-color);
+.month-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.month-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    background: white;
+    border: 2px solid var(--timeline-accent);
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.month-header:hover .month-node {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.month-header.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.month-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.month-count {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+}
+
+/* 日期节点 */
+.days-container {
+    transition: all 0.3s ease;
+}
+
+.day-section {
+    position: relative;
+    margin-bottom: 28px;
+}
+
+.day-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.day-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: var(--bg-secondary);
+    border: 1.5px solid var(--timeline-color);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.day-header:hover .day-node {
+    transform: scale(1.05);
+    background: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.day-header.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.day-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-family: var(--font-sans);
+}
+
+.day-count {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+}
+
+/* 时间条目容器 */
+.posts-container {
+    position: relative;
+    transition: all 0.3s ease;
 }
 
 .timeline-item {
     position: relative;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
 }
 
-.timeline-dot {
+/* 时间轴点 */
+.timeline-item::before {
+    content: '';
     position: absolute;
-    left: -24px;
-    top: 20px;
+    left: 50%;
+    top: 16px;
+    transform: translateX(-50%);
     width: 8px;
     height: 8px;
     background: var(--timeline-dot);
-    border-radius: 50%;
     border: 2px solid var(--bg-primary);
+    border-radius: 50%;
     z-index: 1;
+    box-shadow: 0 0 0 4px rgba(139, 115, 85, 0.1);
+}
+
+/* 左右交替布局 */
+.timeline-item.left {
+    flex-direction: row-reverse;
+}
+
+.timeline-item.left .content-card {
+    margin-right: calc(50% + 30px);
+    margin-left: 0;
+}
+
+.timeline-item.right .content-card {
+    margin-left: calc(50% + 30px);
+    margin-right: 0;
 }
 
 /* 内容卡片 */
 .content-card {
+    flex: 0 0 auto;
+    width: calc(50% - 30px);
     background: white;
     border-radius: 12px;
-    padding: 20px;
+    padding: 16px 18px;
     box-shadow: var(--shadow-sm);
-    border-left: 3px solid var(--user1-color);
     transition: all 0.3s ease;
+    border-left: 3px solid var(--user1-color);
 }
 
 .timeline-item.right .content-card {
@@ -303,17 +384,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .user-badge {
     display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
     font-family: var(--font-sans);
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .timeline-item.left .user-badge {
@@ -327,7 +408,7 @@ body {
 }
 
 .time-badge {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-tertiary);
     font-family: var(--font-sans);
     font-weight: 500;
@@ -335,25 +416,25 @@ body {
 
 /* 文字内容 */
 .content-text {
-    font-size: 15px;
-    line-height: 1.8;
+    font-size: 14px;
+    line-height: 1.7;
     color: var(--text-primary);
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .content-text p {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .content-text p:last-child {
     margin-bottom: 0;
 }
 
-/* 图片容器 */
+/* 图片容器 - 更小更精致 */
 .content-images {
     display: grid;
-    gap: 10px;
-    margin-top: 16px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .content-images.count-1 {
@@ -380,14 +461,15 @@ body {
 .image-wrapper {
     position: relative;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 6px;
     background: var(--bg-secondary);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .image-wrapper:hover {
-    transform: scale(1.02);
+    transform: scale(1.03);
+    box-shadow: var(--shadow-sm);
 }
 
 .image-wrapper img {
@@ -398,13 +480,13 @@ body {
     transition: all 0.3s ease;
 }
 
-/* 预览模式 */
+/* 预览模式 - 小图 */
 .toggle-btn[data-state="preview"] ~ .timeline .image-wrapper {
-    height: 150px;
+    height: 100px;
 }
 
 .toggle-btn[data-state="preview"] ~ .timeline .content-images.count-1 .image-wrapper {
-    height: 250px;
+    height: 160px;
 }
 
 /* 完整模式 */
@@ -434,9 +516,9 @@ body {
 }
 
 .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--bg-secondary);
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--bg-secondary);
     border-top-color: var(--timeline-color);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -448,46 +530,66 @@ body {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+    }
+    
     .header {
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         align-items: flex-start;
     }
     
     .site-title {
-        font-size: 24px;
+        font-size: 20px;
     }
     
-    .year-title {
-        font-size: 26px;
+    .timeline-line {
+        left: 30px;
     }
     
-    .month-title {
-        font-size: 18px;
+    .year-header,
+    .month-header,
+    .day-header {
+        justify-content: flex-start;
+        padding-left: 60px;
     }
     
-    .month-section {
-        margin-left: 20px;
+    .timeline-item {
+        flex-direction: column !important;
+        padding-left: 60px;
     }
     
-    .day-section {
-        margin-left: 20px;
+    .timeline-item::before {
+        left: 30px;
+        top: 12px;
     }
     
-    .posts-container {
-        padding-left: 30px;
+    .timeline-item.left .content-card,
+    .timeline-item.right .content-card {
+        margin: 0;
+        width: 100%;
     }
     
-    .posts-container::before {
-        left: 15px;
-    }
-    
-    .timeline-dot {
-        left: -19px;
+    .timeline-item.right .content-card {
+        border-left: 3px solid var(--user2-color);
+        border-right: none;
     }
     
     .content-card {
-        padding: 16px;
+        padding: 14px 16px;
+    }
+    
+    .year-title {
+        font-size: 18px;
+    }
+    
+    .month-title {
+        font-size: 14px;
+    }
+    
+    .day-title {
+        font-size: 13px;
     }
     
     .content-images.count-2,
@@ -501,7 +603,7 @@ body {
 
 /* 滚动条样式 */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -510,7 +612,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
     background: var(--timeline-color);
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
