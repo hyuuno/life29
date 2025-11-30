@@ -178,6 +178,28 @@ body {
     z-index: -1;
 }
 
+/* 日期占位符（当不显示日期标签时保持间距） */
+.timeline-date-placeholder {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    height: 36px;
+    width: 10px;
+}
+
+.timeline-date-placeholder::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: var(--timeline-dot);
+    border-radius: 50%;
+}
+
 /* 内容卡片 */
 .timeline-content-wrapper {
     width: calc(50% - 60px);
@@ -213,6 +235,13 @@ body {
 }
 
 /* 用户标识 */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
 .user-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -220,7 +249,6 @@ body {
     font-size: 12px;
     font-family: var(--font-sans);
     font-weight: 600;
-    margin-bottom: 16px;
     letter-spacing: 0.5px;
 }
 
@@ -232,6 +260,13 @@ body {
 .timeline-item.right .user-badge {
     background: var(--user2-light);
     color: var(--user2-color);
+}
+
+.time-badge {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+    font-weight: 500;
 }
 
 /* 文字内容 */
