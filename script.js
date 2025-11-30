@@ -1,9 +1,9 @@
 // Google API 客户端
 let gapi = null;
 let googleAuth = null;
-let mainFolderId = null;  // 主文件夹 ID
-let dataFileId = null;    // 数据文件 ID
-let imagesFolderId = null; // 图片文件夹 ID
+let mainFolderId = null;
+let dataFileId = null;
+let imagesFolderId = null;
 
 // 状态
 let imageDisplayState = 'preview';
@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupImageToggle();
     setupLightbox();
     setupImageUpload();
+    setupModal();
     initGoogleAPI();
 });
 
@@ -30,11 +31,10 @@ function initGoogleAPI() {
     document.body.appendChild(script);
 }
 
-// 初始化 Google API 客户端
+// 初始化 Google API 客户端（移除 apiKey）
 async function initClient() {
     try {
         await window.gapi.client.init({
-            apiKey: GOOGLE_CONFIG.apiKey,
             clientId: GOOGLE_CONFIG.clientId,
             discoveryDocs: GOOGLE_CONFIG.discoveryDocs,
             scope: GOOGLE_CONFIG.scope
@@ -131,12 +131,9 @@ function showError(message) {
     `;
 }
 
-// ==================== 文件夹管理 ====================
-
 // 获取或创建主文件夹
 async function getOrCreateMainFolder() {
     try {
-        // 搜索主文件夹
         const response = await gapi.client.drive.files.list({
             q: `name='${GOOGLE_CONFIG.mainFolderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
             spaces: 'drive',
@@ -149,7 +146,6 @@ async function getOrCreateMainFolder() {
             mainFolderId = folders[0].id;
             return mainFolderId;
         } else {
-            // 创建主文件夹
             const folderMetadata = {
                 name: GOOGLE_CONFIG.mainFolderName,
                 mimeType: 'application/vnd.google-apps.folder'
@@ -170,13 +166,11 @@ async function getOrCreateMainFolder() {
     }
 }
 
-// 获取或创建数据文件（在主文件夹下）
+// 获取或创建数据文件
 async function getOrCreateDataFile() {
     try {
-        // 确保主文件夹存在
         const folderId = await getOrCreateMainFolder();
         
-        // 在主文件夹中搜索数据文件
         const response = await gapi.client.drive.files.list({
             q: `name='${GOOGLE_CONFIG.dataFileName}' and '${folderId}' in parents and mimeType='application/json' and trashed=false`,
             spaces: 'drive',
@@ -189,7 +183,6 @@ async function getOrCreateDataFile() {
             dataFileId = files[0].id;
             return dataFileId;
         } else {
-            // 在主文件夹中创建数据文件
             const fileMetadata = {
                 name: GOOGLE_CONFIG.dataFileName,
                 mimeType: 'application/json',
@@ -222,13 +215,11 @@ async function getOrCreateDataFile() {
     }
 }
 
-// 获取或创建图片文件夹（在主文件夹下）
+// 获取或创建图片文件夹
 async function getOrCreateImagesFolder() {
     try {
-        // 确保主文件夹存在
         const mainFolder = await getOrCreateMainFolder();
         
-        // 在主文件夹中搜索图片文件夹
         const response = await gapi.client.drive.files.list({
             q: `name='${GOOGLE_CONFIG.imagesFolderName}' and '${mainFolder}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
             spaces: 'drive',
@@ -241,7 +232,6 @@ async function getOrCreateImagesFolder() {
             imagesFolderId = folders[0].id;
             return imagesFolderId;
         } else {
-            // 在主文件夹中创建图片文件夹
             const folderMetadata = {
                 name: GOOGLE_CONFIG.imagesFolderName,
                 mimeType: 'application/vnd.google-apps.folder',
@@ -263,7 +253,7 @@ async function getOrCreateImagesFolder() {
     }
 }
 
-// 从 Google Drive 读取数据
+// 读取数据文件
 async function readDataFile(fileId) {
     try {
         const response = await gapi.client.drive.files.get({
@@ -278,7 +268,7 @@ async function readDataFile(fileId) {
     }
 }
 
-// 写入数据到 Google Drive
+// 写入数据文件
 async function writeDataFile(fileId, data) {
     try {
         const file = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -299,7 +289,7 @@ async function writeDataFile(fileId, data) {
     }
 }
 
-// 上传图片到 Google Drive（图片文件夹下）
+// 上传图片到 Drive
 async function uploadImageToDrive(file) {
     try {
         const folderId = await getOrCreateImagesFolder();
@@ -321,7 +311,6 @@ async function uploadImageToDrive(file) {
         
         const result = await response.json();
         
-        // 设置文件为公开可访问
         await gapi.client.drive.permissions.create({
             fileId: result.id,
             resource: {
@@ -338,7 +327,7 @@ async function uploadImageToDrive(file) {
     }
 }
 
-// 加载时间线数据
+// 加载时间线
 async function loadTimeline() {
     const loading = document.getElementById('loading');
     const timelineContent = document.getElementById('timelineContent');
@@ -379,7 +368,6 @@ function renderTimeline(posts) {
         return;
     }
     
-    // 按年份分组
     const groupedByYear = {};
     posts.forEach(post => {
         const date = convertToTargetTimezone(new Date(post.timestamp));
@@ -533,7 +521,7 @@ function createDaySection(day, posts) {
     return section;
 }
 
-// 切换折叠状态
+// 切换折叠
 function toggleCollapse(header, container) {
     if (container.style.display === 'none') {
         container.style.display = 'block';
@@ -544,7 +532,7 @@ function toggleCollapse(header, container) {
     }
 }
 
-// 转换到目标时区
+// 转换时区
 function convertToTargetTimezone(date) {
     return new Date(date.toLocaleString('en-US', { timeZone: CONFIG.targetTimezone }));
 }
@@ -597,20 +585,17 @@ function createImagesHTML(images) {
     `;
 }
 
-// 格式化星期
 function formatWeekday(date) {
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     return weekdays[date.getDay()];
 }
 
-// 格式化时间
 function formatTime(date) {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
 }
 
-// 格式化文本
 function formatText(text) {
     return text.split('\n')
         .filter(line => line.trim())
@@ -618,14 +603,13 @@ function formatText(text) {
         .join('');
 }
 
-// 转义HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// 设置图片切换功能
+// 图片切换
 function setupImageToggle() {
     const toggleBtn = document.getElementById('toggleImages');
     
@@ -651,7 +635,7 @@ function setupImageToggle() {
     });
 }
 
-// 设置灯箱
+// 灯箱
 function setupLightbox() {
     const lightbox = document.getElementById('lightbox');
     const lightboxImage = document.getElementById('lightboxImage');
@@ -671,9 +655,7 @@ function setupLightbox() {
     
     closeBtn.addEventListener('click', hideLightbox);
     lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
-            hideLightbox();
-        }
+        if (e.target === lightbox) hideLightbox();
     });
     
     prevBtn.addEventListener('click', (e) => {
@@ -690,14 +672,9 @@ function setupLightbox() {
     
     document.addEventListener('keydown', (e) => {
         if (!lightbox.classList.contains('active')) return;
-        
-        if (e.key === 'Escape') {
-            hideLightbox();
-        } else if (e.key === 'ArrowLeft') {
-            prevBtn.click();
-        } else if (e.key === 'ArrowRight') {
-            nextBtn.click();
-        }
+        if (e.key === 'Escape') hideLightbox();
+        else if (e.key === 'ArrowLeft') prevBtn.click();
+        else if (e.key === 'ArrowRight') nextBtn.click();
     });
     
     function showLightbox() {
@@ -725,7 +702,7 @@ function setupLightbox() {
     }
 }
 
-// 设置模态框
+// 模态框
 function setupModal() {
     const modal = document.getElementById('addPostModal');
     const addBtn = document.getElementById('addPostBtn');
@@ -754,9 +731,7 @@ function setupModal() {
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
+        if (e.target === modal) closeModal();
     });
     
     form.addEventListener('submit', async (e) => {
@@ -772,7 +747,6 @@ function setupModal() {
             const location = document.getElementById('postLocation').value.trim();
             const text = document.getElementById('postText').value.trim();
             
-            // 上传图片到 Google Drive
             const imageUrls = [];
             for (const file of uploadedImageFiles) {
                 submitBtn.textContent = `上传图片 ${imageUrls.length + 1}/${uploadedImageFiles.length}...`;
@@ -789,14 +763,10 @@ function setupModal() {
                 images: imageUrls.length > 0 ? imageUrls : undefined
             };
             
-            // 读取现有数据
             const fileId = await getOrCreateDataFile();
             const data = await readDataFile(fileId);
-            
-            // 添加新记录
             data.posts.push(newPost);
             
-            // 写回文件
             submitBtn.textContent = '保存中...';
             await writeDataFile(fileId, data);
             
@@ -813,7 +783,7 @@ function setupModal() {
     });
 }
 
-// 设置图片上传
+// 图片上传
 function setupImageUpload() {
     const fileInput = document.getElementById('postImages');
     const preview = document.getElementById('imagePreview');

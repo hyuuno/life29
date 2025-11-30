@@ -3,9 +3,6 @@ const GOOGLE_CONFIG = {
     // 你的 Google API 客户端 ID
     clientId: '1097251788392-il09f5pitva37upe7sevvk2ttulqmde5.apps.googleusercontent.com',
     
-    // API 密钥（可选，纯前端应用不需要）
-    apiKey: '',
-    
     // 授权范围
     scope: 'https://www.googleapis.com/auth/drive.file',
     
