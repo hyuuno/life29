@@ -8,13 +8,20 @@ const CONFIG = {
     targetTimezone: 'America/Los_Angeles'
 };
 
-// 图片显示状态
+// 状态
 let imageDisplayState = 'preview';
+let allPosts = [];
+let currentLightboxImages = [];
+let currentLightboxIndex = 0;
+let uploadedImageFiles = [];
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     loadTimeline();
     setupImageToggle();
+    setupModal();
+    setupLightbox();
+    setupImageUpload();
 });
 
 // 加载时间线数据
@@ -29,14 +36,17 @@ async function loadTimeline() {
         }
         
         const data = await response.json();
+        allPosts = data.posts;
+        
+        // 从 localStorage 加载用户添加的数据
+        const localPosts = JSON.parse(localStorage.getItem('userPosts') || '[]');
+        allPosts = [...allPosts, ...localPosts];
         
         // 按时间排序（最新的在上面）
-        const sortedPosts = data.posts.sort((a, b) => 
-            new Date(b.timestamp) - new Date(a.timestamp)
-        );
+        allPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
         // 渲染时间线
-        renderTimeline(sortedPosts);
+        renderTimeline(allPosts);
         
         loading.classList.add('hidden');
     } catch (error) {
@@ -51,10 +61,20 @@ async function loadTimeline() {
     }
 }
 
-// 渲染时间线（分组展示）
+// 渲染时间线
 function renderTimeline(posts) {
     const timelineContent = document.getElementById('timelineContent');
     timelineContent.innerHTML = '';
+    
+    if (posts.length === 0) {
+        timelineContent.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                <p style="font-size: 16px;">还没有任何记录</p>
+                <p style="font-size: 14px; margin-top: 8px;">点击右上角"添加记录"开始记录生活</p>
+            </div>
+        `;
+        return;
+    }
     
     // 按年份分组
     const groupedByYear = {};
@@ -80,7 +100,6 @@ function createYearSection(year, posts) {
     section.className = 'year-section';
     section.dataset.year = year;
     
-    // 年份标题（节点样式）
     const yearHeader = document.createElement('div');
     yearHeader.className = 'year-header';
     yearHeader.innerHTML = `
@@ -94,11 +113,9 @@ function createYearSection(year, posts) {
     `;
     section.appendChild(yearHeader);
     
-    // 月份内容容器
     const monthsContainer = document.createElement('div');
     monthsContainer.className = 'months-container';
     
-    // 按月份分组
     const groupedByMonth = {};
     posts.forEach(post => {
         const date = convertToTargetTimezone(new Date(post.timestamp));
@@ -109,7 +126,6 @@ function createYearSection(year, posts) {
         groupedByMonth[month].push(post);
     });
     
-    // 渲染每个月份
     Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a)).forEach(month => {
         const monthSection = createMonthSection(month, groupedByMonth[month]);
         monthsContainer.appendChild(monthSection);
@@ -117,7 +133,6 @@ function createYearSection(year, posts) {
     
     section.appendChild(monthsContainer);
     
-    // 添加折叠事件
     yearHeader.addEventListener('click', () => {
         toggleCollapse(yearHeader, monthsContainer);
     });
@@ -135,7 +150,6 @@ function createMonthSection(month, posts) {
     const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
                        '七月', '八月', '九月', '十月', '十一月', '十二月'];
     
-    // 月份标题（节点样式）
     const monthHeader = document.createElement('div');
     monthHeader.className = 'month-header';
     monthHeader.innerHTML = `
@@ -149,11 +163,9 @@ function createMonthSection(month, posts) {
     `;
     section.appendChild(monthHeader);
     
-    // 日期内容容器
     const daysContainer = document.createElement('div');
     daysContainer.className = 'days-container';
     
-    // 按日期分组
     const groupedByDay = {};
     posts.forEach(post => {
         const date = convertToTargetTimezone(new Date(post.timestamp));
@@ -164,7 +176,6 @@ function createMonthSection(month, posts) {
         groupedByDay[day].push(post);
     });
     
-    // 渲染每一天
     Object.keys(groupedByDay).sort((a, b) => b.localeCompare(a)).forEach(day => {
         const daySection = createDaySection(day, groupedByDay[day]);
         daysContainer.appendChild(daySection);
@@ -172,7 +183,6 @@ function createMonthSection(month, posts) {
     
     section.appendChild(daysContainer);
     
-    // 添加折叠事件
     monthHeader.addEventListener('click', () => {
         toggleCollapse(monthHeader, daysContainer);
     });
@@ -190,7 +200,6 @@ function createDaySection(day, posts) {
     const sampleDate = convertToTargetTimezone(new Date(posts[0].timestamp));
     const weekday = formatWeekday(sampleDate);
     
-    // 日期标题（节点样式）
     const dayHeader = document.createElement('div');
     dayHeader.className = 'day-header';
     dayHeader.innerHTML = `
@@ -204,11 +213,9 @@ function createDaySection(day, posts) {
     `;
     section.appendChild(dayHeader);
     
-    // 时间条目容器
     const postsContainer = document.createElement('div');
     postsContainer.className = 'posts-container';
     
-    // 按时间排序并渲染
     posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
          .forEach((post, index) => {
         const item = createTimelineItem(post, index);
@@ -217,7 +224,6 @@ function createDaySection(day, posts) {
     
     section.appendChild(postsContainer);
     
-    // 添加折叠事件
     dayHeader.addEventListener('click', () => {
         toggleCollapse(dayHeader, postsContainer);
     });
@@ -236,7 +242,7 @@ function toggleCollapse(header, container) {
     }
 }
 
-// 转换到目标时区（加州时间）
+// 转换到目标时区
 function convertToTargetTimezone(date) {
     return new Date(date.toLocaleString('en-US', { timeZone: CONFIG.targetTimezone }));
 }
@@ -250,12 +256,23 @@ function createTimelineItem(post, index) {
     const timeStr = formatTime(targetDate);
     const userName = CONFIG.users[post.user] || post.user;
     
+    const locationHTML = post.location ? `
+        <div class="location-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            ${escapeHtml(post.location)}
+        </div>
+    ` : '';
+    
     item.innerHTML = `
         <div class="content-card">
             <div class="card-header">
                 <div class="user-badge">${userName}</div>
                 <div class="time-badge">${timeStr}</div>
             </div>
+            ${locationHTML}
             ${post.text ? `<div class="content-text">${formatText(post.text)}</div>` : ''}
             ${post.images && post.images.length > 0 ? createImagesHTML(post.images) : ''}
         </div>
@@ -269,8 +286,8 @@ function createImagesHTML(images) {
     const count = images.length;
     return `
         <div class="content-images count-${count}">
-            ${images.map(img => `
-                <div class="image-wrapper">
+            ${images.map((img, idx) => `
+                <div class="image-wrapper" data-images='${JSON.stringify(images)}' data-index="${idx}">
                     <img src="${img}" alt="照片" loading="lazy">
                 </div>
             `).join('')}
@@ -291,7 +308,7 @@ function formatTime(date) {
     return `${hours}:${minutes}`;
 }
 
-// 格式化文本（保留换行）
+// 格式化文本
 function formatText(text) {
     return text.split('\n')
         .filter(line => line.trim())
@@ -332,9 +349,200 @@ function setupImageToggle() {
     });
 }
 
-// 图片点击放大
-document.addEventListener('click', (e) => {
-    if (e.target.matches('.image-wrapper img')) {
-        console.log('图片点击:', e.target.src);
+// 设置灯箱
+function setupLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+    const closeBtn = lightbox.querySelector('.lightbox-close');
+    const prevBtn = lightbox.querySelector('.lightbox-prev');
+    const nextBtn = lightbox.querySelector('.lightbox-next');
+    const counter = lightbox.querySelector('.lightbox-counter');
+    
+    // 点击图片打开灯箱
+    document.addEventListener('click', (e) => {
+        const wrapper = e.target.closest('.image-wrapper');
+        if (wrapper && e.target.matches('.image-wrapper img')) {
+            currentLightboxImages = JSON.parse(wrapper.dataset.images);
+            currentLightboxIndex = parseInt(wrapper.dataset.index);
+            showLightbox();
+        }
+    });
+    
+    // 关闭灯箱
+    closeBtn.addEventListener('click', hideLightbox);
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+            hideLightbox();
+        }
+    });
+    
+    // 上一张/下一张
+    prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
+        updateLightbox();
+    });
+    
+    nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxImages.length;
+        updateLightbox();
+    });
+    
+    // 键盘控制
+    document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('active')) return;
+        
+        if (e.key === 'Escape') {
+            hideLightbox();
+        } else if (e.key === 'ArrowLeft') {
+            prevBtn.click();
+        } else if (e.key === 'ArrowRight') {
+            nextBtn.click();
+        }
+    });
+    
+    function showLightbox() {
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        updateLightbox();
     }
-});
+    
+    function hideLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    function updateLightbox() {
+        lightboxImage.src = currentLightboxImages[currentLightboxIndex];
+        counter.textContent = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
+        
+        // 只有一张图片时隐藏前后按钮
+        if (currentLightboxImages.length === 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = 'flex';
+            nextBtn.style.display = 'flex';
+        }
+    }
+}
+
+// 设置模态框
+function setupModal() {
+    const modal = document.getElementById('addPostModal');
+    const addBtn = document.getElementById('addPostBtn');
+    const closeBtn = modal.querySelector('.modal-close');
+    const cancelBtn = modal.querySelector('.btn-cancel');
+    const form = document.getElementById('addPostForm');
+    
+    // 打开模态框
+    addBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // 设置默认时间为当前时间
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(now - offset).toISOString().slice(0, 16);
+        document.getElementById('postTime').value = localISOTime;
+    });
+    
+    // 关闭模态框
+    const closeModal = () => {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        form.reset();
+        uploadedImageFiles = [];
+        document.getElementById('imagePreview').innerHTML = '';
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // 提交表单
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const user = document.getElementById('userSelect').value;
+        const timestamp = new Date(document.getElementById('postTime').value).toISOString();
+        const location = document.getElementById('postLocation').value.trim();
+        const text = document.getElementById('postText').value.trim();
+        
+        // 转换图片为base64
+        const images = await Promise.all(uploadedImageFiles.map(file => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        }));
+        
+        const newPost = {
+            id: Date.now(),
+            user,
+            timestamp,
+            location: location || undefined,
+            text: text || undefined,
+            images: images.length > 0 ? images : undefined
+        };
+        
+        // 保存到 localStorage
+        const localPosts = JSON.parse(localStorage.getItem('userPosts') || '[]');
+        localPosts.push(newPost);
+        localStorage.setItem('userPosts', JSON.stringify(localPosts));
+        
+        // 重新加载时间线
+        closeModal();
+        loadTimeline();
+    });
+}
+
+// 设置图片上传
+function setupImageUpload() {
+    const fileInput = document.getElementById('postImages');
+    const preview = document.getElementById('imagePreview');
+    
+    fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        uploadedImageFiles = files;
+        
+        preview.innerHTML = '';
+        
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                div.className = 'image-preview-item';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="预览">
+                    <button type="button" class="image-preview-remove" data-index="${index}">&times;</button>
+                `;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+    
+    // 删除预览图片
+    preview.addEventListener('click', (e) => {
+        if (e.target.classList.contains('image-preview-remove')) {
+            const index = parseInt(e.target.dataset.index);
+            uploadedImageFiles.splice(index, 1);
+            
+            // 重新创建 FileList（使用 DataTransfer）
+            const dt = new DataTransfer();
+            uploadedImageFiles.forEach(file => dt.items.add(file));
+            document.getElementById('postImages').files = dt.files;
+            
+            // 重新触发 change 事件
+            const event = new Event('change', { bubbles: true });
+            document.getElementById('postImages').dispatchEvent(event);
+        }
+    });
+}
