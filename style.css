@@ -1,0 +1,411 @@
+:root {
+    /* 主题色 */
+    --bg-primary: #fdfbf7;
+    --bg-secondary: #f8f6f1;
+    --text-primary: #2c2c2c;
+    --text-secondary: #6b6b6b;
+    --text-tertiary: #a0a0a0;
+    
+    /* 时间线 */
+    --timeline-color: #d4c5b0;
+    --timeline-dot: #8b7355;
+    
+    /* 用户颜色 - 柔和淡色系 */
+    --user1-color: #b8a394;
+    --user1-light: #e8dfd8;
+    --user2-color: #94a3b8;
+    --user2-light: #dce4ec;
+    
+    /* 阴影和边框 */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --border-color: #e8e4de;
+    
+    /* 字体 */
+    --font-serif: 'Crimson Pro', 'Noto Serif SC', serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-serif);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+/* 容器 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 顶部栏 */
+.header {
+    position: sticky;
+    top: 0;
+    background: rgba(253, 251, 247, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 24px 0;
+    margin-bottom: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    z-index: 100;
+}
+
+.site-title {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: var(--text-primary);
+}
+
+.toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.toggle-btn:hover svg {
+    transform: scale(1.1);
+}
+
+/* 时间线 */
+.timeline {
+    position: relative;
+    padding: 40px 0 80px;
+}
+
+.timeline-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, 
+        transparent 0%, 
+        var(--timeline-color) 5%, 
+        var(--timeline-color) 95%, 
+        transparent 100%);
+    transform: translateX(-50%);
+}
+
+.timeline-content {
+    position: relative;
+}
+
+/* 时间线条目 */
+.timeline-item {
+    position: relative;
+    margin-bottom: 80px;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.timeline-item:nth-child(1) { animation-delay: 0.1s; }
+.timeline-item:nth-child(2) { animation-delay: 0.2s; }
+.timeline-item:nth-child(3) { animation-delay: 0.3s; }
+.timeline-item:nth-child(4) { animation-delay: 0.4s; }
+.timeline-item:nth-child(5) { animation-delay: 0.5s; }
+.timeline-item:nth-child(n+6) { animation-delay: 0.6s; }
+
+/* 时间戳节点 */
+.timeline-date {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    background: var(--bg-primary);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border: 2px solid var(--timeline-color);
+    white-space: nowrap;
+    z-index: 2;
+    letter-spacing: 0.5px;
+}
+
+.timeline-date::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: var(--timeline-dot);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+/* 内容卡片 */
+.timeline-content-wrapper {
+    width: calc(50% - 60px);
+    padding-top: 50px;
+}
+
+.timeline-item.left .timeline-content-wrapper {
+    margin-left: 0;
+}
+
+.timeline-item.right .timeline-content-wrapper {
+    margin-left: auto;
+}
+
+.content-card {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: var(--shadow-md);
+    border-left: 4px solid var(--user1-color);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.timeline-item.right .content-card {
+    border-left: none;
+    border-right: 4px solid var(--user2-color);
+}
+
+.content-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* 用户标识 */
+.user-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+}
+
+.timeline-item.left .user-badge {
+    background: var(--user1-light);
+    color: var(--user1-color);
+}
+
+.timeline-item.right .user-badge {
+    background: var(--user2-light);
+    color: var(--user2-color);
+}
+
+/* 文字内容 */
+.content-text {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.content-text p {
+    margin-bottom: 12px;
+}
+
+.content-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* 图片容器 */
+.content-images {
+    display: grid;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.content-images.count-1 {
+    grid-template-columns: 1fr;
+}
+
+.content-images.count-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.content-images.count-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.content-images.count-4 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.content-images.count-5,
+.content-images.count-6 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.image-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.image-wrapper:hover {
+    transform: scale(1.02);
+}
+
+.image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+/* 预览模式 - 固定高度 */
+.toggle-btn[data-state="preview"] ~ .timeline .image-wrapper {
+    height: 180px;
+}
+
+.toggle-btn[data-state="preview"] ~ .timeline .content-images.count-1 .image-wrapper {
+    height: 300px;
+}
+
+/* 完整模式 - 自适应高度 */
+.toggle-btn[data-state="full"] ~ .timeline .image-wrapper {
+    height: auto;
+}
+
+.toggle-btn[data-state="full"] ~ .timeline .image-wrapper img {
+    height: auto;
+}
+
+/* 隐藏模式 */
+.toggle-btn[data-state="hidden"] ~ .timeline .content-images {
+    display: none;
+}
+
+/* 加载状态 */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+}
+
+.loading.hidden {
+    display: none;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--bg-secondary);
+    border-top-color: var(--timeline-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    
+    .site-title {
+        font-size: 24px;
+    }
+    
+    .timeline-line {
+        left: 30px;
+    }
+    
+    .timeline-date {
+        left: 30px;
+        font-size: 11px;
+        padding: 6px 12px;
+    }
+    
+    .timeline-content-wrapper {
+        width: calc(100% - 70px);
+        margin-left: 70px !important;
+    }
+    
+    .timeline-item.right .content-card {
+        border-left: 4px solid var(--user2-color);
+        border-right: none;
+    }
+    
+    .content-card {
+        padding: 20px;
+    }
+    
+    .content-images.count-2,
+    .content-images.count-3,
+    .content-images.count-4,
+    .content-images.count-5,
+    .content-images.count-6 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--timeline-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--timeline-dot);
+}
