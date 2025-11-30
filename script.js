@@ -5,12 +5,18 @@ const CONFIG = {
         'user1': '用户A',
         'user2': '用户B'
     },
-    // 目标时区：太平洋时间（加州）
     targetTimezone: 'America/Los_Angeles'
 };
 
 // 图片显示状态
-let imageDisplayState = 'preview'; // preview, full, hidden
+let imageDisplayState = 'preview';
+
+// 收缩状态存储
+const collapseState = {
+    years: new Set(),
+    months: new Set(),
+    days: new Set()
+};
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -52,61 +58,228 @@ async function loadTimeline() {
     }
 }
 
-// 渲染时间线
+// 渲染时间线（分组展示）
 function renderTimeline(posts) {
     const timelineContent = document.getElementById('timelineContent');
     timelineContent.innerHTML = '';
     
-    let lastDate = null;
-    
-    posts.forEach((post, index) => {
-        const item = createTimelineItem(post, index, lastDate);
-        timelineContent.appendChild(item);
-        
-        // 记录当前日期，用于下一次比较
-        const postDate = convertToTargetTimezone(new Date(post.timestamp));
-        lastDate = formatDateOnly(postDate);
+    // 按年份分组
+    const groupedByYear = {};
+    posts.forEach(post => {
+        const date = convertToTargetTimezone(new Date(post.timestamp));
+        const year = date.getFullYear();
+        if (!groupedByYear[year]) {
+            groupedByYear[year] = [];
+        }
+        groupedByYear[year].push(post);
     });
+    
+    // 渲染每个年份
+    Object.keys(groupedByYear).sort((a, b) => b - a).forEach(year => {
+        const yearSection = createYearSection(year, groupedByYear[year]);
+        timelineContent.appendChild(yearSection);
+    });
+}
+
+// 创建年份区块
+function createYearSection(year, posts) {
+    const section = document.createElement('div');
+    section.className = 'year-section';
+    section.dataset.year = year;
+    
+    // 年份标题
+    const yearHeader = document.createElement('div');
+    yearHeader.className = 'year-header';
+    yearHeader.innerHTML = `
+        <button class="collapse-btn" data-level="year" data-key="${year}">
+            <svg class="collapse-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </button>
+        <h2 class="year-title">${year}</h2>
+        <span class="year-count">${posts.length} 条记录</span>
+    `;
+    section.appendChild(yearHeader);
+    
+    // 月份内容容器
+    const monthsContainer = document.createElement('div');
+    monthsContainer.className = 'months-container';
+    
+    // 按月份分组
+    const groupedByMonth = {};
+    posts.forEach(post => {
+        const date = convertToTargetTimezone(new Date(post.timestamp));
+        const month = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!groupedByMonth[month]) {
+            groupedByMonth[month] = [];
+        }
+        groupedByMonth[month].push(post);
+    });
+    
+    // 渲染每个月份
+    Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a)).forEach(month => {
+        const monthSection = createMonthSection(month, groupedByMonth[month]);
+        monthsContainer.appendChild(monthSection);
+    });
+    
+    section.appendChild(monthsContainer);
+    
+    // 添加折叠事件
+    yearHeader.querySelector('.collapse-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCollapse('year', year, section);
+    });
+    
+    return section;
+}
+
+// 创建月份区块
+function createMonthSection(month, posts) {
+    const section = document.createElement('div');
+    section.className = 'month-section';
+    section.dataset.month = month;
+    
+    const [year, monthNum] = month.split('-');
+    const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
+                       '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    
+    // 月份标题
+    const monthHeader = document.createElement('div');
+    monthHeader.className = 'month-header';
+    monthHeader.innerHTML = `
+        <button class="collapse-btn" data-level="month" data-key="${month}">
+            <svg class="collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </button>
+        <h3 class="month-title">${monthNames[parseInt(monthNum) - 1]}</h3>
+        <span class="month-count">${posts.length} 条</span>
+    `;
+    section.appendChild(monthHeader);
+    
+    // 日期内容容器
+    const daysContainer = document.createElement('div');
+    daysContainer.className = 'days-container';
+    
+    // 按日期分组
+    const groupedByDay = {};
+    posts.forEach(post => {
+        const date = convertToTargetTimezone(new Date(post.timestamp));
+        const day = `${month}-${String(date.getDate()).padStart(2, '0')}`;
+        if (!groupedByDay[day]) {
+            groupedByDay[day] = [];
+        }
+        groupedByDay[day].push(post);
+    });
+    
+    // 渲染每一天
+    Object.keys(groupedByDay).sort((a, b) => b.localeCompare(a)).forEach(day => {
+        const daySection = createDaySection(day, groupedByDay[day]);
+        daysContainer.appendChild(daySection);
+    });
+    
+    section.appendChild(daysContainer);
+    
+    // 添加折叠事件
+    monthHeader.querySelector('.collapse-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCollapse('month', month, section);
+    });
+    
+    return section;
+}
+
+// 创建日期区块
+function createDaySection(day, posts) {
+    const section = document.createElement('div');
+    section.className = 'day-section';
+    section.dataset.day = day;
+    
+    const [year, month, dayNum] = day.split('-');
+    const sampleDate = convertToTargetTimezone(new Date(posts[0].timestamp));
+    const weekday = formatWeekday(sampleDate);
+    
+    // 日期标题
+    const dayHeader = document.createElement('div');
+    dayHeader.className = 'day-header';
+    dayHeader.innerHTML = `
+        <button class="collapse-btn" data-level="day" data-key="${day}">
+            <svg class="collapse-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </button>
+        <h4 class="day-title">${month}.${dayNum} ${weekday}</h4>
+        <span class="day-count">${posts.length} 条</span>
+    `;
+    section.appendChild(dayHeader);
+    
+    // 时间条目容器
+    const postsContainer = document.createElement('div');
+    postsContainer.className = 'posts-container';
+    
+    // 按时间排序并渲染
+    posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+         .forEach((post, index) => {
+        const item = createTimelineItem(post, index);
+        postsContainer.appendChild(item);
+    });
+    
+    section.appendChild(postsContainer);
+    
+    // 添加折叠事件
+    dayHeader.querySelector('.collapse-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCollapse('day', day, section);
+    });
+    
+    return section;
+}
+
+// 切换折叠状态
+function toggleCollapse(level, key, element) {
+    const container = level === 'year' ? '.months-container' : 
+                     level === 'month' ? '.days-container' : 
+                     '.posts-container';
+    
+    const contentEl = element.querySelector(container);
+    const btn = element.querySelector('.collapse-btn');
+    
+    if (collapseState[level + 's'].has(key)) {
+        // 展开
+        collapseState[level + 's'].delete(key);
+        contentEl.style.display = 'block';
+        btn.classList.remove('collapsed');
+    } else {
+        // 折叠
+        collapseState[level + 's'].add(key);
+        contentEl.style.display = 'none';
+        btn.classList.add('collapsed');
+    }
 }
 
 // 转换到目标时区（加州时间）
 function convertToTargetTimezone(date) {
-    // 使用 Intl API 转换时区
     return new Date(date.toLocaleString('en-US', { timeZone: CONFIG.targetTimezone }));
 }
 
 // 创建时间线条目
-function createTimelineItem(post, index, lastDate) {
+function createTimelineItem(post, index) {
     const item = document.createElement('div');
     item.className = `timeline-item ${index % 2 === 0 ? 'left' : 'right'}`;
     
-    // 转换到加州时间
-    const originalDate = new Date(post.timestamp);
-    const targetDate = convertToTargetTimezone(originalDate);
-    
-    // 格式化日期和时间
-    const currentDateStr = formatDateOnly(targetDate);
+    const targetDate = convertToTargetTimezone(new Date(post.timestamp));
     const timeStr = formatTime(targetDate);
-    const weekdayStr = formatWeekday(targetDate);
-    
-    // 判断是否需要显示日期标签（只有日期变化时才显示）
-    const showDateLabel = lastDate !== currentDateStr;
-    
-    // 获取用户名
     const userName = CONFIG.users[post.user] || post.user;
     
-    // 创建HTML
     item.innerHTML = `
-        ${showDateLabel ? `<div class="timeline-date">${currentDateStr} ${weekdayStr}</div>` : `<div class="timeline-date-placeholder"></div>`}
-        <div class="timeline-content-wrapper">
-            <div class="content-card">
-                <div class="card-header">
-                    <div class="user-badge">${userName}</div>
-                    <div class="time-badge">${timeStr}</div>
-                </div>
-                ${post.text ? `<div class="content-text">${formatText(post.text)}</div>` : ''}
-                ${post.images && post.images.length > 0 ? createImagesHTML(post.images) : ''}
+        <div class="timeline-dot"></div>
+        <div class="content-card">
+            <div class="card-header">
+                <div class="user-badge">${userName}</div>
+                <div class="time-badge">${timeStr}</div>
             </div>
+            ${post.text ? `<div class="content-text">${formatText(post.text)}</div>` : ''}
+            ${post.images && post.images.length > 0 ? createImagesHTML(post.images) : ''}
         </div>
     `;
     
@@ -125,14 +298,6 @@ function createImagesHTML(images) {
             `).join('')}
         </div>
     `;
-}
-
-// 只格式化日期（不含时间）
-function formatDateOnly(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}.${month}.${day}`;
 }
 
 // 格式化星期
@@ -168,7 +333,6 @@ function setupImageToggle() {
     const toggleBtn = document.getElementById('toggleImages');
     
     toggleBtn.addEventListener('click', () => {
-        // 循环切换：preview -> full -> hidden -> preview
         if (imageDisplayState === 'preview') {
             imageDisplayState = 'full';
             toggleBtn.setAttribute('data-state', 'full');
@@ -183,7 +347,6 @@ function setupImageToggle() {
             toggleBtn.querySelector('span').textContent = '预览模式';
         }
         
-        // 添加按钮点击动画
         toggleBtn.style.transform = 'scale(0.95)';
         setTimeout(() => {
             toggleBtn.style.transform = 'scale(1)';
@@ -191,10 +354,9 @@ function setupImageToggle() {
     });
 }
 
-// 图片点击放大（可选功能，可以后续添加）
+// 图片点击放大
 document.addEventListener('click', (e) => {
     if (e.target.matches('.image-wrapper img')) {
-        // 这里可以添加图片lightbox功能
         console.log('图片点击:', e.target.src);
     }
 });

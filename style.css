@@ -10,7 +10,7 @@
     --timeline-color: #d4c5b0;
     --timeline-dot: #8b7355;
     
-    /* 用户颜色 - 柔和淡色系 */
+    /* 用户颜色 */
     --user1-color: #b8a394;
     --user1-light: #e8dfd8;
     --user2-color: #94a3b8;
@@ -40,7 +40,6 @@ body {
     overflow-x: hidden;
 }
 
-/* 容器 */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -97,35 +96,19 @@ body {
     transform: scale(1.1);
 }
 
-/* 时间线 */
+/* 时间线容器 */
 .timeline {
     position: relative;
     padding: 40px 0 80px;
-}
-
-.timeline-line {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(to bottom, 
-        transparent 0%, 
-        var(--timeline-color) 5%, 
-        var(--timeline-color) 95%, 
-        transparent 100%);
-    transform: translateX(-50%);
 }
 
 .timeline-content {
     position: relative;
 }
 
-/* 时间线条目 */
-.timeline-item {
-    position: relative;
-    margin-bottom: 80px;
-    opacity: 0;
+/* 年份区块 */
+.year-section {
+    margin-bottom: 60px;
     animation: fadeInUp 0.6s ease forwards;
 }
 
@@ -140,106 +123,187 @@ body {
     }
 }
 
-.timeline-item:nth-child(1) { animation-delay: 0.1s; }
-.timeline-item:nth-child(2) { animation-delay: 0.2s; }
-.timeline-item:nth-child(3) { animation-delay: 0.3s; }
-.timeline-item:nth-child(4) { animation-delay: 0.4s; }
-.timeline-item:nth-child(5) { animation-delay: 0.5s; }
-.timeline-item:nth-child(n+6) { animation-delay: 0.6s; }
+.year-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+    padding: 16px 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    border-left: 4px solid var(--timeline-dot);
+}
 
-/* 时间戳节点 */
-.timeline-date {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    background: var(--bg-primary);
-    padding: 8px 20px;
-    border-radius: 20px;
+.year-title {
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    flex: 1;
+}
+
+.year-count {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+}
+
+/* 月份区块 */
+.month-section {
+    margin-bottom: 40px;
+    margin-left: 40px;
+}
+
+.month-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border-left: 3px solid var(--user1-color);
+}
+
+.month-title {
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.month-count {
     font-size: 13px;
-    font-weight: 600;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+}
+
+/* 日期区块 */
+.day-section {
+    margin-bottom: 30px;
+    margin-left: 40px;
+}
+
+.day-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 8px 16px;
+    background: white;
+    border-radius: 8px;
+    border-left: 2px solid var(--user2-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.day-title {
+    font-size: 16px;
+    font-weight: 500;
     color: var(--text-secondary);
-    border: 2px solid var(--timeline-color);
-    white-space: nowrap;
-    z-index: 2;
-    letter-spacing: 0.5px;
+    flex: 1;
+    font-family: var(--font-sans);
 }
 
-.timeline-date::before {
+.day-count {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+}
+
+/* 折叠按钮 */
+.collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.collapse-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
+
+.collapse-icon {
+    transition: transform 0.3s ease;
+}
+
+.collapse-btn.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+/* 容器 */
+.months-container,
+.days-container,
+.posts-container {
+    transition: all 0.3s ease;
+}
+
+/* 时间线条目 */
+.posts-container {
+    position: relative;
+    padding-left: 40px;
+}
+
+.posts-container::before {
     content: '';
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 10px;
-    height: 10px;
-    background: var(--timeline-dot);
-    border-radius: 50%;
-    z-index: -1;
-}
-
-/* 日期占位符（当不显示日期标签时保持间距） */
-.timeline-date-placeholder {
-    position: absolute;
-    left: 50%;
+    left: 20px;
     top: 0;
-    transform: translateX(-50%);
-    height: 36px;
-    width: 10px;
+    bottom: 0;
+    width: 2px;
+    background: var(--timeline-color);
 }
 
-.timeline-date-placeholder::before {
-    content: '';
+.timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.timeline-dot {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 10px;
-    height: 10px;
+    left: -24px;
+    top: 20px;
+    width: 8px;
+    height: 8px;
     background: var(--timeline-dot);
     border-radius: 50%;
+    border: 2px solid var(--bg-primary);
+    z-index: 1;
 }
 
 /* 内容卡片 */
-.timeline-content-wrapper {
-    width: calc(50% - 60px);
-    padding-top: 50px;
-}
-
-.timeline-item.left .timeline-content-wrapper {
-    margin-left: 0;
-}
-
-.timeline-item.right .timeline-content-wrapper {
-    margin-left: auto;
-}
-
 .content-card {
     background: white;
     border-radius: 12px;
-    padding: 28px;
-    box-shadow: var(--shadow-md);
-    border-left: 4px solid var(--user1-color);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border-left: 3px solid var(--user1-color);
     transition: all 0.3s ease;
-    position: relative;
 }
 
 .timeline-item.right .content-card {
     border-left: none;
-    border-right: 4px solid var(--user2-color);
+    border-right: 3px solid var(--user2-color);
 }
 
 .content-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-/* 用户标识 */
+/* 卡片头部 */
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .user-badge {
@@ -271,14 +335,14 @@ body {
 
 /* 文字内容 */
 .content-text {
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.8;
     color: var(--text-primary);
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .content-text p {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .content-text p:last-child {
@@ -288,8 +352,8 @@ body {
 /* 图片容器 */
 .content-images {
     display: grid;
-    gap: 12px;
-    margin-top: 20px;
+    gap: 10px;
+    margin-top: 16px;
 }
 
 .content-images.count-1 {
@@ -334,16 +398,16 @@ body {
     transition: all 0.3s ease;
 }
 
-/* 预览模式 - 固定高度 */
+/* 预览模式 */
 .toggle-btn[data-state="preview"] ~ .timeline .image-wrapper {
-    height: 180px;
+    height: 150px;
 }
 
 .toggle-btn[data-state="preview"] ~ .timeline .content-images.count-1 .image-wrapper {
-    height: 300px;
+    height: 250px;
 }
 
-/* 完整模式 - 自适应高度 */
+/* 完整模式 */
 .toggle-btn[data-state="full"] ~ .timeline .image-wrapper {
     height: auto;
 }
@@ -394,28 +458,36 @@ body {
         font-size: 24px;
     }
     
-    .timeline-line {
-        left: 30px;
+    .year-title {
+        font-size: 26px;
     }
     
-    .timeline-date {
-        left: 30px;
-        font-size: 11px;
-        padding: 6px 12px;
+    .month-title {
+        font-size: 18px;
     }
     
-    .timeline-content-wrapper {
-        width: calc(100% - 70px);
-        margin-left: 70px !important;
+    .month-section {
+        margin-left: 20px;
     }
     
-    .timeline-item.right .content-card {
-        border-left: 4px solid var(--user2-color);
-        border-right: none;
+    .day-section {
+        margin-left: 20px;
+    }
+    
+    .posts-container {
+        padding-left: 30px;
+    }
+    
+    .posts-container::before {
+        left: 15px;
+    }
+    
+    .timeline-dot {
+        left: -19px;
     }
     
     .content-card {
-        padding: 20px;
+        padding: 16px;
     }
     
     .content-images.count-2,
