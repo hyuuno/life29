@@ -1,243 +1,169 @@
-# 🚀 Life29 快速开始指南
+# Life29 快速开始指南
 
-## 第一步：上传文件到 GitHub
+## 🚀 5分钟快速部署
 
-### 方式A：通过 GitHub 网页上传（最简单）
-
-1. **进入你的 life29 仓库**
-   - 访问：`https://github.com/你的用户名/life29`
-
-2. **上传文件**
-   - 点击 "Add file" → "Upload files"
-   - 将所有文件拖拽到页面（保持文件夹结构）：
-     ```
-     index.html
-     style.css
-     script.js
-     .gitignore
-     README.md
-     data/posts.json
-     images/.gitkeep (创建一个空文件占位)
-     ```
-   - 点击 "Commit changes"
-
-### 方式B：通过命令行（推荐）
+### 方式一：本地运行（最简单）
 
 ```bash
-# 1. 克隆仓库到本地
-git clone https://github.com/你的用户名/life29.git
-cd life29
+# 1. 解压文件
+unzip life29-gdrive.zip
+cd life29-gdrive
 
-# 2. 复制所有文件到这个文件夹
+# 2. 配置 Google API（见下方详细步骤）
+# 编辑 config.js，填入你的客户端 ID
 
-# 3. 提交并推送
+# 3. 启动本地服务器
+python -m http.server 8000
+
+# 4. 打开浏览器
+# 访问 http://localhost:8000
+```
+
+### 方式二：部署到 GitHub Pages（推荐）
+
+```bash
+# 1. 创建 GitHub 仓库
+git init
 git add .
-git commit -m "🎉 初始化时间线网站"
-git push origin main
+git commit -m "Initial commit"
+git remote add origin https://github.com/你的用户名/life29.git
+git push -u origin main
+
+# 2. 在 GitHub 仓库设置中启用 Pages
+# Settings → Pages → Source 选择 main 分支
+
+# 3. 访问
+# https://你的用户名.github.io/life29
 ```
 
-## 第二步：启用 GitHub Pages
+---
 
-1. 进入仓库页面
-2. 点击 **Settings**（设置）
-3. 左侧菜单找到 **Pages**
-4. 在 "Build and deployment" 下：
-   - Source: 选择 **Deploy from a branch**
-   - Branch: 选择 **main** 和 **/ (root)**
-   - 点击 **Save**
+## ⚙️ Google API 配置（核心步骤）
 
-⏳ 等待 1-2 分钟，刷新页面，你会看到：
-```
-Your site is live at https://你的用户名.github.io/life29/
-```
+### 简化版（5步完成）
 
-## 第三步：绑定域名 life29.me
+#### 1️⃣ 访问 Google Cloud Console
+https://console.cloud.google.com/
 
-### 在域名服务商设置 DNS
+#### 2️⃣ 创建项目
+- 点击顶部项目选择器
+- 点击"新建项目"
+- 项目名称：`Life29`
+- 点击"创建"
 
-假设你在阿里云/腾讯云购买的域名，进入域名管理：
+#### 3️⃣ 启用 API
+- 搜索并启用 **Google Drive API**
+- 直接访问：https://console.cloud.google.com/apis/library/drive.googleapis.com
 
-**添加以下记录：**
+#### 4️⃣ 配置 OAuth 同意屏幕
+- 进入：OAuth 同意屏幕
+- 选择"外部"→ 创建
+- 应用名称：`Life29`
+- 用户支持邮箱：你的邮箱
+- 开发者联系信息：你的邮箱
+- 保存并继续（其他都可以跳过）
+- 添加测试用户：你的邮箱
 
-1. **A 记录（根域名）**
-   ```
-   记录类型: A
-   主机记录: @
-   记录值: 185.199.108.153
-   TTL: 600
-   ```
+#### 5️⃣ 创建客户端 ID
+- 进入：凭据 → 创建凭据 → OAuth 客户端 ID
+- 应用类型：**Web 应用**
+- 名称：`Life29`
+- 已获授权的 JavaScript 来源：
+  ```
+  http://localhost:8000
+  https://你的用户名.github.io
+  ```
+- 点击"创建"
+- **复制客户端 ID**
 
-2. **再添加其他 GitHub Pages IP**
-   ```
-   记录类型: A
-   主机记录: @
-   记录值: 185.199.109.153
-   ```
-   ```
-   记录类型: A
-   主机记录: @
-   记录值: 185.199.110.153
-   ```
-   ```
-   记录类型: A
-   主机记录: @
-   记录值: 185.199.111.153
-   ```
-
-3. **CNAME 记录（www子域名）**
-   ```
-   记录类型: CNAME
-   主机记录: www
-   记录值: 你的用户名.github.io
-   ```
-
-### 在 GitHub 设置自定义域名
-
-1. 回到仓库的 Settings → Pages
-2. 在 "Custom domain" 输入：`life29.me`
-3. 点击 **Save**
-4. 勾选 **Enforce HTTPS**（等DNS生效后再勾选）
-
-⏳ 等待 DNS 生效（5分钟到24小时不等）
-
-### 验证域名是否生效
-
-在终端运行：
-```bash
-ping life29.me
-```
-如果返回 `185.199.108.153` 等 IP，说明成功！
-
-## 第四步：添加内容
-
-### 方法1：在 GitHub 网页直接编辑
-
-1. 进入仓库，点击 `data/posts.json`
-2. 点击编辑按钮（铅笔图标 ✏️）
-3. 添加新内容：
-
-```json
-{
-  "posts": [
-    {
-      "id": 1,
-      "user": "user1",
-      "timestamp": "2024-12-01T10:30:00",
-      "text": "这是我的第一条记录！",
-      "images": [
-        "https://你的图片URL.jpg"
-      ]
-    }
-  ]
-}
-```
-
-4. 点击 "Commit changes"
-5. 等待几秒，刷新网站即可看到新内容
-
-### 方法2：本地编辑
-
-```bash
-# 1. 拉取最新代码
-git pull
-
-# 2. 编辑 data/posts.json
-
-# 3. 提交
-git add data/posts.json
-git commit -m "添加新记录"
-git push
-```
-
-## 第五步：上传图片
-
-### 推荐方案：使用免费图床
-
-**ImgBB（推荐）**
-1. 访问：https://imgbb.com/
-2. 点击 "Start uploading"
-3. 选择图片上传
-4. 复制 "Direct link" 链接
-5. 粘贴到 JSON 的 `images` 数组中
-
-**示例：**
-```json
-"images": [
-  "https://i.ibb.co/xxxxxx/photo.jpg"
-]
-```
-
-### 备选方案：放在 GitHub 仓库
-
-1. 在仓库创建 `images` 文件夹
-2. 上传图片文件
-3. 在 JSON 中使用相对路径：
-
-```json
-"images": [
-  "images/photo1.jpg",
-  "images/photo2.jpg"
-]
-```
-
-## 第六步：邀请协作者
-
-1. 进入仓库 → **Settings** → **Collaborators**
-2. 点击 **Add people**
-3. 输入对方的 GitHub 用户名或邮箱
-4. 对方会收到邀请邮件，接受后即可协作
-
-现在你们两个人都可以编辑 `posts.json` 添加内容了！
-
-## 📱 手机端使用
-
-1. 在手机浏览器访问 `life29.me`
-2. 网站自动适配移动端
-3. 点击右上角按钮切换图片显示模式
-
-## 🎨 个性化定制
-
-### 修改用户名称
-
-编辑 `script.js` 第 4-7 行：
+#### 6️⃣ 配置项目
+编辑 `config.js`：
 ```javascript
-users: {
-    'user1': '小明',
-    'user2': '小红'
-}
+const GOOGLE_CONFIG = {
+    clientId: '粘贴你的客户端ID.apps.googleusercontent.com',
+    // ...
+};
 ```
 
-### 修改颜色主题
+---
 
-编辑 `style.css` 开头的颜色变量
+## 📖 详细教程
 
-### 修改字体
+如需图文详细教程，请查看：
+- **GOOGLE_OAUTH_TUTORIAL.md** - OAuth 配置详细步骤
+- **GDRIVE_SETUP.md** - 完整设置说明
 
-在 `index.html` 的 `<head>` 中修改 Google Fonts 链接
+---
 
-## ❓ 常见问题
+## ✅ 完成检查清单
 
-**Q: 为什么网站不显示？**
-A: 检查 GitHub Pages 是否启用，等待几分钟让部署完成
+- [ ] Google Cloud 项目已创建
+- [ ] Google Drive API 已启用
+- [ ] OAuth 同意屏幕已配置
+- [ ] OAuth 客户端 ID 已创建
+- [ ] config.js 已填入客户端 ID
+- [ ] 本地测试成功（能登录）
+- [ ] GitHub 仓库已创建（可选）
+- [ ] GitHub Pages 已启用（可选）
 
-**Q: 为什么域名访问不了？**
-A: DNS 需要时间生效，可能要等几小时
+---
 
-**Q: 如何删除某条记录？**
-A: 编辑 `posts.json`，删除对应的对象即可
+## 🎯 使用流程
 
-**Q: 图片显示不出来？**
-A: 确保图片链接是 HTTPS，且可以直接在浏览器打开
+1. **首次访问**：点击"登录 Google"
+2. **授权**：允许应用访问 Google Drive
+3. **使用**：点击"添加记录"开始记录生活
+4. **分享**：把网址分享给朋友，他们登录后也能看到
 
-**Q: 如何备份数据？**
-A: 所有数据都在 GitHub 仓库中，天然就有版本控制和备份
+---
 
-## 🎉 完成！
+## 💡 重要说明
 
-现在你可以：
-- ✅ 访问 `life29.me` 查看你的时间线
-- ✅ 编辑 `data/posts.json` 添加新内容
-- ✅ 邀请朋友一起协作
-- ✅ 随时随地用手机查看
+### ✅ 数据存储
+- 所有数据存在你的 Google Drive
+- 文件名：`life29-posts.json`
+- 图片文件夹：`life29-images`
 
-享受记录生活的乐趣吧！ 📝✨
+### ✅ 权限说明
+- 应用只能访问自己创建的文件
+- 不会访问你的其他 Google Drive 文件
+- 完全安全
+
+### ✅ 多人使用
+- 每个人都需要登录自己的 Google 账号
+- 所有人共享同一份数据
+- 第一个登录的人会在自己的 Drive 创建文件
+- 其他人需要有该文件的访问权限
+
+### ⚠️ 测试用户限制
+- 应用在"测试"状态时，只有添加的测试用户能登录
+- 如需更多人使用，在 OAuth 同意屏幕添加他们的邮箱
+- 或者发布应用（需要 Google 审核）
+
+---
+
+## 🆘 遇到问题？
+
+### 问题1：提示"此应用未经验证"
+- 点击"高级" → "前往 Life29（不安全）"
+- 这是正常的，因为应用在测试阶段
+
+### 问题2：无法登录
+- 检查 config.js 中的客户端 ID 是否正确
+- 检查是否添加了正确的授权来源 URI
+- 检查该用户是否在测试用户列表中
+
+### 问题3：GitHub Pages 部署后无法登录
+- 确保在 OAuth 客户端添加了 GitHub Pages 的 URL
+- URL 格式：`https://用户名.github.io`（不要加项目名）
+
+---
+
+## 📞 获取帮助
+
+查看详细文档：
+- GOOGLE_OAUTH_TUTORIAL.md
+- GDRIVE_SETUP.md
+- README.md
+
+祝使用愉快！🎉
