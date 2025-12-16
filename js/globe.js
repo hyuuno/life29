@@ -365,19 +365,19 @@ class Globe {
         stars.renderOrder = -100;
         starGroup.add(stars);
         
-        // 给部分星星添加光晕 (约15%的星星)
-        const glowColors = [0xd7e3ee, 0xf1e5e6];
+        // 给部分星星添加光晕 (约15%的星星) - 光晕在星星后面
+        const glowColors = [0x5287a3, 0x663556];
         const glowCount = Math.floor(count * 0.15);
         
         for (let i = 0; i < glowCount; i++) {
             const idx = Math.floor(Math.random() * count);
             const star = starData[idx];
             const color = glowColors[Math.floor(Math.random() * 2)];
-            const glowSize = star.size * 1.2;
+            const glowSize = star.size * 0.2;
             
-            // 使用Sprite创建光晕
+            // 使用Sprite创建光晕 - 在星星后面
             const spriteMaterial = new THREE.SpriteMaterial({
-                map: this.createGlowTexture(color),
+                map: this.createStarGlowTexture(color),
                 transparent: true,
                 blending: THREE.AdditiveBlending,
                 depthWrite: false
@@ -385,8 +385,8 @@ class Globe {
             
             const sprite = new THREE.Sprite(spriteMaterial);
             sprite.position.set(star.x, star.y, star.z);
-            sprite.scale.set(glowSize * 8, glowSize * 8, 1);
-            sprite.renderOrder = -99;
+            sprite.scale.set(glowSize * 15, glowSize * 15, 1);
+            sprite.renderOrder = -101; // 在星星(-100)后面
             starGroup.add(sprite);
         }
         
@@ -409,6 +409,30 @@ class Globe {
         
         gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
         gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.1)`);
+        gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 64, 64);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
+    }
+    
+    createStarGlowTexture(color) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        
+        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        
+        const r = (color >> 16) & 255;
+        const g = (color >> 8) & 255;
+        const b = color & 255;
+        
+        // 中心opacity 0.15 到 外边缘 0
+        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.15)`);
+        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.05)`);
         gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
         
         ctx.fillStyle = gradient;
@@ -694,7 +718,7 @@ class Globe {
         const size = this.config.markerSize;
         const zOffset = 2 + index * 0.3;
         
-        // 1. 白色渐变光晕 - 1.2倍大小，中心0.5向外渐变到0
+        // 1. 白色渐变光晕 - 0.5倍大小，中心0.5向外渐变到0
         const glowTexture = this.createMarkerGlowTexture();
         const glowMaterial = new THREE.SpriteMaterial({
             map: glowTexture,
@@ -702,7 +726,7 @@ class Globe {
             depthWrite: false
         });
         const glow = new THREE.Sprite(glowMaterial);
-        glow.scale.set(size * 1.2 * 3, size * 1.2 * 3, 1);
+        glow.scale.set(size * 0.5 * 6, size * 0.5 * 6, 1);
         glow.renderOrder = 10 + index * 3;
         group.add(glow);
         
