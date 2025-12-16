@@ -404,8 +404,8 @@ body {
 
 /* FAB */
 .fab {
-    position: fixed; bottom: calc(80px + var(--space-xl)); right: var(--space-xl);
-    width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+    position: fixed; bottom: calc(56px + var(--space-lg)); right: var(--space-xl);
+    width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
     background: var(--color-text); color: var(--color-bg); border: none;
     border-radius: var(--radius-full); box-shadow: var(--shadow-lg);
     cursor: pointer; transition: all 0.3s var(--ease-out); z-index: var(--z-panel);
@@ -413,16 +413,17 @@ body {
 .fab:hover { background: var(--color-primary-dark); transform: scale(1.05); }
 .fab.hidden { display: none; }
 
-/* Footer */
+/* Footer - 长条形底部栏 */
 .footer {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
+    position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 var(--space-xl);
-    background: linear-gradient(0deg, var(--color-bg) 60%, transparent 100%);
+    background: linear-gradient(0deg, var(--color-bg) 70%, transparent 100%);
     z-index: var(--z-header);
 }
-.footer-left, .footer-right { min-width: 150px; }
-.footer-right { text-align: right; }
+.footer-left { min-width: 120px; }
+.footer-center { flex: 1; display: flex; justify-content: center; }
+.footer-right { min-width: 120px; text-align: right; }
 
 .user-status {
     font-size: 0.75rem; color: var(--color-text-muted);
@@ -436,36 +437,61 @@ body {
 .user-status.user-yuyu::before { background: var(--color-yuyu); }
 .footer-date { font-size: 0.75rem; color: var(--color-text-muted); }
 
-/* Music Player */
+/* Music Player - 无边框精致长条设计 */
 .music-player {
-    display: flex; align-items: center; gap: var(--space-lg);
-    background: var(--color-bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    padding: var(--space-sm) var(--space-lg); border-radius: var(--radius-full); box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xl);
+    background: transparent;
+    padding: var(--space-sm) 0;
 }
 .player-controls { display: flex; align-items: center; gap: var(--space-xs); }
 .player-btn {
-    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     background: transparent; border: none; border-radius: var(--radius-full);
-    color: var(--color-text-light); cursor: pointer; transition: all 0.2s;
+    color: var(--color-text-muted); cursor: pointer; transition: all 0.2s;
 }
-.player-btn:hover { background: rgba(0,0,0,0.05); color: var(--color-text); }
+.player-btn:hover { color: var(--color-text); transform: scale(1.1); }
+.player-btn:active { transform: scale(0.95); }
 #playPauseBtn .icon-pause { display: none; }
 .music-player.playing #playPauseBtn .icon-play { display: none; }
 .music-player.playing #playPauseBtn .icon-pause { display: block; }
-.player-info { display: flex; flex-direction: column; align-items: center; min-width: 120px; }
-.song-title { font-size: 0.8125rem; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
-.song-time { font-size: 0.6875rem; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.player-info { 
+    display: flex; 
+    align-items: center;
+    gap: var(--space-md);
+    min-width: 180px;
+}
+.song-title { 
+    font-size: 0.75rem; 
+    font-weight: 400; 
+    color: var(--color-text-light);
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    max-width: 140px;
+}
+.song-time { 
+    font-size: 0.6875rem; 
+    color: var(--color-text-muted); 
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+}
 .player-volume { display: flex; align-items: center; gap: var(--space-sm); }
+.volume-btn { color: var(--color-text-muted); }
 .volume-btn .icon-mute { display: none; }
 .volume-btn.muted .icon-volume { display: none; }
 .volume-btn.muted .icon-mute { display: block; }
 .volume-slider {
-    width: 60px; height: 4px; -webkit-appearance: none; appearance: none;
-    background: rgba(0,0,0,0.1); border-radius: var(--radius-full); cursor: pointer;
+    width: 50px; height: 3px; -webkit-appearance: none; appearance: none;
+    background: var(--color-text-muted); opacity: 0.3;
+    border-radius: var(--radius-full); cursor: pointer;
+    transition: opacity 0.2s;
 }
+.volume-slider:hover { opacity: 0.5; }
 .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 12px; height: 12px;
-    background: var(--color-primary); border-radius: var(--radius-full); cursor: pointer;
+    -webkit-appearance: none; width: 10px; height: 10px;
+    background: var(--color-text-light); border-radius: var(--radius-full); cursor: pointer;
     transition: transform 0.2s;
 }
 .volume-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
@@ -474,17 +500,18 @@ body {
 @media (max-width: 768px) {
     .header { padding: 0 var(--space-md); height: 64px; }
     .nav { display: none; }
-    .left-panel { left: var(--space-md); bottom: calc(80px + var(--space-md)); top: auto; transform: none; }
+    .left-panel { left: var(--space-md); bottom: calc(56px + var(--space-md)); top: auto; transform: none; }
     .panel-content { padding: var(--space-lg); }
     .city-list-panel { width: 100%; }
     .modal-content { padding: var(--space-lg); margin: var(--space-md); }
     .form-row { grid-template-columns: 1fr; }
-    .footer { padding: 0 var(--space-md); }
+    .footer { padding: 0 var(--space-md); height: 48px; }
     .footer-left, .footer-right { min-width: auto; }
-    .music-player { padding: var(--space-xs) var(--space-md); gap: var(--space-sm); }
-    .player-info { min-width: 80px; }
-    .song-title { max-width: 80px; font-size: 0.75rem; }
+    .music-player { gap: var(--space-md); }
+    .player-info { min-width: 100px; }
+    .song-title { max-width: 80px; font-size: 0.6875rem; }
     .volume-slider { width: 40px; }
+    .fab { bottom: calc(48px + var(--space-md)); right: var(--space-md); width: 44px; height: 44px; }
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }

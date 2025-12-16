@@ -1,6 +1,6 @@
 /**
  * Life29 - 3D 地球模块
- * 精确地图版本
+ * 使用GeoJSON数据渲染精确地图
  */
 
 class Globe {
@@ -11,10 +11,11 @@ class Globe {
         this.hoveredMarker = null;
         this.homeCity = null;
         this.isHovering = false;
+        this.geoDataLoaded = false;
         
         this.config = {
             radius: 180,
-            markerSize: 3, // 缩小一半
+            markerSize: 3,
             segments: 64,
             autoRotate: true,
             autoRotateSpeed: 0.0006,
@@ -63,197 +64,13 @@ class Globe {
         this.init();
     }
     
-    // 中国省份数据 - 简化但准确的多边形
-    getChinaProvinces() {
-        const colors = {
-            pink: 0xf8d0d8, green: 0xc8e8c8, yellow: 0xf8f0c0,
-            blue: 0xc8d8f0, orange: 0xf8e0c0, purple: 0xe0d0e8
-        };
-        return [
-            // 黑龙江
-            { coords: [[53.5,123],[52,127],[50,129],[48,134],[46,133],[45,131],[43,130],[45,128],[47,124],[49,121],[51,120],[53,121],[53.5,123]], color: colors.green },
-            // 吉林
-            { coords: [[46,123],[47,124],[45,128],[44,129],[43,128],[42,128],[41,126],[42,124],[44,122],[46,123]], color: colors.pink },
-            // 辽宁
-            { coords: [[43,120],[44,122],[42,124],[41,126],[40,124],[39,122],[39,120],[40,119],[42,119],[43,120]], color: colors.blue },
-            // 内蒙古
-            { coords: [[53,120],[51,120],[49,118],[47,119],[45,116],[43,115],[41,114],[40,112],[39,108],[40,106],[42,102],[44,98],[46,93],[48,90],[50,89],[49,97],[51,108],[53,115],[53,120]], color: colors.yellow },
-            // 新疆
-            { coords: [[49,88],[48,92],[47,96],[44,96],[42,93],[40,88],[38,82],[36,79],[35,76],[36,74],[38,74],[40,76],[42,80],[44,82],[47,84],[49,88]], color: colors.orange },
-            // 西藏
-            { coords: [[36,79],[34,80],[32,80],[30,82],[28,86],[27,90],[28,94],[30,97],[32,99],[34,96],[36,90],[37,84],[36,79]], color: colors.blue },
-            // 青海
-            { coords: [[39,96],[38,100],[36,103],[34,102],[33,100],[32,98],[34,94],[36,92],[38,94],[39,96]], color: colors.blue },
-            // 甘肃
-            { coords: [[42,100],[40,102],[38,104],[36,106],[35,105],[34,104],[35,102],[37,100],[39,98],[41,98],[42,100]], color: colors.yellow },
-            // 宁夏
-            { coords: [[39,105],[39,107],[38,107],[37,106],[37,105],[38,105],[39,105]], color: colors.blue },
-            // 陕西
-            { coords: [[39,108],[39,111],[37,111],[35,111],[34,110],[33,108],[34,106],[36,106],[38,107],[39,108]], color: colors.orange },
-            // 山西
-            { coords: [[40,111],[40,114],[38,114],[36,113],[35,112],[36,111],[38,111],[40,111]], color: colors.yellow },
-            // 河北
-            { coords: [[42,115],[42,118],[40,119],[39,118],[38,117],[37,116],[38,115],[40,114],[42,115]], color: colors.pink },
-            // 山东
-            { coords: [[38,115],[38,120],[37,122],[35,121],[34,120],[35,117],[37,116],[38,115]], color: colors.yellow },
-            // 河南
-            { coords: [[36,111],[36,115],[34,116],[32,115],[32,112],[34,111],[36,111]], color: colors.yellow },
-            // 江苏
-            { coords: [[35,117],[35,120],[33,121],[32,121],[31,119],[32,117],[34,117],[35,117]], color: colors.yellow },
-            // 安徽
-            { coords: [[34,116],[34,118],[32,119],[30,118],[30,116],[32,115],[34,116]], color: colors.green },
-            // 浙江
-            { coords: [[31,119],[31,122],[29,122],[28,121],[27,120],[28,118],[30,118],[31,119]], color: colors.pink },
-            // 江西
-            { coords: [[30,114],[30,117],[28,118],[26,117],[25,115],[26,114],[28,114],[30,114]], color: colors.pink },
-            // 福建
-            { coords: [[28,117],[28,120],[26,120],[24,119],[24,117],[26,117],[28,117]], color: colors.pink },
-            // 台湾
-            { coords: [[25,120],[26,122],[24,122],[22,121],[22,120],[24,120],[25,120]], color: colors.green },
-            // 湖北
-            { coords: [[33,109],[33,114],[31,116],[29,114],[29,110],[31,109],[33,109]], color: colors.orange },
-            // 湖南
-            { coords: [[30,109],[30,114],[27,114],[25,112],[26,109],[28,109],[30,109]], color: colors.orange },
-            // 广东
-            { coords: [[25,112],[25,117],[23,117],[21,114],[21,111],[23,110],[25,112]], color: colors.pink },
-            // 广西
-            { coords: [[26,105],[26,111],[23,110],[21,108],[22,105],[24,105],[26,105]], color: colors.pink },
-            // 海南
-            { coords: [[20,109],[20,111],[19,111],[18,110],[18,109],[19,109],[20,109]], color: colors.orange },
-            // 四川
-            { coords: [[34,102],[34,108],[31,108],[28,106],[27,103],[29,100],[32,100],[34,102]], color: colors.orange },
-            // 贵州
-            { coords: [[29,104],[29,109],[26,109],[25,107],[26,104],[28,104],[29,104]], color: colors.orange },
-            // 云南
-            { coords: [[29,98],[29,105],[25,105],[22,103],[21,100],[24,98],[27,98],[29,98]], color: colors.yellow },
-            // 北京
-            { coords: [[40.5,116],[40.5,117],[40,117],[39.5,117],[39.5,116],[40,116],[40.5,116]], color: colors.pink },
-            // 天津
-            { coords: [[40,117],[40,118],[39.5,118.5],[39,118],[39,117],[39.5,117],[40,117]], color: colors.green },
-            // 上海
-            { coords: [[31.5,121],[31.5,122],[31,122],[30.8,121.5],[31,121],[31.5,121]], color: colors.yellow },
-            // 重庆
-            { coords: [[32,106],[32,109],[30,110],[29,109],[29,107],[30,106],[32,106]], color: colors.blue },
-            // 香港
-            { coords: [[22.5,113.8],[22.5,114.4],[22.2,114.4],[22.2,113.8],[22.5,113.8]], color: colors.yellow },
-            // 澳门
-            { coords: [[22.25,113.5],[22.25,113.6],[22.1,113.6],[22.1,113.5],[22.25,113.5]], color: colors.green }
-        ];
-    }
-    
-    // 美国州数据
-    getUSStates() {
-        const colors = {
-            pink: 0xf8d0d8, green: 0xc8e8c8, yellow: 0xf8f0c0,
-            blue: 0xc8d8f0, purple: 0xe0d0e8
-        };
-        return [
-            // Washington
-            { coords: [[49,-124],[49,-117],[46,-117],[46,-120],[47,-122],[48,-123],[49,-124]], color: colors.green },
-            // Oregon
-            { coords: [[46,-124],[46,-117],[42,-117],[42,-121],[43,-124],[46,-124]], color: colors.green },
-            // California
-            { coords: [[42,-124],[42,-120],[39,-120],[35,-115],[33,-117],[32.5,-117],[34,-120],[36,-122],[39,-123],[42,-124]], color: colors.green },
-            // Nevada
-            { coords: [[42,-120],[42,-114],[35,-114],[36,-117],[39,-120],[42,-120]], color: colors.purple },
-            // Idaho
-            { coords: [[49,-117],[49,-111],[44,-111],[42,-114],[42,-117],[46,-117],[49,-117]], color: colors.green },
-            // Montana
-            { coords: [[49,-116],[49,-104],[45,-104],[45,-111],[46,-113],[47,-115],[49,-116]], color: colors.yellow },
-            // Wyoming
-            { coords: [[45,-111],[45,-104],[41,-104],[41,-111],[45,-111]], color: colors.pink },
-            // Utah
-            { coords: [[42,-114],[42,-109],[37,-109],[37,-114],[42,-114]], color: colors.purple },
-            // Colorado
-            { coords: [[41,-109],[41,-102],[37,-102],[37,-109],[41,-109]], color: colors.pink },
-            // Arizona
-            { coords: [[37,-114],[37,-109],[31.5,-109],[32,-111],[32.5,-114],[37,-114]], color: colors.yellow },
-            // New Mexico
-            { coords: [[37,-109],[37,-103],[32,-103],[31.5,-109],[37,-109]], color: colors.pink },
-            // North Dakota
-            { coords: [[49,-104],[49,-97],[46,-97],[46,-104],[49,-104]], color: colors.yellow },
-            // South Dakota
-            { coords: [[46,-104],[46,-97],[43,-97],[43,-104],[46,-104]], color: colors.purple },
-            // Nebraska
-            { coords: [[43,-104],[43,-97],[40,-97],[40,-102],[41,-104],[43,-104]], color: colors.yellow },
-            // Kansas
-            { coords: [[40,-102],[40,-95],[37,-95],[37,-102],[40,-102]], color: colors.pink },
-            // Oklahoma
-            { coords: [[37,-103],[37,-95],[34,-95],[33.5,-97],[34,-100],[36.5,-100],[36.5,-103],[37,-103]], color: colors.green },
-            // Texas
-            { coords: [[36.5,-103],[36.5,-100],[34,-100],[33.5,-97],[34,-95],[30,-94],[28,-97],[26,-97],[26,-99],[29,-101],[32,-106],[36.5,-103]], color: colors.purple },
-            // Minnesota
-            { coords: [[49,-97],[49,-90],[47,-90],[44,-92],[43,-96],[46,-97],[49,-97]], color: colors.pink },
-            // Iowa
-            { coords: [[43.5,-96],[44,-92],[43,-90],[41,-91],[40.5,-95],[43.5,-96]], color: colors.yellow },
-            // Missouri
-            { coords: [[40.5,-95],[41,-91],[40,-89],[38,-90],[36,-90],[36,-94],[39,-95],[40.5,-95]], color: colors.green },
-            // Arkansas
-            { coords: [[36.5,-94],[36,-90],[35,-90],[33,-91],[33,-94],[36.5,-94]], color: colors.pink },
-            // Louisiana
-            { coords: [[33,-94],[33,-91],[31,-90],[29,-90],[29,-94],[33,-94]], color: colors.purple },
-            // Wisconsin
-            { coords: [[47,-92],[47,-87],[45,-87],[43,-87],[43,-91],[45,-92],[47,-92]], color: colors.green },
-            // Illinois
-            { coords: [[42.5,-91],[43,-87],[41,-87],[38,-88],[37,-89],[37,-91],[40,-91],[42.5,-91]], color: colors.yellow },
-            // Michigan
-            { coords: [[46,-90],[46,-84],[44,-84],[42,-83],[42,-86],[44,-87],[45,-88],[46,-90]], color: colors.green },
-            // Indiana
-            { coords: [[41.8,-88],[42,-85],[40,-85],[38,-86],[37.8,-88],[41.8,-88]], color: colors.pink },
-            // Ohio
-            { coords: [[42,-85],[42,-81],[40,-81],[39,-81],[38,-82],[38,-85],[42,-85]], color: colors.yellow },
-            // Kentucky
-            { coords: [[39,-89],[39,-83],[38,-82],[36.5,-84],[36.5,-89],[39,-89]], color: colors.green },
-            // Tennessee
-            { coords: [[36.7,-90],[36.7,-82],[35,-82],[35,-88],[35,-90],[36.7,-90]], color: colors.yellow },
-            // Mississippi
-            { coords: [[35,-91],[35,-88],[32,-88],[30.5,-89],[30.5,-91],[35,-91]], color: colors.purple },
-            // Alabama
-            { coords: [[35,-88],[35,-85],[32,-85],[30.5,-88],[35,-88]], color: colors.pink },
-            // Georgia
-            { coords: [[35,-85],[35,-81],[32,-81],[30.5,-82],[30.5,-85],[35,-85]], color: colors.green },
-            // Florida
-            { coords: [[31,-87.5],[31,-82],[30,-81],[27,-80],[25,-80],[25,-82],[28,-84],[30,-86],[31,-87.5]], color: colors.purple },
-            // South Carolina
-            { coords: [[35,-83],[35,-79],[33,-79],[32,-80],[32,-81.5],[34,-83],[35,-83]], color: colors.pink },
-            // North Carolina
-            { coords: [[36.5,-84],[36.5,-76],[35,-76],[34,-78],[35,-81],[35,-83],[36.5,-84]], color: colors.green },
-            // Virginia
-            { coords: [[39.5,-83],[39,-78],[38.5,-76],[37,-76],[36.5,-76],[36.5,-83],[39.5,-83]], color: colors.pink },
-            // West Virginia
-            { coords: [[40,-81],[40,-78],[39,-78],[38,-79],[37.5,-81],[39,-82],[40,-81]], color: colors.purple },
-            // Pennsylvania
-            { coords: [[42,-80],[42,-75],[40,-75],[40,-80],[42,-80]], color: colors.green },
-            // New York
-            { coords: [[45,-79],[45,-73],[43,-73],[42,-74],[42,-79],[43,-79],[45,-79]], color: colors.purple },
-            // Vermont
-            { coords: [[45,-73],[45,-71.5],[43,-71.5],[43,-73],[45,-73]], color: colors.green },
-            // New Hampshire
-            { coords: [[45,-71.5],[45,-71],[43.5,-70.5],[43,-71],[43,-71.5],[45,-71.5]], color: colors.yellow },
-            // Maine
-            { coords: [[47,-71],[47,-67],[45,-67],[44,-69],[43.5,-70.5],[45,-71],[47,-71]], color: colors.purple },
-            // Massachusetts
-            { coords: [[42.8,-73.5],[42.8,-70],[41.5,-70],[41.5,-71],[42,-73.5],[42.8,-73.5]], color: colors.green },
-            // Rhode Island
-            { coords: [[42,-71.8],[42,-71.2],[41.3,-71.2],[41.3,-71.8],[42,-71.8]], color: colors.yellow },
-            // Connecticut
-            { coords: [[42.1,-73.7],[42.1,-72],[41,-72],[41,-73.7],[42.1,-73.7]], color: colors.yellow },
-            // New Jersey
-            { coords: [[41.4,-75],[41.4,-74],[40,-74],[39,-74.5],[39,-75],[40,-75],[41.4,-75]], color: colors.yellow },
-            // Delaware
-            { coords: [[39.8,-75.8],[39.8,-75.1],[38.5,-75.1],[38.5,-75.8],[39.8,-75.8]], color: colors.blue },
-            // Maryland
-            { coords: [[39.7,-79],[39.5,-76],[39,-76],[38,-76],[38.5,-76.5],[39,-78],[39.7,-79]], color: colors.pink }
-        ];
-    }
-    
-    init() {
+    async init() {
         try {
             this.setupScene();
             this.createStars();
             this.createGlobe();
             this.createAtmosphere();
-            this.createCountryMaps();
+            await this.loadGeoData();
             this.bindEvents();
             this.animate();
         } catch (error) {
@@ -298,14 +115,11 @@ class Globe {
             return;
         }
         
-        // Dark mode: 特殊星星效果
         const count = 1500;
         const starGroup = new THREE.Group();
-        
-        // 创建星星点
         const positions = [];
         const sizes = [];
-        const starData = []; // 保存每颗星的信息用于光晕
+        const starData = [];
         
         for (let i = 0; i < count; i++) {
             const r = 700 + Math.random() * 500;
@@ -318,15 +132,8 @@ class Globe {
             
             positions.push(x, y, z);
             
-            // 一半3px，一半随机2-6px
-            let size;
-            if (i < count / 2) {
-                size = 3;
-            } else {
-                size = 2 + Math.random() * 4;
-            }
+            let size = i < count / 2 ? 3 : 2 + Math.random() * 4;
             sizes.push(size);
-            
             starData.push({ x, y, z, size });
         }
         
@@ -334,7 +141,6 @@ class Globe {
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
         
-        // 星星材质
         const starMaterial = new THREE.ShaderMaterial({
             uniforms: {},
             vertexShader: `
@@ -365,7 +171,7 @@ class Globe {
         stars.renderOrder = -100;
         starGroup.add(stars);
         
-        // 给部分星星添加光晕 (约15%的星星) - 光晕在星星后面
+        // 15%星星添加光晕
         const glowColors = [0x5287a3, 0x663556];
         const glowCount = Math.floor(count * 0.15);
         
@@ -375,7 +181,6 @@ class Globe {
             const color = glowColors[Math.floor(Math.random() * 2)];
             const glowSize = star.size * 0.2;
             
-            // 使用Sprite创建光晕 - 在星星后面
             const spriteMaterial = new THREE.SpriteMaterial({
                 map: this.createStarGlowTexture(color),
                 transparent: true,
@@ -386,36 +191,12 @@ class Globe {
             const sprite = new THREE.Sprite(spriteMaterial);
             sprite.position.set(star.x, star.y, star.z);
             sprite.scale.set(glowSize * 15, glowSize * 15, 1);
-            sprite.renderOrder = -101; // 在星星(-100)后面
+            sprite.renderOrder = -101;
             starGroup.add(sprite);
         }
         
         this.stars = starGroup;
         this.scene.add(starGroup);
-    }
-    
-    createGlowTexture(color) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        
-        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-        
-        // 解析颜色
-        const r = (color >> 16) & 255;
-        const g = (color >> 8) & 255;
-        const b = color & 255;
-        
-        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
-        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.1)`);
-        gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 64, 64);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        return texture;
     }
     
     createStarGlowTexture(color) {
@@ -425,12 +206,10 @@ class Globe {
         const ctx = canvas.getContext('2d');
         
         const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-        
         const r = (color >> 16) & 255;
         const g = (color >> 8) & 255;
         const b = color & 255;
         
-        // 中心opacity 0.3 到 外边缘 0
         gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
         gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.1)`);
         gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
@@ -438,8 +217,7 @@ class Globe {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 64, 64);
         
-        const texture = new THREE.CanvasTexture(canvas);
-        return texture;
+        return new THREE.CanvasTexture(canvas);
     }
     
     createLightModeStars() {
@@ -494,7 +272,7 @@ class Globe {
         const mat = new THREE.LineBasicMaterial({ 
             color: isDark ? 0x2a2622 : 0xc5c0ba,
             transparent: true, 
-            opacity: 0.25
+            opacity: 0.2
         });
         
         for (let lat = -60; lat <= 60; lat += 30) {
@@ -530,83 +308,86 @@ class Globe {
         }
     }
     
-    createCountryMaps() {
+    async loadGeoData() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         
-        // 绘制中国省份
-        const chinaProvinces = this.getChinaProvinces();
-        chinaProvinces.forEach(province => {
-            this.drawFilledRegion(province.coords, province.color, isDark);
-        });
-        
-        // 绘制美国州
-        const usStates = this.getUSStates();
-        usStates.forEach(state => {
-            this.drawFilledRegion(state.coords, state.color, isDark);
-        });
+        try {
+            // 加载中国GeoJSON
+            const chinaRes = await fetch('data/china.geojson');
+            const chinaData = await chinaRes.json();
+            this.renderGeoJSON(chinaData, isDark);
+            
+            // 加载美国GeoJSON
+            const usaRes = await fetch('data/usa.geojson');
+            const usaData = await usaRes.json();
+            this.renderGeoJSON(usaData, isDark);
+            
+            this.geoDataLoaded = true;
+        } catch (error) {
+            console.error('Failed to load GeoJSON:', error);
+        }
     }
     
-    drawFilledRegion(coords, fillColor, isDark) {
-        // 将坐标转换为3D点
-        const points = coords.map(([lat, lng]) => 
-            this.latLngToVector3(lat, lng, this.config.radius + 0.3)
-        );
-        
-        // 绘制填充区域 (使用多个三角形)
-        if (points.length >= 3) {
-            const shape = new THREE.Shape();
+    renderGeoJSON(geojson, isDark) {
+        geojson.features.forEach(feature => {
+            const coords = feature.geometry.coordinates[0];
+            const colorHex = feature.properties.color;
+            const color = parseInt(colorHex.replace('#', ''), 16);
             
-            // 将3D点投影到2D进行形状创建
-            const center = this.latLngToVector3(
-                coords.reduce((s, c) => s + c[0], 0) / coords.length,
-                coords.reduce((s, c) => s + c[1], 0) / coords.length,
-                this.config.radius + 0.3
-            );
+            // 调整颜色亮度
+            const adjustedColor = isDark ? this.darkenColor(color, 0.35) : color;
             
-            // 创建填充材质
-            const adjustedColor = isDark ? this.darkenColor(fillColor, 0.3) : fillColor;
-            const fillMaterial = new THREE.MeshBasicMaterial({
-                color: adjustedColor,
-                transparent: true,
-                opacity: isDark ? 0.4 : 0.6,
-                side: THREE.DoubleSide,
-                depthWrite: false
+            // 转换坐标到3D点
+            const points3D = coords.map(coord => {
+                const lng = coord[0];
+                const lat = coord[1];
+                return this.latLngToVector3(lat, lng, this.config.radius + 0.3);
             });
             
-            // 使用简化的方法：创建多个小三角形来填充
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            
-            for (let i = 1; i < points.length - 1; i++) {
-                vertices.push(
-                    points[0].x, points[0].y, points[0].z,
-                    points[i].x, points[i].y, points[i].z,
-                    points[i + 1].x, points[i + 1].y, points[i + 1].z
-                );
+            // 绘制填充区域
+            if (points3D.length >= 3) {
+                const fillMaterial = new THREE.MeshBasicMaterial({
+                    color: adjustedColor,
+                    transparent: true,
+                    opacity: isDark ? 0.5 : 0.65,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+                
+                // 创建三角形网格填充
+                const vertices = [];
+                for (let i = 1; i < points3D.length - 1; i++) {
+                    vertices.push(
+                        points3D[0].x, points3D[0].y, points3D[0].z,
+                        points3D[i].x, points3D[i].y, points3D[i].z,
+                        points3D[i + 1].x, points3D[i + 1].y, points3D[i + 1].z
+                    );
+                }
+                
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+                geometry.computeVertexNormals();
+                
+                const mesh = new THREE.Mesh(geometry, fillMaterial);
+                mesh.renderOrder = 2;
+                this.globeGroup.add(mesh);
             }
             
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geometry.computeVertexNormals();
+            // 绘制边框线
+            const borderColor = isDark ? 0x5a5652 : 0x9a9692;
+            const borderMaterial = new THREE.LineBasicMaterial({
+                color: borderColor,
+                transparent: true,
+                opacity: isDark ? 0.7 : 0.8
+            });
             
-            const mesh = new THREE.Mesh(geometry, fillMaterial);
-            mesh.renderOrder = 2;
-            this.globeGroup.add(mesh);
-        }
-        
-        // 绘制边框
-        const borderColor = isDark ? 0x4a4642 : 0x888480;
-        const borderMaterial = new THREE.LineBasicMaterial({
-            color: borderColor,
-            transparent: true,
-            opacity: 0.7
+            const borderLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints(points3D),
+                borderMaterial
+            );
+            borderLine.renderOrder = 3;
+            this.globeGroup.add(borderLine);
         });
-        
-        const borderLine = new THREE.Line(
-            new THREE.BufferGeometry().setFromPoints(points),
-            borderMaterial
-        );
-        borderLine.renderOrder = 3;
-        this.globeGroup.add(borderLine);
     }
     
     darkenColor(color, factor) {
@@ -679,12 +460,7 @@ class Globe {
                 }
                 
                 if (!overlapping) {
-                    markerPositions.push({ 
-                        pos: testPos, 
-                        city,
-                        lat: testLat,
-                        lng: testLng
-                    });
+                    markerPositions.push({ pos: testPos, city, lat: testLat, lng: testLng });
                     break;
                 }
                 
@@ -698,12 +474,7 @@ class Globe {
             }
             
             if (attempts >= 10) {
-                markerPositions.push({ 
-                    pos: basePos, 
-                    city,
-                    lat: city.lat,
-                    lng: city.lng
-                });
+                markerPositions.push({ pos: basePos, city, lat: city.lat, lng: city.lng });
             }
         });
         
@@ -718,7 +489,7 @@ class Globe {
         const size = this.config.markerSize;
         const zOffset = 2 + index * 0.3;
         
-        // 1. 白色渐变光晕 - 0.5倍大小，中心0.5向外渐变到0
+        // 白色渐变光晕
         const glowTexture = this.createMarkerGlowTexture();
         const glowMaterial = new THREE.SpriteMaterial({
             map: glowTexture,
@@ -730,7 +501,7 @@ class Globe {
         glow.renderOrder = 10 + index * 3;
         group.add(glow);
         
-        // 2. 脉动环
+        // 脉动环
         const ringGeometry = new THREE.RingGeometry(size * 0.85, size * 1.0, 32);
         const ringMaterial = new THREE.MeshBasicMaterial({
             color: markerColor,
@@ -743,7 +514,7 @@ class Globe {
         ring.renderOrder = 11 + index * 3;
         group.add(ring);
         
-        // 3. 主标记
+        // 主标记
         const markerGeometry = new THREE.CircleGeometry(size * 0.6, 32);
         const markerMaterial = new THREE.MeshBasicMaterial({
             color: markerColor,
@@ -762,14 +533,7 @@ class Globe {
         
         this.globeGroup.add(group);
         
-        this.markers.push({ 
-            group, 
-            mesh: marker, 
-            ring,
-            glow,
-            city, 
-            pulsePhase: Math.random() * Math.PI * 2 
-        });
+        this.markers.push({ group, mesh: marker, ring, glow, city, pulsePhase: Math.random() * Math.PI * 2 });
     }
     
     createMarkerGlowTexture() {
@@ -924,9 +688,11 @@ class Globe {
             this.globe.material.color.setHex(isDark ? 0x1a1816 : 0xdedad5);
         }
         
-        // 重建星星
+        // 清除旧的地图和重新加载
+        // 这里简单处理，完整实现需要清除所有地图mesh
+        
         if (this.stars) {
-            if (this.stars.isGroup) {
+            if (this.stars.isGroup || this.stars.type === 'Group') {
                 this.stars.children.forEach(child => {
                     if (child.geometry) child.geometry.dispose();
                     if (child.material) {
@@ -941,7 +707,6 @@ class Globe {
             this.scene.remove(this.stars);
         }
         this.createStars();
-        
         this.updateCities(this.cities);
     }
     
