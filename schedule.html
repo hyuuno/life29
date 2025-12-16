@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-bg="gray">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life29 · 做咩</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
+    <style>
+        .schedule-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 40px 80px;
+            min-height: 100vh;
+        }
+        
+        .schedule-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .schedule-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--color-text);
+        }
+        
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .week-nav button {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
+        }
+        
+        .week-nav button:hover {
+            color: var(--color-text);
+        }
+        
+        .week-label {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .schedule-table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            background: var(--color-bg-card);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+        
+        .schedule-table th,
+        .schedule-table td {
+            border: 1px solid var(--color-border);
+            padding: 0;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .schedule-table th {
+            padding: 16px 12px;
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: var(--color-text-light);
+            background: var(--color-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .schedule-table th.time-col {
+            width: 70px;
+            background: var(--color-bg);
+        }
+        
+        .schedule-table th .day-name {
+            font-size: 0.9rem;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+        
+        .schedule-table th .day-date {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+        
+        .time-cell {
+            padding: 8px;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            background: var(--color-bg);
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .schedule-cell {
+            min-height: 36px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        
+        .schedule-cell:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        
+        .schedule-cell.editing {
+            background: rgba(0,0,0,0.03);
+        }
+        
+        .cell-content {
+            display: block;
+            width: 100%;
+            min-height: 36px;
+            padding: 6px 8px;
+            font-size: 0.8rem;
+            color: var(--color-text);
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            text-align: left;
+            line-height: 1.4;
+        }
+        
+        .cell-content::placeholder {
+            color: transparent;
+        }
+        
+        .schedule-cell:hover .cell-content::placeholder {
+            color: var(--color-text-muted);
+            opacity: 0.5;
+        }
+        
+        /* 颜色选择器 */
+        .color-picker-popup {
+            position: fixed;
+            display: none;
+            background: var(--color-bg-card);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            gap: 6px;
+            flex-wrap: wrap;
+            width: 140px;
+        }
+        
+        .color-picker-popup.show {
+            display: flex;
+        }
+        
+        .color-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.active {
+            border-color: var(--color-text);
+        }
+        
+        .color-option.clear {
+            background: var(--color-bg);
+            border: 1px dashed var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--color-text-muted);
+        }
+        
+        /* 预设颜色 */
+        .bg-orange { background: #f8e0c0; }
+        .bg-blue { background: #c8d8f0; }
+        .bg-green { background: #c8e8c8; }
+        .bg-pink { background: #f8d0d8; }
+        .bg-purple { background: #e0d0e8; }
+        .bg-yellow { background: #f8f0c0; }
+        .bg-teal { background: #c8e8e0; }
+        .bg-gray { background: #e8e8e8; }
+        
+        [data-theme="dark"] .bg-orange { background: #4a3c28; }
+        [data-theme="dark"] .bg-blue { background: #2a3a4a; }
+        [data-theme="dark"] .bg-green { background: #2a3a2a; }
+        [data-theme="dark"] .bg-pink { background: #4a3038; }
+        [data-theme="dark"] .bg-purple { background: #3a2a3a; }
+        [data-theme="dark"] .bg-yellow { background: #3a3828; }
+        [data-theme="dark"] .bg-teal { background: #2a3a38; }
+        [data-theme="dark"] .bg-gray { background: #2a2a2a; }
+        
+        /* 工具栏 */
+        .schedule-toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .toolbar-btn {
+            padding: 8px 16px;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .schedule-container {
+                padding: 80px 16px 60px;
+            }
+            
+            .schedule-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    
+    <header class="header">
+        <a href="index.html" class="logo">
+            <span class="logo-text">Life</span>
+            <span class="logo-number">29</span>
+        </a>
+        <nav class="nav">
+            <a href="index.html" class="nav-link">地球</a>
+            <a href="#" class="nav-link">时间线</a>
+            <a href="#" class="nav-link">回忆</a>
+            <a href="schedule.html" class="nav-link active">做咩</a>
+            <a href="relax.html" class="nav-link">Relax</a>
+        </nav>
+        <div class="header-actions">
+            <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
+    </header>
+    
+    <main class="schedule-container">
+        <div class="schedule-header">
+            <h1 class="schedule-title">小魏在干嘛？</h1>
+            <div class="week-nav">
+                <button id="prevWeek" title="上一周">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <span class="week-label" id="weekLabel">Week of April 11</span>
+                <button id="nextWeek" title="下一周">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="schedule-toolbar">
+            <button class="toolbar-btn" id="clearAllBtn">清空本周</button>
+            <button class="toolbar-btn" id="saveBtn">保存</button>
+        </div>
+        
+        <div class="schedule-table-wrapper">
+            <table class="schedule-table" id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th class="time-col"></th>
+                        <th><div class="day-name">MONDAY</div><div class="day-date" id="mon-date">4/11</div></th>
+                        <th><div class="day-name">TUESDAY</div><div class="day-date" id="tue-date">4/12</div></th>
+                        <th><div class="day-name">WEDNESDAY</div><div class="day-date" id="wed-date">4/13</div></th>
+                        <th><div class="day-name">THURSDAY</div><div class="day-date" id="thu-date">4/14</div></th>
+                        <th><div class="day-name">FRIDAY</div><div class="day-date" id="fri-date">4/15</div></th>
+                        <th><div class="day-name">SATURDAY</div><div class="day-date" id="sat-date">4/16</div></th>
+                        <th><div class="day-name">SUNDAY</div><div class="day-date" id="sun-date">4/17</div></th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody"></tbody>
+            </table>
+        </div>
+    </main>
+    
+    <!-- 颜色选择器弹窗 -->
+    <div class="color-picker-popup" id="colorPicker">
+        <div class="color-option clear" data-color="">✕</div>
+        <div class="color-option bg-orange" data-color="bg-orange"></div>
+        <div class="color-option bg-blue" data-color="bg-blue"></div>
+        <div class="color-option bg-green" data-color="bg-green"></div>
+        <div class="color-option bg-pink" data-color="bg-pink"></div>
+        <div class="color-option bg-purple" data-color="bg-purple"></div>
+        <div class="color-option bg-yellow" data-color="bg-yellow"></div>
+        <div class="color-option bg-teal" data-color="bg-teal"></div>
+        <div class="color-option bg-gray" data-color="bg-gray"></div>
+    </div>
+    
+    <script>
+        // 主题切换
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('life29-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('life29-theme', next);
+        });
+        
+        // 时间段列表
+        const timeSlots = [];
+        for (let h = 3; h <= 23; h++) {
+            timeSlots.push(`${h}:00 ${h < 12 ? 'AM' : 'PM'}`);
+        }
+        for (let h = 0; h <= 2; h++) {
+            timeSlots.push(`${h}:00 AM`);
+        }
+        
+        // 生成表格
+        const tbody = document.getElementById('scheduleBody');
+        timeSlots.forEach((time, rowIdx) => {
+            const tr = document.createElement('tr');
+            
+            // 时间列
+            const timeTd = document.createElement('td');
+            timeTd.className = 'time-cell';
+            timeTd.textContent = time;
+            tr.appendChild(timeTd);
+            
+            // 7天的格子
+            for (let day = 0; day < 7; day++) {
+                const td = document.createElement('td');
+                td.className = 'schedule-cell';
+                td.dataset.row = rowIdx;
+                td.dataset.day = day;
+                
+                const textarea = document.createElement('textarea');
+                textarea.className = 'cell-content';
+                textarea.placeholder = '+';
+                textarea.rows = 1;
+                
+                td.appendChild(textarea);
+                tr.appendChild(td);
+            }
+            
+            tbody.appendChild(tr);
+        });
+        
+        // 颜色选择器
+        const colorPicker = document.getElementById('colorPicker');
+        let currentCell = null;
+        
+        document.querySelectorAll('.schedule-cell').forEach(cell => {
+            cell.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                currentCell = cell;
+                colorPicker.style.left = e.clientX + 'px';
+                colorPicker.style.top = e.clientY + 'px';
+                colorPicker.classList.add('show');
+            });
+        });
+        
+        document.querySelectorAll('.color-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                if (currentCell) {
+                    // 移除所有背景色类
+                    currentCell.classList.remove('bg-orange', 'bg-blue', 'bg-green', 'bg-pink', 'bg-purple', 'bg-yellow', 'bg-teal', 'bg-gray');
+                    // 添加新颜色
+                    const color = opt.dataset.color;
+                    if (color) {
+                        currentCell.classList.add(color);
+                    }
+                    saveData();
+                }
+                colorPicker.classList.remove('show');
+            });
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!colorPicker.contains(e.target)) {
+                colorPicker.classList.remove('show');
+            }
+        });
+        
+        // 周导航
+        let currentWeekStart = getMonday(new Date());
+        
+        function getMonday(d) {
+            const date = new Date(d);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(date.setDate(diff));
+        }
+        
+        function updateWeekLabel() {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('weekLabel').textContent = 
+                `Week of ${months[currentWeekStart.getMonth()]} ${currentWeekStart.getDate()}`;
+            
+            // 更新日期
+            const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            days.forEach((day, i) => {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + i);
+                document.getElementById(`${day}-date`).textContent = 
+                    `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+            
+            loadData();
+        }
+        
+        document.getElementById('prevWeek').addEventListener('click', () => {
+            currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+            updateWeekLabel();
+        });
+        
+        document.getElementById('nextWeek').addEventListener('click', () => {
+            currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+            updateWeekLabel();
+        });
+        
+        // 保存/加载数据
+        function getWeekKey() {
+            return `schedule-${currentWeekStart.toISOString().split('T')[0]}`;
+        }
+        
+        function saveData() {
+            const data = {};
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                const key = `${cell.dataset.row}-${cell.dataset.day}`;
+                const content = cell.querySelector('.cell-content').value;
+                const colorClass = Array.from(cell.classList).find(c => c.startsWith('bg-'));
+                if (content || colorClass) {
+                    data[key] = { content, color: colorClass || '' };
+                }
+            });
+            localStorage.setItem(getWeekKey(), JSON.stringify(data));
+        }
+        
+        function loadData() {
+            // 先清空
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.querySelector('.cell-content').value = '';
+                cell.classList.remove('bg-orange', 'bg-blue', 'bg-green', 'bg-pink', 'bg-purple', 'bg-yellow', 'bg-teal', 'bg-gray');
+            });
+            
+            // 加载数据
+            const data = JSON.parse(localStorage.getItem(getWeekKey()) || '{}');
+            Object.entries(data).forEach(([key, val]) => {
+                const [row, day] = key.split('-');
+                const cell = document.querySelector(`.schedule-cell[data-row="${row}"][data-day="${day}"]`);
+                if (cell) {
+                    cell.querySelector('.cell-content').value = val.content || '';
+                    if (val.color) {
+                        cell.classList.add(val.color);
+                    }
+                }
+            });
+        }
+        
+        // 自动保存
+        document.querySelectorAll('.cell-content').forEach(textarea => {
+            textarea.addEventListener('input', saveData);
+            textarea.addEventListener('blur', saveData);
+        });
+        
+        // 清空按钮
+        document.getElementById('clearAllBtn').addEventListener('click', () => {
+            if (confirm('确定要清空本周的所有内容吗？')) {
+                localStorage.removeItem(getWeekKey());
+                loadData();
+            }
+        });
+        
+        // 保存按钮
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            saveData();
+            alert('已保存！');
+        });
+        
+        // 初始化
+        updateWeekLabel();
+    </script>
+</body>
+</html>

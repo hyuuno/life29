@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-bg="gray">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life29 · Relax</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
+    <style>
+        .relax-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 80px 20px 40px;
+        }
+        
+        .relax-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            color: var(--color-text);
+            margin-bottom: 12px;
+            letter-spacing: 0.1em;
+        }
+        
+        .relax-subtitle {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-bottom: 30px;
+        }
+        
+        .game-wrapper {
+            width: 100%;
+            max-width: 900px;
+            background: var(--color-bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+        }
+        
+        .game-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+            display: block;
+        }
+        
+        .game-footer {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 16px;
+            border-top: 1px solid var(--color-border);
+        }
+        
+        .game-btn {
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .game-btn:hover {
+            background: var(--color-text);
+            color: var(--color-bg);
+            border-color: var(--color-text);
+        }
+        
+        .game-list {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .game-tab {
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .game-tab:hover {
+            border-color: var(--color-text-muted);
+        }
+        
+        .game-tab.active {
+            background: var(--color-text);
+            color: var(--color-bg);
+            border-color: var(--color-text);
+        }
+        
+        .loading-msg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: var(--color-text-muted);
+        }
+        
+        .loading-msg svg {
+            animation: spin 2s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .game-frame {
+                height: 500px;
+            }
+            
+            .relax-container {
+                padding: 70px 12px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    
+    <header class="header">
+        <a href="index.html" class="logo">
+            <span class="logo-text">Life</span>
+            <span class="logo-number">29</span>
+        </a>
+        <nav class="nav">
+            <a href="index.html" class="nav-link">地球</a>
+            <a href="#" class="nav-link">时间线</a>
+            <a href="#" class="nav-link">回忆</a>
+            <a href="schedule.html" class="nav-link">做咩</a>
+            <a href="relax.html" class="nav-link active">Relax</a>
+        </nav>
+        <div class="header-actions">
+            <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
+    </header>
+    
+    <main class="relax-container">
+        <h1 class="relax-title">Take a Break</h1>
+        <p class="relax-subtitle">放松一下，玩个小游戏</p>
+        
+        <div class="game-list">
+            <button class="game-tab active" data-game="color_tiles">Color Tiles</button>
+            <button class="game-tab" data-game="2048">2048</button>
+            <button class="game-tab" data-game="tetris">Tetris</button>
+            <button class="game-tab" data-game="minesweeper">Minesweeper</button>
+        </div>
+        
+        <div class="game-wrapper">
+            <iframe 
+                id="gameFrame"
+                class="game-frame" 
+                src="https://en.gamesaien.com/game/color_tiles/"
+                title="Color Tiles Game"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div class="game-footer">
+                <button class="game-btn" id="fullscreenBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    全屏
+                </button>
+                <button class="game-btn" id="refreshBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    刷新
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // 主题切换
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('life29-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('life29-theme', next);
+        });
+        
+        // 游戏URL映射
+        const games = {
+            'color_tiles': 'https://en.gamesaien.com/game/color_tiles/',
+            '2048': 'https://play2048.co/',
+            'tetris': 'https://tetris.com/play-tetris',
+            'minesweeper': 'https://minesweeper.online/game/1'
+        };
+        
+        const gameFrame = document.getElementById('gameFrame');
+        
+        // 游戏切换
+        document.querySelectorAll('.game-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const game = tab.dataset.game;
+                gameFrame.src = games[game];
+            });
+        });
+        
+        // 全屏
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            if (gameFrame.requestFullscreen) {
+                gameFrame.requestFullscreen();
+            } else if (gameFrame.webkitRequestFullscreen) {
+                gameFrame.webkitRequestFullscreen();
+            }
+        });
+        
+        // 刷新
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            gameFrame.src = gameFrame.src;
+        });
+    </script>
+</body>
+</html>
