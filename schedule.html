@@ -8,132 +8,186 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
     <style>
         .schedule-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 100px 40px 80px;
+            padding: 90px 30px 60px;
             min-height: 100vh;
         }
-        
         .schedule-header {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 30px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
-        
         .schedule-title {
             font-family: 'Noto Serif SC', serif;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 400;
             color: var(--color-text);
         }
-        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .date-selector select, .date-selector input {
+            padding: 6px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            background: var(--color-bg-card);
+            color: var(--color-text);
+            font-size: 0.85rem;
+        }
         .week-nav {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 8px;
         }
-        
         .week-nav button {
             background: none;
             border: none;
             color: var(--color-text-muted);
             cursor: pointer;
-            padding: 8px;
+            padding: 6px;
             transition: color 0.2s;
         }
-        
-        .week-nav button:hover {
-            color: var(--color-text);
-        }
-        
+        .week-nav button:hover { color: var(--color-text); }
         .week-label {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--color-text-light);
-            min-width: 120px;
+            min-width: 140px;
             text-align: center;
         }
-        
-        .schedule-table-wrapper {
-            overflow-x: auto;
-            border-radius: 12px;
+        .timezone-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
             background: var(--color-bg-card);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--color-text-light);
         }
+        .timezone-toggle button {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+        .timezone-toggle button.active {
+            background: var(--color-text);
+            color: var(--color-bg);
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .toolbar-btn {
+            padding: 6px 14px;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toolbar-btn:hover { background: var(--color-bg); color: var(--color-text); }
         
+        .tables-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 1200px) {
+            .tables-container { grid-template-columns: 1fr; }
+        }
+        .person-section {
+            background: var(--color-bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+        }
+        .person-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--color-bg);
+            border-bottom: 1px solid var(--color-border);
+        }
+        .person-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--color-text);
+        }
+        .person-tz {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
         .schedule-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 900px;
+            min-width: 700px;
         }
-        
-        .schedule-table th,
-        .schedule-table td {
+        .schedule-table th, .schedule-table td {
             border: 1px solid var(--color-border);
             padding: 0;
             text-align: center;
             vertical-align: top;
         }
-        
         .schedule-table th {
-            padding: 16px 12px;
+            padding: 10px 8px;
             font-weight: 400;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--color-text-light);
             background: var(--color-bg);
             position: sticky;
             top: 0;
             z-index: 10;
         }
-        
-        .schedule-table th.time-col {
-            width: 70px;
-            background: var(--color-bg);
-        }
-        
-        .schedule-table th .day-name {
-            font-size: 0.9rem;
-            color: var(--color-text);
-            margin-bottom: 4px;
-        }
-        
-        .schedule-table th .day-date {
-            font-size: 0.75rem;
-            color: var(--color-text-muted);
-        }
-        
+        .schedule-table th.time-col { width: 60px; }
+        .schedule-table th .day-name { font-size: 0.8rem; color: var(--color-text); margin-bottom: 2px; }
+        .schedule-table th .day-date { font-size: 0.7rem; color: var(--color-text-muted); }
         .time-cell {
-            padding: 8px;
-            font-size: 0.75rem;
+            padding: 6px 4px;
+            font-size: 0.65rem;
             color: var(--color-text-muted);
             background: var(--color-bg);
-            font-variant-numeric: tabular-nums;
         }
-        
         .schedule-cell {
-            min-height: 36px;
-            position: relative;
+            min-height: 28px;
             cursor: pointer;
             transition: background 0.15s;
         }
-        
-        .schedule-cell:hover {
-            background: rgba(0,0,0,0.02);
-        }
-        
-        .schedule-cell.editing {
-            background: rgba(0,0,0,0.03);
-        }
-        
+        .schedule-cell:hover { background: rgba(0,0,0,0.02); }
         .cell-content {
             display: block;
             width: 100%;
-            min-height: 36px;
-            padding: 6px 8px;
-            font-size: 0.8rem;
+            min-height: 28px;
+            padding: 4px 6px;
+            font-size: 0.7rem;
             color: var(--color-text);
             background: transparent;
             border: none;
@@ -141,19 +195,11 @@
             resize: none;
             font-family: inherit;
             text-align: left;
-            line-height: 1.4;
+            line-height: 1.3;
         }
+        .cell-content::placeholder { color: transparent; }
+        .schedule-cell:hover .cell-content::placeholder { color: var(--color-text-muted); opacity: 0.4; }
         
-        .cell-content::placeholder {
-            color: transparent;
-        }
-        
-        .schedule-cell:hover .cell-content::placeholder {
-            color: var(--color-text-muted);
-            opacity: 0.5;
-        }
-        
-        /* 颜色选择器 */
         .color-picker-popup {
             position: fixed;
             display: none;
@@ -162,43 +208,30 @@
             padding: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             z-index: 1000;
-            gap: 6px;
+            gap: 5px;
             flex-wrap: wrap;
-            width: 140px;
+            width: 130px;
         }
-        
-        .color-picker-popup.show {
-            display: flex;
-        }
-        
+        .color-picker-popup.show { display: flex; }
         .color-option {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 4px;
             border: 2px solid transparent;
             cursor: pointer;
-            transition: transform 0.15s, border-color 0.15s;
+            transition: transform 0.15s;
         }
-        
-        .color-option:hover {
-            transform: scale(1.1);
-        }
-        
-        .color-option.active {
-            border-color: var(--color-text);
-        }
-        
+        .color-option:hover { transform: scale(1.1); }
         .color-option.clear {
             background: var(--color-bg);
             border: 1px dashed var(--color-border);
+            font-size: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
             color: var(--color-text-muted);
         }
         
-        /* 预设颜色 */
         .bg-orange { background: #f8e0c0; }
         .bg-blue { background: #c8d8f0; }
         .bg-green { background: #c8e8c8; }
@@ -206,8 +239,7 @@
         .bg-purple { background: #e0d0e8; }
         .bg-yellow { background: #f8f0c0; }
         .bg-teal { background: #c8e8e0; }
-        .bg-gray { background: #e8e8e8; }
-        
+        .bg-gray { background: #e0e0e0; }
         [data-theme="dark"] .bg-orange { background: #4a3c28; }
         [data-theme="dark"] .bg-blue { background: #2a3a4a; }
         [data-theme="dark"] .bg-green { background: #2a3a2a; }
@@ -216,42 +248,6 @@
         [data-theme="dark"] .bg-yellow { background: #3a3828; }
         [data-theme="dark"] .bg-teal { background: #2a3a38; }
         [data-theme="dark"] .bg-gray { background: #2a2a2a; }
-        
-        /* 工具栏 */
-        .schedule-toolbar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .toolbar-btn {
-            padding: 8px 16px;
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            color: var(--color-text-light);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .toolbar-btn:hover {
-            background: var(--color-bg);
-            color: var(--color-text);
-        }
-        
-        /* 响应式 */
-        @media (max-width: 768px) {
-            .schedule-container {
-                padding: 80px 16px 60px;
-            }
-            
-            .schedule-header {
-                flex-direction: column;
-                gap: 16px;
-                align-items: flex-start;
-            }
-        }
     </style>
 </head>
 <body>
@@ -279,43 +275,57 @@
     
     <main class="schedule-container">
         <div class="schedule-header">
-            <h1 class="schedule-title">小魏在干嘛？</h1>
-            <div class="week-nav">
-                <button id="prevWeek" title="上一周">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <span class="week-label" id="weekLabel">Week of April 11</span>
-                <button id="nextWeek" title="下一周">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
+            <h1 class="schedule-title">我们在干嘛？</h1>
+            <div class="header-controls">
+                <div class="date-selector">
+                    <select id="yearSelect"></select>
+                    <select id="monthSelect"></select>
+                    <select id="weekSelect"></select>
+                </div>
+                <div class="week-nav">
+                    <button id="prevWeek" title="上一周">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span class="week-label" id="weekLabel">Week 1</span>
+                    <button id="nextWeek" title="下一周">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+                <div class="timezone-toggle">
+                    <span>时区:</span>
+                    <button id="tzSF" class="active">旧金山</button>
+                    <button id="tzBJ">北京</button>
+                </div>
             </div>
         </div>
         
-        <div class="schedule-toolbar">
+        <div class="toolbar">
+            <button class="toolbar-btn" id="todayBtn">回到今天</button>
             <button class="toolbar-btn" id="clearAllBtn">清空本周</button>
-            <button class="toolbar-btn" id="saveBtn">保存</button>
         </div>
         
-        <div class="schedule-table-wrapper">
-            <table class="schedule-table" id="scheduleTable">
-                <thead>
-                    <tr>
-                        <th class="time-col"></th>
-                        <th><div class="day-name">MONDAY</div><div class="day-date" id="mon-date">4/11</div></th>
-                        <th><div class="day-name">TUESDAY</div><div class="day-date" id="tue-date">4/12</div></th>
-                        <th><div class="day-name">WEDNESDAY</div><div class="day-date" id="wed-date">4/13</div></th>
-                        <th><div class="day-name">THURSDAY</div><div class="day-date" id="thu-date">4/14</div></th>
-                        <th><div class="day-name">FRIDAY</div><div class="day-date" id="fri-date">4/15</div></th>
-                        <th><div class="day-name">SATURDAY</div><div class="day-date" id="sat-date">4/16</div></th>
-                        <th><div class="day-name">SUNDAY</div><div class="day-date" id="sun-date">4/17</div></th>
-                    </tr>
-                </thead>
-                <tbody id="scheduleBody"></tbody>
-            </table>
+        <div class="tables-container">
+            <div class="person-section">
+                <div class="person-header">
+                    <span class="person-name">👦 小魏</span>
+                    <span class="person-tz" id="myTz">北京时间 (UTC+8)</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="schedule-table" id="tableMe"></table>
+                </div>
+            </div>
+            <div class="person-section">
+                <div class="person-header">
+                    <span class="person-name">👧 女朋友</span>
+                    <span class="person-tz" id="herTz">旧金山时间 (UTC-8)</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="schedule-table" id="tableHer"></table>
+                </div>
+            </div>
         </div>
     </main>
     
-    <!-- 颜色选择器弹窗 -->
     <div class="color-picker-popup" id="colorPicker">
         <div class="color-option clear" data-color="">✕</div>
         <div class="color-option bg-orange" data-color="bg-orange"></div>
@@ -329,81 +339,221 @@
     </div>
     
     <script>
-        // 主题切换
-        const themeToggle = document.getElementById('themeToggle');
+        // Theme
         const savedTheme = localStorage.getItem('life29-theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        
-        themeToggle.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('life29-theme', next);
         });
         
-        // 时间段列表
-        const timeSlots = [];
-        for (let h = 3; h <= 23; h++) {
-            timeSlots.push(`${h}:00 ${h < 12 ? 'AM' : 'PM'}`);
-        }
-        for (let h = 0; h <= 2; h++) {
-            timeSlots.push(`${h}:00 AM`);
-        }
+        // State
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let currentWeekInMonth = 0;
+        let timezone = 'sf'; // 'sf' or 'bj'
         
-        // 生成表格
-        const tbody = document.getElementById('scheduleBody');
-        timeSlots.forEach((time, rowIdx) => {
-            const tr = document.createElement('tr');
+        const HOUR_DIFF = 16; // SF比BJ晚16小时 (UTC-8 vs UTC+8)
+        
+        // Initialize selectors
+        const yearSelect = document.getElementById('yearSelect');
+        const monthSelect = document.getElementById('monthSelect');
+        const weekSelect = document.getElementById('weekSelect');
+        
+        for (let y = 2020; y <= 2030; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y + '年';
+            yearSelect.appendChild(opt);
+        }
+        yearSelect.value = currentYear;
+        
+        const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+        monthNames.forEach((m, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = m;
+            monthSelect.appendChild(opt);
+        });
+        monthSelect.value = currentMonth;
+        
+        function updateWeekOptions() {
+            weekSelect.innerHTML = '';
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const weeksInMonth = Math.ceil((lastDay.getDate() + firstDay.getDay()) / 7);
             
-            // 时间列
-            const timeTd = document.createElement('td');
-            timeTd.className = 'time-cell';
-            timeTd.textContent = time;
-            tr.appendChild(timeTd);
-            
-            // 7天的格子
-            for (let day = 0; day < 7; day++) {
-                const td = document.createElement('td');
-                td.className = 'schedule-cell';
-                td.dataset.row = rowIdx;
-                td.dataset.day = day;
-                
-                const textarea = document.createElement('textarea');
-                textarea.className = 'cell-content';
-                textarea.placeholder = '+';
-                textarea.rows = 1;
-                
-                td.appendChild(textarea);
-                tr.appendChild(td);
+            for (let w = 0; w < weeksInMonth; w++) {
+                const opt = document.createElement('option');
+                opt.value = w;
+                opt.textContent = `第${w + 1}周`;
+                weekSelect.appendChild(opt);
             }
             
-            tbody.appendChild(tr);
+            // Find current week
+            const today = new Date();
+            if (today.getFullYear() === currentYear && today.getMonth() === currentMonth) {
+                currentWeekInMonth = Math.floor((today.getDate() + firstDay.getDay() - 1) / 7);
+            } else {
+                currentWeekInMonth = 0;
+            }
+            weekSelect.value = currentWeekInMonth;
+        }
+        
+        function getWeekDates() {
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Monday = 0
+            const weekStart = new Date(currentYear, currentMonth, 1 - startOffset + currentWeekInMonth * 7);
+            
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                dates.push(d);
+            }
+            return dates;
+        }
+        
+        function buildTable(tableId, person) {
+            const table = document.getElementById(tableId);
+            const dates = getWeekDates();
+            const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+            
+            let html = '<thead><tr><th class="time-col"></th>';
+            dates.forEach((d, i) => {
+                // 时区调整
+                let displayDate = new Date(d);
+                if (person === 'her' && timezone === 'bj') {
+                    displayDate.setHours(displayDate.getHours() - HOUR_DIFF);
+                } else if (person === 'me' && timezone === 'sf') {
+                    displayDate.setHours(displayDate.getHours() + HOUR_DIFF);
+                }
+                html += `<th><div class="day-name">${dayNames[i]}</div><div class="day-date">${displayDate.getMonth()+1}/${displayDate.getDate()}</div></th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            // Time slots from 3AM to 2AM next day
+            const hours = [];
+            for (let h = 3; h <= 23; h++) hours.push(h);
+            for (let h = 0; h <= 2; h++) hours.push(h);
+            
+            hours.forEach((h, rowIdx) => {
+                const timeStr = `${h}:00`;
+                html += `<tr><td class="time-cell">${timeStr}</td>`;
+                for (let day = 0; day < 7; day++) {
+                    html += `<td class="schedule-cell" data-person="${person}" data-row="${rowIdx}" data-day="${day}">
+                        <textarea class="cell-content" placeholder="+"></textarea>
+                    </td>`;
+                }
+                html += '</tr>';
+            });
+            
+            html += '</tbody>';
+            table.innerHTML = html;
+            
+            // Add event listeners
+            table.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.addEventListener('contextmenu', handleRightClick);
+                cell.querySelector('.cell-content').addEventListener('input', saveData);
+            });
+        }
+        
+        function renderTables() {
+            buildTable('tableMe', 'me');
+            buildTable('tableHer', 'her');
+            updateWeekLabel();
+            loadData();
+        }
+        
+        function updateWeekLabel() {
+            const dates = getWeekDates();
+            const start = dates[0];
+            const end = dates[6];
+            document.getElementById('weekLabel').textContent = 
+                `${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()}`;
+        }
+        
+        // Timezone toggle
+        document.getElementById('tzSF').addEventListener('click', () => {
+            timezone = 'sf';
+            document.getElementById('tzSF').classList.add('active');
+            document.getElementById('tzBJ').classList.remove('active');
+            document.getElementById('myTz').textContent = '转换为旧金山时间';
+            document.getElementById('herTz').textContent = '旧金山时间 (UTC-8)';
+            renderTables();
         });
         
-        // 颜色选择器
+        document.getElementById('tzBJ').addEventListener('click', () => {
+            timezone = 'bj';
+            document.getElementById('tzBJ').classList.add('active');
+            document.getElementById('tzSF').classList.remove('active');
+            document.getElementById('myTz').textContent = '北京时间 (UTC+8)';
+            document.getElementById('herTz').textContent = '转换为北京时间';
+            renderTables();
+        });
+        
+        // Date selectors
+        yearSelect.addEventListener('change', () => { currentYear = parseInt(yearSelect.value); updateWeekOptions(); renderTables(); });
+        monthSelect.addEventListener('change', () => { currentMonth = parseInt(monthSelect.value); updateWeekOptions(); renderTables(); });
+        weekSelect.addEventListener('change', () => { currentWeekInMonth = parseInt(weekSelect.value); renderTables(); });
+        
+        // Week navigation
+        document.getElementById('prevWeek').addEventListener('click', () => {
+            currentWeekInMonth--;
+            if (currentWeekInMonth < 0) {
+                currentMonth--;
+                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                yearSelect.value = currentYear;
+                monthSelect.value = currentMonth;
+                updateWeekOptions();
+                currentWeekInMonth = weekSelect.options.length - 1;
+            }
+            weekSelect.value = currentWeekInMonth;
+            renderTables();
+        });
+        
+        document.getElementById('nextWeek').addEventListener('click', () => {
+            currentWeekInMonth++;
+            if (currentWeekInMonth >= weekSelect.options.length) {
+                currentMonth++;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                yearSelect.value = currentYear;
+                monthSelect.value = currentMonth;
+                updateWeekOptions();
+                currentWeekInMonth = 0;
+            }
+            weekSelect.value = currentWeekInMonth;
+            renderTables();
+        });
+        
+        document.getElementById('todayBtn').addEventListener('click', () => {
+            const today = new Date();
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth();
+            yearSelect.value = currentYear;
+            monthSelect.value = currentMonth;
+            updateWeekOptions();
+            renderTables();
+        });
+        
+        // Color picker
         const colorPicker = document.getElementById('colorPicker');
         let currentCell = null;
         
-        document.querySelectorAll('.schedule-cell').forEach(cell => {
-            cell.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                currentCell = cell;
-                colorPicker.style.left = e.clientX + 'px';
-                colorPicker.style.top = e.clientY + 'px';
-                colorPicker.classList.add('show');
-            });
-        });
+        function handleRightClick(e) {
+            e.preventDefault();
+            currentCell = e.currentTarget;
+            colorPicker.style.left = e.clientX + 'px';
+            colorPicker.style.top = e.clientY + 'px';
+            colorPicker.classList.add('show');
+        }
         
         document.querySelectorAll('.color-option').forEach(opt => {
             opt.addEventListener('click', () => {
                 if (currentCell) {
-                    // 移除所有背景色类
-                    currentCell.classList.remove('bg-orange', 'bg-blue', 'bg-green', 'bg-pink', 'bg-purple', 'bg-yellow', 'bg-teal', 'bg-gray');
-                    // 添加新颜色
-                    const color = opt.dataset.color;
-                    if (color) {
-                        currentCell.classList.add(color);
-                    }
+                    currentCell.classList.remove('bg-orange','bg-blue','bg-green','bg-pink','bg-purple','bg-yellow','bg-teal','bg-gray');
+                    if (opt.dataset.color) currentCell.classList.add(opt.dataset.color);
                     saveData();
                 }
                 colorPicker.classList.remove('show');
@@ -411,110 +561,56 @@
         });
         
         document.addEventListener('click', (e) => {
-            if (!colorPicker.contains(e.target)) {
-                colorPicker.classList.remove('show');
-            }
+            if (!colorPicker.contains(e.target)) colorPicker.classList.remove('show');
         });
         
-        // 周导航
-        let currentWeekStart = getMonday(new Date());
-        
-        function getMonday(d) {
-            const date = new Date(d);
-            const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(date.setDate(diff));
-        }
-        
-        function updateWeekLabel() {
-            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                           'July', 'August', 'September', 'October', 'November', 'December'];
-            document.getElementById('weekLabel').textContent = 
-                `Week of ${months[currentWeekStart.getMonth()]} ${currentWeekStart.getDate()}`;
-            
-            // 更新日期
-            const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-            days.forEach((day, i) => {
-                const date = new Date(currentWeekStart);
-                date.setDate(date.getDate() + i);
-                document.getElementById(`${day}-date`).textContent = 
-                    `${date.getMonth() + 1}/${date.getDate()}`;
-            });
-            
-            loadData();
-        }
-        
-        document.getElementById('prevWeek').addEventListener('click', () => {
-            currentWeekStart.setDate(currentWeekStart.getDate() - 7);
-            updateWeekLabel();
-        });
-        
-        document.getElementById('nextWeek').addEventListener('click', () => {
-            currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-            updateWeekLabel();
-        });
-        
-        // 保存/加载数据
+        // Data persistence
         function getWeekKey() {
-            return `schedule-${currentWeekStart.toISOString().split('T')[0]}`;
+            const dates = getWeekDates();
+            return `schedule-${dates[0].toISOString().split('T')[0]}`;
         }
         
         function saveData() {
-            const data = {};
+            const data = { me: {}, her: {} };
             document.querySelectorAll('.schedule-cell').forEach(cell => {
+                const person = cell.dataset.person;
                 const key = `${cell.dataset.row}-${cell.dataset.day}`;
                 const content = cell.querySelector('.cell-content').value;
                 const colorClass = Array.from(cell.classList).find(c => c.startsWith('bg-'));
                 if (content || colorClass) {
-                    data[key] = { content, color: colorClass || '' };
+                    data[person][key] = { content, color: colorClass || '' };
                 }
             });
             localStorage.setItem(getWeekKey(), JSON.stringify(data));
         }
         
         function loadData() {
-            // 先清空
+            const data = JSON.parse(localStorage.getItem(getWeekKey()) || '{"me":{},"her":{}}');
             document.querySelectorAll('.schedule-cell').forEach(cell => {
+                const person = cell.dataset.person;
+                const key = `${cell.dataset.row}-${cell.dataset.day}`;
+                const cellData = data[person]?.[key];
+                
+                cell.classList.remove('bg-orange','bg-blue','bg-green','bg-pink','bg-purple','bg-yellow','bg-teal','bg-gray');
                 cell.querySelector('.cell-content').value = '';
-                cell.classList.remove('bg-orange', 'bg-blue', 'bg-green', 'bg-pink', 'bg-purple', 'bg-yellow', 'bg-teal', 'bg-gray');
-            });
-            
-            // 加载数据
-            const data = JSON.parse(localStorage.getItem(getWeekKey()) || '{}');
-            Object.entries(data).forEach(([key, val]) => {
-                const [row, day] = key.split('-');
-                const cell = document.querySelector(`.schedule-cell[data-row="${row}"][data-day="${day}"]`);
-                if (cell) {
-                    cell.querySelector('.cell-content').value = val.content || '';
-                    if (val.color) {
-                        cell.classList.add(val.color);
-                    }
+                
+                if (cellData) {
+                    cell.querySelector('.cell-content').value = cellData.content || '';
+                    if (cellData.color) cell.classList.add(cellData.color);
                 }
             });
         }
         
-        // 自动保存
-        document.querySelectorAll('.cell-content').forEach(textarea => {
-            textarea.addEventListener('input', saveData);
-            textarea.addEventListener('blur', saveData);
-        });
-        
-        // 清空按钮
         document.getElementById('clearAllBtn').addEventListener('click', () => {
-            if (confirm('确定要清空本周的所有内容吗？')) {
+            if (confirm('确定清空本周所有内容?')) {
                 localStorage.removeItem(getWeekKey());
                 loadData();
             }
         });
         
-        // 保存按钮
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            saveData();
-            alert('已保存！');
-        });
-        
-        // 初始化
-        updateWeekLabel();
+        // Init
+        updateWeekOptions();
+        renderTables();
     </script>
 </body>
 </html>

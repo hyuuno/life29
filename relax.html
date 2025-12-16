@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
     <style>
         .relax-container {
             display: flex;
@@ -18,7 +17,6 @@
             min-height: 100vh;
             padding: 80px 20px 40px;
         }
-        
         .relax-title {
             font-family: 'Cormorant Garamond', serif;
             font-size: 2rem;
@@ -27,54 +25,11 @@
             margin-bottom: 12px;
             letter-spacing: 0.1em;
         }
-        
         .relax-subtitle {
             font-size: 0.9rem;
             color: var(--color-text-muted);
             margin-bottom: 30px;
         }
-        
-        .game-wrapper {
-            width: 100%;
-            max-width: 900px;
-            background: var(--color-bg-card);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
-        }
-        
-        .game-frame {
-            width: 100%;
-            height: 600px;
-            border: none;
-            display: block;
-        }
-        
-        .game-footer {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            padding: 16px;
-            border-top: 1px solid var(--color-border);
-        }
-        
-        .game-btn {
-            padding: 10px 24px;
-            background: transparent;
-            border: 1px solid var(--color-border);
-            border-radius: 20px;
-            font-size: 0.85rem;
-            color: var(--color-text-light);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .game-btn:hover {
-            background: var(--color-text);
-            color: var(--color-bg);
-            border-color: var(--color-text);
-        }
-        
         .game-list {
             display: flex;
             gap: 12px;
@@ -82,7 +37,6 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        
         .game-tab {
             padding: 8px 20px;
             background: transparent;
@@ -93,44 +47,113 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
-        .game-tab:hover {
-            border-color: var(--color-text-muted);
-        }
-        
+        .game-tab:hover { border-color: var(--color-text-muted); }
         .game-tab.active {
             background: var(--color-text);
             color: var(--color-bg);
             border-color: var(--color-text);
         }
+        .game-wrapper {
+            width: 100%;
+            max-width: 500px;
+            background: var(--color-bg-card);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+        }
+        .game-area { display: none; }
+        .game-area.active { display: block; }
         
-        .loading-msg {
+        .color-game, .game-2048, .memory-game { text-align: center; }
+        .game-info {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+        }
+        .color-grid {
+            display: grid;
+            gap: 8px;
+            margin: 0 auto 20px;
+        }
+        .color-tile {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .color-tile:hover { transform: scale(1.05); }
+        .game-btn {
+            padding: 10px 30px;
+            background: var(--color-text);
+            color: var(--color-bg);
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .game-btn:hover { opacity: 0.8; }
+        
+        .grid-2048 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: var(--color-border);
+            padding: 8px;
+            border-radius: 8px;
+            margin: 0 auto 20px;
+            max-width: 320px;
+        }
+        .tile-2048 {
+            aspect-ratio: 1;
+            display: flex;
             align-items: center;
             justify-content: center;
-            height: 400px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 1.5rem;
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+        .tile-2048[data-value="2"] { background: #eee4da; color: #776e65; }
+        .tile-2048[data-value="4"] { background: #ede0c8; color: #776e65; }
+        .tile-2048[data-value="8"] { background: #f2b179; color: #fff; }
+        .tile-2048[data-value="16"] { background: #f59563; color: #fff; }
+        .tile-2048[data-value="32"] { background: #f67c5f; color: #fff; }
+        .tile-2048[data-value="64"] { background: #f65e3b; color: #fff; }
+        .tile-2048[data-value="128"] { background: #edcf72; color: #fff; }
+        .tile-2048[data-value="256"] { background: #edcc61; color: #fff; }
+        .tile-2048[data-value="512"] { background: #edc850; color: #fff; }
+        .tile-2048[data-value="1024"] { background: #edc53f; color: #fff; font-size: 1.2rem; }
+        .tile-2048[data-value="2048"] { background: #edc22e; color: #fff; font-size: 1.2rem; }
+        
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            max-width: 320px;
+            margin: 0 auto 20px;
+        }
+        .memory-card {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            background: var(--color-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+        .memory-card.flipped { background: var(--color-bg); border: 2px solid var(--color-border); }
+        .memory-card.matched { background: #c8e8c8; cursor: default; }
+        
+        .game-instructions {
+            font-size: 0.8rem;
             color: var(--color-text-muted);
-        }
-        
-        .loading-msg svg {
-            animation: spin 2s linear infinite;
-            margin-bottom: 16px;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 768px) {
-            .game-frame {
-                height: 500px;
-            }
-            
-            .relax-container {
-                padding: 70px 12px 30px;
-            }
+            margin-top: 16px;
         }
     </style>
 </head>
@@ -162,88 +185,121 @@
         <p class="relax-subtitle">放松一下，玩个小游戏</p>
         
         <div class="game-list">
-            <button class="game-tab active" data-game="color_tiles">Color Tiles</button>
+            <button class="game-tab active" data-game="color">Color Tiles</button>
             <button class="game-tab" data-game="2048">2048</button>
-            <button class="game-tab" data-game="tetris">Tetris</button>
-            <button class="game-tab" data-game="minesweeper">Minesweeper</button>
+            <button class="game-tab" data-game="memory">Memory</button>
         </div>
         
         <div class="game-wrapper">
-            <iframe 
-                id="gameFrame"
-                class="game-frame" 
-                src="https://en.gamesaien.com/game/color_tiles/"
-                title="Color Tiles Game"
-                sandbox="allow-scripts allow-same-origin allow-popups"
-            ></iframe>
-            <div class="game-footer">
-                <button class="game-btn" id="fullscreenBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
-                        <polyline points="15 3 21 3 21 9"></polyline>
-                        <polyline points="9 21 3 21 3 15"></polyline>
-                        <line x1="21" y1="3" x2="14" y2="10"></line>
-                        <line x1="3" y1="21" x2="10" y2="14"></line>
-                    </svg>
-                    全屏
-                </button>
-                <button class="game-btn" id="refreshBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                    </svg>
-                    刷新
-                </button>
+            <div class="game-area active" id="colorGame">
+                <div class="color-game">
+                    <div class="game-info">
+                        <span>Level: <strong id="colorLevel">1</strong></span>
+                        <span>Score: <strong id="colorScore">0</strong></span>
+                    </div>
+                    <div class="color-grid" id="colorGrid"></div>
+                    <button class="game-btn" id="colorStartBtn">开始游戏</button>
+                    <p class="game-instructions">找出颜色不同的方块</p>
+                </div>
+            </div>
+            
+            <div class="game-area" id="game2048">
+                <div class="game-2048">
+                    <div class="game-info">
+                        <span>Score: <strong id="score2048">0</strong></span>
+                        <button class="game-btn" id="reset2048">重新开始</button>
+                    </div>
+                    <div class="grid-2048" id="grid2048"></div>
+                    <p class="game-instructions">使用方向键移动方块</p>
+                </div>
+            </div>
+            
+            <div class="game-area" id="memoryGame">
+                <div class="memory-game">
+                    <div class="game-info">
+                        <span>Moves: <strong id="memoryMoves">0</strong></span>
+                        <button class="game-btn" id="resetMemory">重新开始</button>
+                    </div>
+                    <div class="memory-grid" id="memoryGrid"></div>
+                    <p class="game-instructions">找出所有配对的卡片</p>
+                </div>
             </div>
         </div>
     </main>
     
     <script>
-        // 主题切换
-        const themeToggle = document.getElementById('themeToggle');
+        // Theme
         const savedTheme = localStorage.getItem('life29-theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        
-        themeToggle.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('life29-theme', next);
         });
         
-        // 游戏URL映射
-        const games = {
-            'color_tiles': 'https://en.gamesaien.com/game/color_tiles/',
-            '2048': 'https://play2048.co/',
-            'tetris': 'https://tetris.com/play-tetris',
-            'minesweeper': 'https://minesweeper.online/game/1'
-        };
-        
-        const gameFrame = document.getElementById('gameFrame');
-        
-        // 游戏切换
+        // Tab switch
         document.querySelectorAll('.game-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.game-area').forEach(g => g.classList.remove('active'));
                 tab.classList.add('active');
-                
-                const game = tab.dataset.game;
-                gameFrame.src = games[game];
+                const id = tab.dataset.game === 'color' ? 'colorGame' : tab.dataset.game === '2048' ? 'game2048' : 'memoryGame';
+                document.getElementById(id).classList.add('active');
             });
         });
         
-        // 全屏
-        document.getElementById('fullscreenBtn').addEventListener('click', () => {
-            if (gameFrame.requestFullscreen) {
-                gameFrame.requestFullscreen();
-            } else if (gameFrame.webkitRequestFullscreen) {
-                gameFrame.webkitRequestFullscreen();
+        // Color Tiles
+        let colorLevel = 1, colorScore = 0;
+        function initColorGame() {
+            const grid = document.getElementById('colorGrid');
+            const size = Math.min(2 + Math.floor(colorLevel / 2), 6);
+            grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            grid.style.maxWidth = `${size * 60}px`;
+            grid.innerHTML = '';
+            const hue = Math.random() * 360, sat = 50 + Math.random() * 30, light = 40 + Math.random() * 30;
+            const diff = Math.max(30 - colorLevel * 2, 5);
+            const diffIdx = Math.floor(Math.random() * size * size);
+            for (let i = 0; i < size * size; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'color-tile';
+                tile.style.background = `hsl(${hue}, ${sat}%, ${i === diffIdx ? light + diff : light}%)`;
+                if (i === diffIdx) tile.dataset.different = 'true';
+                tile.onclick = () => {
+                    if (tile.dataset.different) {
+                        colorScore += colorLevel * 10;
+                        colorLevel++;
+                    } else {
+                        colorLevel = 1;
+                        colorScore = 0;
+                    }
+                    document.getElementById('colorScore').textContent = colorScore;
+                    document.getElementById('colorLevel').textContent = colorLevel;
+                    initColorGame();
+                };
+                grid.appendChild(tile);
             }
-        });
+        }
+        document.getElementById('colorStartBtn').onclick = () => { colorLevel = 1; colorScore = 0; document.getElementById('colorScore').textContent = 0; document.getElementById('colorLevel').textContent = 1; initColorGame(); };
+        initColorGame();
         
-        // 刷新
-        document.getElementById('refreshBtn').addEventListener('click', () => {
-            gameFrame.src = gameFrame.src;
-        });
+        // 2048
+        let grid2048 = Array(16).fill(0), score2048 = 0;
+        function init2048() { grid2048 = Array(16).fill(0); score2048 = 0; addTile(); addTile(); render2048(); }
+        function addTile() { const empty = grid2048.map((v, i) => v === 0 ? i : -1).filter(i => i >= 0); if (empty.length) grid2048[empty[Math.floor(Math.random() * empty.length)]] = Math.random() < 0.9 ? 2 : 4; }
+        function render2048() { const c = document.getElementById('grid2048'); c.innerHTML = ''; grid2048.forEach(v => { const t = document.createElement('div'); t.className = 'tile-2048'; t.textContent = v || ''; t.dataset.value = v; c.appendChild(t); }); document.getElementById('score2048').textContent = score2048; }
+        function slide(arr) { const f = arr.filter(x => x), m = []; let i = 0; while (i < f.length) { if (i + 1 < f.length && f[i] === f[i + 1]) { m.push(f[i] * 2); score2048 += f[i] * 2; i += 2; } else { m.push(f[i]); i++; } } while (m.length < 4) m.push(0); return m; }
+        function move2048(dir) { const old = [...grid2048]; if (dir === 'left' || dir === 'right') { for (let r = 0; r < 4; r++) { let row = grid2048.slice(r * 4, r * 4 + 4); if (dir === 'right') row.reverse(); row = slide(row); if (dir === 'right') row.reverse(); for (let c = 0; c < 4; c++) grid2048[r * 4 + c] = row[c]; } } else { for (let c = 0; c < 4; c++) { let col = [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]]; if (dir === 'down') col.reverse(); col = slide(col); if (dir === 'down') col.reverse(); [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]] = col; } } if (old.join() !== grid2048.join()) addTile(); render2048(); }
+        document.addEventListener('keydown', e => { if (!document.getElementById('game2048').classList.contains('active')) return; const m = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' }; if (m[e.key]) { e.preventDefault(); move2048(m[e.key]); } });
+        document.getElementById('reset2048').onclick = init2048;
+        init2048();
+        
+        // Memory
+        const emojis = ['🌸', '🌺', '🌻', '🌼', '🌷', '🌹', '💐', '🪻'];
+        let memoryCards = [], flipped = [], moves = 0, canFlip = true;
+        function initMemory() { memoryCards = [...emojis, ...emojis].sort(() => Math.random() - 0.5); flipped = []; moves = 0; canFlip = true; document.getElementById('memoryMoves').textContent = 0; const g = document.getElementById('memoryGrid'); g.innerHTML = ''; memoryCards.forEach((e, i) => { const c = document.createElement('div'); c.className = 'memory-card'; c.onclick = () => flipCard(c, i); g.appendChild(c); }); }
+        function flipCard(card, i) { if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return; card.classList.add('flipped'); card.textContent = memoryCards[i]; flipped.push({ card, i }); if (flipped.length === 2) { moves++; document.getElementById('memoryMoves').textContent = moves; canFlip = false; const [a, b] = flipped; if (memoryCards[a.i] === memoryCards[b.i]) { a.card.classList.add('matched'); b.card.classList.add('matched'); flipped = []; canFlip = true; } else { setTimeout(() => { a.card.classList.remove('flipped'); a.card.textContent = ''; b.card.classList.remove('flipped'); b.card.textContent = ''; flipped = []; canFlip = true; }, 800); } } }
+        document.getElementById('resetMemory').onclick = initMemory;
+        initMemory();
     </script>
 </body>
 </html>
