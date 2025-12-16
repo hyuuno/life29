@@ -318,12 +318,12 @@ class Globe {
             
             positions.push(x, y, z);
             
-            // 一半维持3px，一半随机1-6px
+            // 一半3px，一半随机2-6px
             let size;
             if (i < count / 2) {
                 size = 3;
             } else {
-                size = 1 + Math.random() * 5;
+                size = 2 + Math.random() * 4;
             }
             sizes.push(size);
             
@@ -430,9 +430,9 @@ class Globe {
         const g = (color >> 8) & 255;
         const b = color & 255;
         
-        // 中心opacity 0.15 到 外边缘 0
-        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.15)`);
-        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.05)`);
+        // 中心opacity 0.3 到 外边缘 0
+        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
+        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.1)`);
         gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
         
         ctx.fillStyle = gradient;
