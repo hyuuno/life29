@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life29 · 我们的世界</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    
+    <!-- 顶部导航 -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-text">Life</span>
+            <span class="logo-number">29</span>
+        </div>
+        <nav class="nav">
+            <!-- 地球下拉菜单（含归位功能） -->
+            <div class="nav-dropdown" id="globeDropdown">
+                <button class="nav-link active" id="globeNavBtn">
+                    地球
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="nav-dropdown-menu" id="globeMenu">
+                    <div class="dropdown-label">归位城市</div>
+                    <div class="city-options" id="homeCityOptions"></div>
+                </div>
+            </div>
+            <a href="#" class="nav-link" data-view="timeline">时间线</a>
+            <a href="#" class="nav-link" data-view="memories">回忆</a>
+        </nav>
+        <div class="header-actions">
+            <!-- 主题切换 -->
+            <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                </svg>
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+            
+            <!-- 搜索 -->
+            <button class="btn-icon" id="searchBtn" title="搜索">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </button>
+            
+            <!-- 用户下拉 -->
+            <div class="user-dropdown" id="userDropdown">
+                <button class="btn-icon user-btn" id="userBtn" title="选择用户">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="userMenu">
+                    <div class="dropdown-label">选择用户</div>
+                    <button class="dropdown-item user-wiwi" data-user="wiwi">
+                        <span class="user-avatar">W</span>
+                        <span class="user-name">wiwi</span>
+                    </button>
+                    <button class="dropdown-item user-yuyu" data-user="yuyu">
+                        <span class="user-avatar">Y</span>
+                        <span class="user-name">yuyu</span>
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout-btn" id="logoutBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>退出登录</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="main">
+        <!-- 3D 地球容器 -->
+        <div id="globeContainer" class="globe-container"></div>
+        
+        <!-- 左侧统计面板 -->
+        <aside class="side-panel left-panel">
+            <div class="panel-content">
+                <h2 class="panel-title">我们去过的地方</h2>
+                <p class="panel-subtitle">每一个足迹，都是爱的证明</p>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalCities">0</span>
+                        <span class="stat-label">城市</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalPhotos">0</span>
+                        <span class="stat-label">照片</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalJournals">0</span>
+                        <span class="stat-label">日志</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 城市悬浮预览 -->
+        <div id="cityPreview" class="city-preview hidden">
+            <div class="preview-header">
+                <h3 class="preview-city"></h3>
+                <span class="preview-country"></span>
+            </div>
+            <div class="preview-stats">
+                <span class="preview-photos">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <path d="m21 15-5-5L5 21"></path>
+                    </svg>
+                    <span class="count">0</span> 张照片
+                </span>
+                <span class="preview-journals">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path>
+                    </svg>
+                    <span class="count">0</span> 篇日志
+                </span>
+            </div>
+            <div class="preview-hint">点击查看详情</div>
+        </div>
+    </main>
+
+    <!-- 城市列表侧边栏 -->
+    <div id="cityListPanel" class="city-list-panel">
+        <div class="city-list-header">
+            <h3>所有城市</h3>
+            <button class="btn-close" id="closeCityList">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="city-list-search">
+            <input type="text" placeholder="搜索城市..." id="citySearch">
+        </div>
+        <div class="city-list" id="cityList"></div>
+    </div>
+
+    <!-- 添加城市按钮 -->
+    <button id="addCityBtn" class="fab hidden" title="添加新城市">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"></path>
+        </svg>
+    </button>
+
+    <!-- 添加城市模态框 -->
+    <div id="addCityModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-large">
+            <button class="modal-close" id="closeAddCity">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="modal-header">
+                <h2>添加新城市</h2>
+                <p>在地图上留下我们的足迹</p>
+            </div>
+            <form id="addCityForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cityName">城市名称</label>
+                        <input type="text" id="cityName" name="cityName" placeholder="如：东京" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cityNameEn">英文名称</label>
+                        <input type="text" id="cityNameEn" name="cityNameEn" placeholder="如：Tokyo" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="countryName">国家/地区</label>
+                        <input type="text" id="countryName" name="countryName" placeholder="如：日本" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cityColor">主题色</label>
+                        <input type="color" id="cityColor" name="cityColor" value="#E8B4B8">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cityLat">纬度</label>
+                        <input type="number" id="cityLat" name="cityLat" step="0.0001" placeholder="35.6762" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cityLng">经度</label>
+                        <input type="number" id="cityLng" name="cityLng" step="0.0001" placeholder="139.6503" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="visitDate">首次访问日期</label>
+                    <input type="date" id="visitDate" name="visitDate">
+                </div>
+                <button type="submit" class="btn-primary">添加城市</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 底部音乐播放器 -->
+    <footer class="footer">
+        <div class="footer-left">
+            <span class="user-status" id="userStatus">未登录</span>
+        </div>
+        <div class="footer-center">
+            <div class="music-player" id="musicPlayer">
+                <div class="player-controls">
+                    <button class="player-btn" id="playPauseBtn" title="播放/暂停">
+                        <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                    </button>
+                    <button class="player-btn" id="shuffleBtn" title="随机下一首">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polyline points="16 3 21 3 21 8"></polyline>
+                            <line x1="4" y1="20" x2="21" y2="3"></line>
+                            <polyline points="21 16 21 21 16 21"></polyline>
+                            <line x1="15" y1="15" x2="21" y2="21"></line>
+                            <line x1="4" y1="4" x2="9" y2="9"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="player-info">
+                    <span class="song-title" id="songTitle">未播放</span>
+                    <span class="song-time" id="songTime">--:--</span>
+                </div>
+                <div class="player-volume">
+                    <button class="player-btn volume-btn" id="volumeBtn" title="音量">
+                        <svg class="icon-volume" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        </svg>
+                        <svg class="icon-mute" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <line x1="23" y1="9" x2="17" y2="15"></line>
+                            <line x1="17" y1="9" x2="23" y2="15"></line>
+                        </svg>
+                    </button>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+        <div class="footer-right">
+            <span class="footer-date" id="currentDate"></span>
+        </div>
+    </footer>
+
+    <!-- 音频 -->
+    <audio id="audioPlayer"></audio>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- 应用脚本 -->
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/globe.js"></script>
+    <script src="js/music.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

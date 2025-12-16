@@ -1,0 +1,54 @@
+[
+  {
+    "id": "city_1",
+    "name": "旧金山",
+    "nameEn": "San Francisco",
+    "slug": "san-francisco",
+    "country": "美国",
+    "lat": 37.7749,
+    "lng": -122.4194,
+    "color": "#E8B4B8",
+    "visitDate": "2024-06-15",
+    "photos": [{"id": "photo_1", "url": "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800", "caption": "金门大桥的日落", "uploadedAt": "2024-06-15T18:30:00.000Z"}],
+    "journals": [{"id": "journal_1", "title": "旧金山初印象", "content": "第一次来到旧金山，被这座城市独特的魅力所吸引...", "date": "2024-06-15", "createdAt": "2024-06-15T22:00:00.000Z"}]
+  },
+  {
+    "id": "city_2",
+    "name": "南京",
+    "nameEn": "Nanjing",
+    "slug": "nanjing",
+    "country": "中国",
+    "lat": 32.0603,
+    "lng": 118.7969,
+    "color": "#A8D5E5",
+    "visitDate": "2024-03-20",
+    "photos": [{"id": "photo_2", "url": "https://images.unsplash.com/photo-1589650600407-979c3c1d9d24?w=800", "caption": "玄武湖畔", "uploadedAt": "2024-03-20T10:00:00.000Z"}],
+    "journals": [{"id": "journal_2", "title": "春日南京", "content": "三月的南京，樱花盛开...", "date": "2024-03-20", "createdAt": "2024-03-20T20:00:00.000Z"}]
+  },
+  {
+    "id": "city_3",
+    "name": "东京",
+    "nameEn": "Tokyo",
+    "slug": "tokyo",
+    "country": "日本",
+    "lat": 35.6762,
+    "lng": 139.6503,
+    "color": "#B8D4A8",
+    "visitDate": null,
+    "photos": [],
+    "journals": []
+  },
+  {
+    "id": "city_4",
+    "name": "巴黎",
+    "nameEn": "Paris",
+    "slug": "paris",
+    "country": "法国",
+    "lat": 48.8566,
+    "lng": 2.3522,
+    "color": "#C8B8E5",
+    "visitDate": null,
+    "photos": [],
+    "journals": []
+  }
+]

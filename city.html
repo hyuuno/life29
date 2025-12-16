@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市 · Life29</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/city.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
+</head>
+<body class="city-page">
+    <div class="noise-overlay"></div>
+    
+    <header class="header header-city">
+        <a href="index.html" class="back-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 18-6-6 6-6"></path></svg>
+            <span>返回地图</span>
+        </a>
+        <div class="header-actions">
+            <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <div class="user-dropdown" id="userDropdown">
+                <button class="btn-icon user-btn" id="userBtn" title="选择用户">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </button>
+                <div class="dropdown-menu" id="userMenu">
+                    <div class="dropdown-label">选择用户</div>
+                    <button class="dropdown-item user-wiwi" data-user="wiwi"><span class="user-avatar">W</span><span class="user-name">wiwi</span></button>
+                    <button class="dropdown-item user-yuyu" data-user="yuyu"><span class="user-avatar">Y</span><span class="user-name">yuyu</span></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="city-hero" id="cityHero">
+        <div class="city-hero-bg"></div>
+        <div class="city-hero-content">
+            <h1 class="city-name" id="cityName">加载中...</h1>
+            <p class="city-country" id="cityCountry"></p>
+            <div class="city-meta"><span class="city-date" id="cityDate"></span></div>
+        </div>
+    </section>
+
+    <section class="city-content">
+        <div class="content-tabs">
+            <button class="tab-btn active" data-tab="photos"><span class="tab-count" id="photoCount">0</span><span class="tab-label">照片</span></button>
+            <button class="tab-btn" data-tab="journals"><span class="tab-count" id="journalCount">0</span><span class="tab-label">日志</span></button>
+        </div>
+        <div class="tab-content active" id="photosTab">
+            <div class="photos-grid" id="photosGrid"></div>
+            <div class="empty-state" id="photosEmpty" style="display: none;"><p>还没有照片</p><span>登录后可以添加照片</span></div>
+        </div>
+        <div class="tab-content" id="journalsTab">
+            <div class="journals-list" id="journalsList"></div>
+            <div class="empty-state" id="journalsEmpty" style="display: none;"><p>还没有日志</p><span>登录后可以写日志</span></div>
+        </div>
+    </section>
+
+    <div id="imageViewer" class="image-viewer hidden">
+        <div class="viewer-backdrop"></div>
+        <button class="viewer-close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+        <button class="viewer-nav viewer-prev"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 18-6-6 6-6"></path></svg></button>
+        <button class="viewer-nav viewer-next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"></path></svg></button>
+        <div class="viewer-content"><img id="viewerImage" src="" alt=""><p class="viewer-caption" id="viewerCaption"></p></div>
+    </div>
+
+    <div id="fabContainer" class="fab-container hidden">
+        <button class="fab fab-main" id="addMainBtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <div class="fab-menu">
+            <button class="fab fab-item" id="addPhotoBtn" title="添加照片"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg></button>
+            <button class="fab fab-item" id="addJournalBtn" title="写日志"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path></svg></button>
+        </div>
+    </div>
+
+    <div id="addPhotoModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="closeAddPhoto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+            <div class="modal-header"><h2>添加照片</h2></div>
+            <form id="addPhotoForm" class="modal-form">
+                <div class="form-group"><label for="photoUrl">照片链接</label><input type="url" id="photoUrl" placeholder="https://..." required></div>
+                <div class="form-group"><label for="photoCaption">说明</label><input type="text" id="photoCaption" placeholder="这张照片的故事..."></div>
+                <button type="submit" class="btn-primary">添加</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="addJournalModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-large">
+            <button class="modal-close" id="closeAddJournal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+            <div class="modal-header"><h2>写日志</h2></div>
+            <form id="addJournalForm" class="modal-form">
+                <div class="form-group"><label for="journalTitle">标题</label><input type="text" id="journalTitle" placeholder="今天的回忆..." required></div>
+                <div class="form-group"><label for="journalDate">日期</label><input type="date" id="journalDate"></div>
+                <div class="form-group"><label for="journalContent">内容</label><textarea id="journalContent" rows="6" placeholder="写下你的故事..." required></textarea></div>
+                <button type="submit" class="btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/city-page.js"></script>
+</body>
+</html>
