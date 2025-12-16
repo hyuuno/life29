@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市 · Life29</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/city.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
+</head>
+<body class="city-page">
+    <div class="noise-overlay"></div>
+    
+    <header class="header header-city">
+        <a href="index.html" class="back-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 18-6-6 6-6"></path></svg>
+            <span>返回</span>
+        </a>
+        <div class="header-actions">
+            <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <div class="user-dropdown" id="userDropdown">
+                <button class="btn-icon user-btn" id="userBtn" title="用户">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </button>
+                <div class="dropdown-menu" id="userMenu">
+                    <div class="dropdown-label">选择用户</div>
+                    <button class="dropdown-item user-wiwi" data-user="wiwi"><span class="user-avatar">W</span><span class="user-name">wiwi</span></button>
+                    <button class="dropdown-item user-yuyu" data-user="yuyu"><span class="user-avatar">Y</span><span class="user-name">yuyu</span></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="city-hero" id="cityHero">
+        <div class="city-hero-bg"></div>
+        <div class="city-hero-content">
+            <h1 class="city-name" id="cityName">加载中...</h1>
+            <p class="city-country" id="cityCountry"></p>
+            <div class="city-meta"><span class="city-date" id="cityDate"></span></div>
+        </div>
+    </section>
+
+    <section class="city-content">
+        <div class="content-tabs">
+            <button class="tab-btn active" data-tab="photos"><span class="tab-count" id="photoCount">0</span><span class="tab-label">照片</span></button>
+            <button class="tab-btn" data-tab="journals"><span class="tab-count" id="journalCount">0</span><span class="tab-label">日志</span></button>
+        </div>
+        <div class="tab-content active" id="photosTab">
+            <div class="photos-grid" id="photosGrid"></div>
+            <div class="empty-state" id="photosEmpty" style="display: none;"><p>还没有照片</p></div>
+        </div>
+        <div class="tab-content" id="journalsTab">
+            <div class="journals-list" id="journalsList"></div>
+            <div class="empty-state" id="journalsEmpty" style="display: none;"><p>还没有日志</p></div>
+        </div>
+    </section>
+
+    <div id="imageViewer" class="image-viewer hidden">
+        <div class="viewer-backdrop"></div>
+        <button class="viewer-close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+        <button class="viewer-nav viewer-prev"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 18-6-6 6-6"></path></svg></button>
+        <button class="viewer-nav viewer-next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"></path></svg></button>
+        <div class="viewer-content"><img id="viewerImage" src="" alt=""><p class="viewer-caption" id="viewerCaption"></p></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/city-page.js"></script>
+</body>
+</html>
