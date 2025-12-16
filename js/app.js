@@ -38,8 +38,24 @@ class App {
     
     initTheme() {
         const savedTheme = localStorage.getItem('life29-theme') || 'light';
+        const savedBg = localStorage.getItem('life29-bg') || 'gray';
+        
         document.documentElement.setAttribute('data-theme', savedTheme);
+        document.documentElement.setAttribute('data-bg', savedBg);
+        
         document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
+        
+        // 背景颜色选择器
+        document.querySelectorAll('.bg-color-btn').forEach(btn => {
+            if (btn.dataset.bg === savedBg) btn.classList.add('active');
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.bg-color-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const bg = btn.dataset.bg;
+                document.documentElement.setAttribute('data-bg', bg);
+                localStorage.setItem('life29-bg', bg);
+            });
+        });
     }
     
     toggleTheme() {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-bg="gray">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,6 +33,13 @@
             <a href="#" class="nav-link" data-view="memories">回忆</a>
         </nav>
         <div class="header-actions">
+            <!-- 背景颜色选择器 (仅Light mode显示) -->
+            <div class="bg-color-picker" id="bgColorPicker">
+                <button class="bg-color-btn active" data-bg="gray" title="灰色"></button>
+                <button class="bg-color-btn" data-bg="pink" title="粉色"></button>
+                <button class="bg-color-btn" data-bg="warm" title="暖色"></button>
+                <button class="bg-color-btn" data-bg="blue" title="蓝色"></button>
+            </div>
             <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
                 <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
                 <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -95,18 +102,15 @@
         <div class="city-list" id="cityList"></div>
     </div>
 
-    <!-- 添加Moment按钮 -->
     <button id="addMomentBtn" class="fab hidden" title="记录新Moment">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
     </button>
 
-    <!-- 添加Moment模态框 - Step 1: 选择地点 -->
     <div id="addMomentModal" class="modal hidden">
         <div class="modal-backdrop"></div>
         <div class="modal-content">
             <button class="modal-close" id="closeMomentModal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
             
-            <!-- Step 1: 选择地点 -->
             <div id="momentStep1" class="moment-step">
                 <div class="modal-steps">
                     <span class="step-dot active"></span>
@@ -139,7 +143,6 @@
                 </form>
             </div>
             
-            <!-- Step 2: 写内容 -->
             <div id="momentStep2" class="moment-step" style="display: none;">
                 <div class="modal-steps">
                     <span class="step-dot"></span>
