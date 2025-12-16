@@ -1,5 +1,6 @@
 /**
  * Life29 - 音乐播放器
+ * 支持music文件夹中任意添加的音乐文件
  */
 
 class MusicPlayer {
@@ -28,9 +29,13 @@ class MusicPlayer {
     }
     
     async loadPlaylist() {
+        // 从music.json加载播放列表
+        // 用户可以在music.json中添加任意歌曲
+        // 只需按格式添加: {"id": "唯一ID", "title": "歌曲名", "filename": "文件名.mp3"}
         try {
             const response = await fetch(CONFIG.storage.musicFile);
             if (response.ok) this.playlist = await response.json();
+            console.log(`已加载 ${this.playlist.length} 首歌曲`);
         } catch (error) {
             console.warn('Failed to load playlist:', error);
             this.playlist = [];

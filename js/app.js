@@ -8,6 +8,15 @@ class App {
         this.dataManager = window.dataManager;
         this.currentUser = null;
         this.homeCity = null;
+        this.momentData = {};
+        this.uploadedPhotos = [];
+        
+        // 中国城市列表
+        this.chinaCities = ['北京', '上海', '天津', '重庆', '香港', '澳门', '广州', '深圳', '杭州', '南京', '苏州', '成都', '武汉', '西安', '长沙', '郑州', '青岛', '大连', '厦门', '福州', '济南', '沈阳', '哈尔滨', '长春', '南昌', '合肥', '昆明', '贵阳', '南宁', '海口', '三亚', '拉萨', '乌鲁木齐', '兰州', '银川', '西宁', '呼和浩特', '石家庄', '太原', '无锡', '宁波', '温州', '珠海', '东莞'];
+        
+        // 美国城市列表
+        this.usCities = ['San Francisco', 'Los Angeles', 'New York', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose', 'Austin', 'Seattle', 'Denver', 'Boston', 'Las Vegas', 'Portland', 'Miami', 'Atlanta', 'Washington DC'];
+        
         this.init();
     }
     
@@ -48,11 +57,7 @@ class App {
         const userBtn = document.getElementById('userBtn');
         const userMenu = document.getElementById('userMenu');
         
-        userBtn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userMenu?.classList.toggle('show');
-        });
-        
+        userBtn?.addEventListener('click', (e) => { e.stopPropagation(); userMenu?.classList.toggle('show'); });
         document.addEventListener('click', () => userMenu?.classList.remove('show'));
         
         document.querySelectorAll('.dropdown-item[data-user]').forEach(item => {
@@ -76,9 +81,7 @@ class App {
         
         const userBtn = document.getElementById('userBtn');
         const userStatus = document.getElementById('userStatus');
-        const addCityBtn = document.getElementById('addCityBtn');
         
-        userBtn?.classList.add('logged-in');
         userBtn?.classList.remove('user-wiwi', 'user-yuyu');
         userBtn?.classList.add(`user-${username}`);
         
@@ -89,7 +92,7 @@ class App {
             userStatus.classList.add(`user-${username}`);
         }
         
-        addCityBtn?.classList.remove('hidden');
+        document.getElementById('addMomentBtn')?.classList.remove('hidden');
         
         document.querySelectorAll('.dropdown-item[data-user]').forEach(item => {
             item.classList.toggle('active', item.dataset.user === username);
@@ -103,14 +106,14 @@ class App {
         const userBtn = document.getElementById('userBtn');
         const userStatus = document.getElementById('userStatus');
         
-        userBtn?.classList.remove('logged-in', 'user-wiwi', 'user-yuyu');
+        userBtn?.classList.remove('user-wiwi', 'user-yuyu');
         
         if (userStatus) {
             userStatus.textContent = '未登录';
             userStatus.classList.remove('logged-in', 'user-wiwi', 'user-yuyu');
         }
         
-        document.getElementById('addCityBtn')?.classList.add('hidden');
+        document.getElementById('addMomentBtn')?.classList.add('hidden');
         document.querySelectorAll('.dropdown-item[data-user]').forEach(item => item.classList.remove('active'));
     }
     
@@ -132,22 +135,21 @@ class App {
         
         if (!homeCityOptions) return;
         
-        // 下拉菜单切换
         globeNavBtn?.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             globeDropdown?.classList.toggle('open');
         });
         
-        document.addEventListener('click', () => {
-            globeDropdown?.classList.remove('open');
-        });
+        document.addEventListener('click', () => globeDropdown?.classList.remove('open'));
         
-        // 获取有记录的城市（按英文名字母排序）
-        const citiesWithContent = this.dataManager.getCitiesWithContent();
+        // 只显示旧金山和上海作为归位城市
+        const homeCities = this.dataManager.cities.filter(c => 
+            c.nameEn === 'San Francisco' || c.nameEn === 'Shanghai'
+        );
         
         homeCityOptions.innerHTML = '';
-        citiesWithContent.forEach(city => {
+        homeCities.forEach(city => {
             const btn = document.createElement('button');
             btn.className = 'city-option';
             btn.innerHTML = `<span class="city-option-dot" style="background-color: ${city.color}"></span><span>${city.name}</span>`;
@@ -160,14 +162,10 @@ class App {
             homeCityOptions.appendChild(btn);
         });
         
-        // 恢复归位城市
+        // 默认归位到旧金山
         const savedHomeCity = localStorage.getItem('life29-home-city');
-        if (savedHomeCity) {
-            const city = this.dataManager.getCity(savedHomeCity);
-            if (city) this.setHomeCity(city, false);
-        } else if (citiesWithContent.length > 0) {
-            this.setHomeCity(citiesWithContent[0], false);
-        }
+        let defaultCity = homeCities.find(c => c.id === savedHomeCity) || homeCities.find(c => c.nameEn === 'San Francisco');
+        if (defaultCity) this.setHomeCity(defaultCity, false);
     }
     
     setHomeCity(city, save = true) {
@@ -188,31 +186,208 @@ class App {
         
         searchBtn?.addEventListener('click', () => cityListPanel?.classList.add('open'));
         closeCityList?.addEventListener('click', () => cityListPanel?.classList.remove('open'));
-        
         document.getElementById('citySearch')?.addEventListener('input', (e) => this.filterCityList(e.target.value));
         
-        const addCityBtn = document.getElementById('addCityBtn');
-        const addCityModal = document.getElementById('addCityModal');
-        const closeAddCity = document.getElementById('closeAddCity');
-        
-        addCityBtn?.addEventListener('click', () => {
-            if (this.currentUser) addCityModal?.classList.remove('hidden');
-        });
-        
-        closeAddCity?.addEventListener('click', () => addCityModal?.classList.add('hidden'));
-        addCityModal?.querySelector('.modal-backdrop')?.addEventListener('click', () => addCityModal?.classList.add('hidden'));
-        
-        document.getElementById('addCityForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleAddCity(e);
-        });
+        // Moment 相关
+        this.initMomentModal();
         
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                addCityModal?.classList.add('hidden');
+                document.getElementById('addMomentModal')?.classList.add('hidden');
                 cityListPanel?.classList.remove('open');
             }
         });
+    }
+    
+    initMomentModal() {
+        const addMomentBtn = document.getElementById('addMomentBtn');
+        const modal = document.getElementById('addMomentModal');
+        const closeBtn = document.getElementById('closeMomentModal');
+        const countrySelect = document.getElementById('momentCountry');
+        const citySelect = document.getElementById('momentCity');
+        const locationForm = document.getElementById('momentLocationForm');
+        const contentForm = document.getElementById('momentContentForm');
+        const backBtn = document.getElementById('backToStep1');
+        const addPhotoBtn = document.getElementById('addPhotoBtn');
+        const photoInput = document.getElementById('photoFileInput');
+        
+        addMomentBtn?.addEventListener('click', () => {
+            if (this.currentUser) {
+                this.resetMomentModal();
+                modal?.classList.remove('hidden');
+            }
+        });
+        
+        closeBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
+        modal?.querySelector('.modal-backdrop')?.addEventListener('click', () => modal?.classList.add('hidden'));
+        
+        // 国家选择变化
+        countrySelect?.addEventListener('change', (e) => {
+            const country = e.target.value;
+            citySelect.disabled = !country;
+            citySelect.innerHTML = '<option value="">选择城市...</option>';
+            
+            if (country === '中国') {
+                this.chinaCities.forEach(city => {
+                    citySelect.innerHTML += `<option value="${city}">${city}</option>`;
+                });
+            } else if (country === '美国') {
+                this.usCities.forEach(city => {
+                    citySelect.innerHTML += `<option value="${city}">${city}</option>`;
+                });
+            }
+        });
+        
+        // Step 1 提交
+        locationForm?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const country = countrySelect.value;
+            const city = citySelect.value;
+            const date = document.getElementById('momentDate').value;
+            
+            this.momentData = { country, city, date };
+            
+            document.getElementById('momentCityTitle').textContent = `在${city}的这一刻`;
+            document.getElementById('momentStep1').style.display = 'none';
+            document.getElementById('momentStep2').style.display = 'block';
+        });
+        
+        // 返回 Step 1
+        backBtn?.addEventListener('click', () => {
+            document.getElementById('momentStep1').style.display = 'block';
+            document.getElementById('momentStep2').style.display = 'none';
+        });
+        
+        // 添加照片
+        addPhotoBtn?.addEventListener('click', () => photoInput?.click());
+        
+        photoInput?.addEventListener('change', (e) => {
+            const files = e.target.files;
+            for (let file of files) {
+                if (this.uploadedPhotos.length >= 9) break;
+                this.addPhotoPreview(file);
+            }
+        });
+        
+        // Step 2 提交
+        contentForm?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitMoment();
+        });
+    }
+    
+    addPhotoPreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const photoData = e.target.result;
+            this.uploadedPhotos.push(photoData);
+            
+            const area = document.getElementById('photoUploadArea');
+            const addBtn = document.getElementById('addPhotoBtn');
+            
+            const preview = document.createElement('div');
+            preview.className = 'photo-preview';
+            preview.innerHTML = `
+                <img src="${photoData}" alt="">
+                <button type="button" class="remove-btn" data-index="${this.uploadedPhotos.length - 1}">×</button>
+            `;
+            
+            preview.querySelector('.remove-btn').addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.uploadedPhotos.splice(index, 1);
+                preview.remove();
+                this.updatePhotoIndices();
+            });
+            
+            area.insertBefore(preview, addBtn);
+            
+            if (this.uploadedPhotos.length >= 9) {
+                addBtn.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    updatePhotoIndices() {
+        document.querySelectorAll('.photo-preview .remove-btn').forEach((btn, index) => {
+            btn.dataset.index = index;
+        });
+    }
+    
+    resetMomentModal() {
+        document.getElementById('momentStep1').style.display = 'block';
+        document.getElementById('momentStep2').style.display = 'none';
+        document.getElementById('momentLocationForm').reset();
+        document.getElementById('momentContentForm').reset();
+        document.getElementById('momentCity').disabled = true;
+        document.getElementById('momentCity').innerHTML = '<option value="">先选择国家...</option>';
+        
+        // 清除照片预览
+        this.uploadedPhotos = [];
+        const area = document.getElementById('photoUploadArea');
+        area.querySelectorAll('.photo-preview').forEach(p => p.remove());
+        document.getElementById('addPhotoBtn').style.display = 'flex';
+        
+        // 设置默认日期为今天
+        document.getElementById('momentDate').value = new Date().toISOString().split('T')[0];
+    }
+    
+    submitMoment() {
+        const content = document.getElementById('momentContent').value;
+        const { country, city, date } = this.momentData;
+        
+        // 获取坐标
+        const coords = this.globe.getCityCoordinates(country, city);
+        if (!coords) {
+            alert('无法找到该城市的坐标');
+            return;
+        }
+        
+        // 查找或创建城市
+        let existingCity = this.dataManager.cities.find(c => c.name === city && c.country === country);
+        
+        if (!existingCity) {
+            // 创建新城市
+            const colors = ['#E8B4B8', '#A8D5E5', '#B8D4A8', '#C8B8E5', '#E5C8B8', '#D5E5D8'];
+            existingCity = this.dataManager.addCity({
+                name: city,
+                nameEn: city,
+                country: country,
+                lat: coords.lat,
+                lng: coords.lng,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                visitDate: date
+            });
+        }
+        
+        // 添加照片
+        this.uploadedPhotos.forEach(photoData => {
+            this.dataManager.addPhoto(existingCity.id, {
+                url: photoData,
+                caption: ''
+            });
+        });
+        
+        // 添加日志
+        if (content.trim()) {
+            this.dataManager.addJournal(existingCity.id, {
+                title: `${city}的记忆`,
+                content: content,
+                date: date
+            });
+        }
+        
+        // 更新UI
+        this.globe?.updateCities(this.dataManager.cities);
+        this.updateStats();
+        this.updateCityList();
+        this.initHomeControl();
+        
+        // 聚焦到新城市
+        this.globe?.focusOnCity(existingCity);
+        
+        // 关闭模态框
+        document.getElementById('addMomentModal')?.classList.add('hidden');
     }
     
     showCityPreview(city, event) {
@@ -256,10 +431,7 @@ class App {
         const timer = setInterval(() => {
             step++;
             element.textContent = Math.round(current + increment * step);
-            if (step >= steps) {
-                element.textContent = target;
-                clearInterval(timer);
-            }
+            if (step >= steps) { element.textContent = target; clearInterval(timer); }
         }, 40);
     }
     
@@ -304,29 +476,6 @@ class App {
         });
     }
     
-    handleAddCity(e) {
-        const formData = new FormData(e.target);
-        const newCity = {
-            name: formData.get('cityName'),
-            nameEn: formData.get('cityNameEn'),
-            country: formData.get('countryName'),
-            lat: parseFloat(formData.get('cityLat')),
-            lng: parseFloat(formData.get('cityLng')),
-            color: formData.get('cityColor'),
-            visitDate: formData.get('visitDate') || null
-        };
-        
-        this.dataManager.addCity(newCity);
-        this.globe?.updateCities(this.dataManager.cities);
-        this.updateStats();
-        this.updateCityList();
-        this.initHomeControl();
-        
-        document.getElementById('addCityModal')?.classList.add('hidden');
-        e.target.reset();
-        this.globe?.focusOnCity(newCity);
-    }
-    
     updateDate() {
         const dateEl = document.getElementById('currentDate');
         if (dateEl) {
@@ -335,6 +484,4 @@ class App {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new App();
-});
+document.addEventListener('DOMContentLoaded', () => { window.app = new App(); });
