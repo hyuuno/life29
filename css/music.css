@@ -334,15 +334,6 @@
 .album-placeholder {
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.album-placeholder svg {
-    width: 40%;
-    height: 40%;
-    opacity: 0.3;
 }
 
 /* Hover 信息 */
@@ -451,14 +442,14 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-sm);
-    padding: var(--space-xl);
+    padding: var(--space-lg);
     border: 2px dashed var(--color-border);
     border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
     position: relative;
-    min-height: 140px;
+    min-height: 120px;
 }
 
 .upload-file-area:hover {
@@ -484,13 +475,66 @@
     font-size: 0.75rem;
     color: var(--color-primary);
     word-break: break-all;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.cover-preview {
+/* 封面预览按钮 */
+.cover-preview-btn {
+    display: none;
+    padding: 4px 12px;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.upload-file-area.has-file .cover-preview-btn {
+    display: inline-block;
+}
+
+/* 预览模态框 */
+.preview-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.preview-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.preview-overlay img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: var(--radius-lg);
+}
+
+.preview-overlay .close-preview {
     position: absolute;
-    inset: 4px;
-    object-fit: cover;
-    border-radius: calc(var(--radius-lg) - 2px);
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    font-size: 24px;
 }
 
 .form-row {

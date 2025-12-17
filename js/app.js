@@ -25,6 +25,7 @@ class App {
             await this.dataManager.load();
             this.initTheme();
             this.initUser();
+            await this.initCloud();
             this.initGlobe();
             this.initHomeControl();
             this.bindEvents();
@@ -34,6 +35,28 @@ class App {
         } catch (error) {
             console.error('App init error:', error);
         }
+    }
+    
+    async initCloud() {
+        const statusEl = document.getElementById('cloudStatus');
+        if (!statusEl) return;
+        
+        if (window.supabaseService) {
+            const connected = await window.supabaseService.init();
+            if (connected) {
+                statusEl.classList.remove('disconnected');
+                statusEl.classList.add('connected');
+                statusEl.title = '云端已连接';
+            } else {
+                statusEl.title = '云端未连接 - 请检查配置';
+            }
+        }
+        
+        // 点击显示状态
+        statusEl.addEventListener('click', () => {
+            const isConnected = statusEl.classList.contains('connected');
+            alert(isConnected ? '☁️ 云端已连接\n\nSupabase 和 Cloudinary 服务正常' : '⚠️ 云端未连接\n\n请检查 config.js 中的配置');
+        });
     }
     
     initTheme() {

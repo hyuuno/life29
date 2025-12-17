@@ -538,3 +538,98 @@ body {
     color: var(--color-text);
     background: var(--color-bg-card);
 }
+
+/* ============================================
+   Mini Music Player (Global)
+   ============================================ */
+.mini-music-player {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mini-music-player.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.mini-player-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #d4a574 0%, #c9956c 50%, #b8860b 100%);
+    color: #1a1a1a;
+    text-decoration: none;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(212, 165, 116, 0.4);
+    transition: all 0.3s;
+}
+
+.mini-player-link:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 28px rgba(212, 165, 116, 0.5);
+}
+
+.mini-music-player.playing .mini-player-link {
+    animation: goldPulse 2s ease-in-out infinite;
+}
+
+@keyframes goldPulse {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(212, 165, 116, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(212, 165, 116, 0.7);
+    }
+}
+
+.mini-player-link svg {
+    flex-shrink: 0;
+}
+
+.mini-player-title {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Cloud Status Indicator */
+.cloud-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cloud-status.connected {
+    color: #4caf50;
+}
+
+.cloud-status.disconnected {
+    color: var(--color-text-muted);
+}
+
+.cloud-status:hover {
+    background: var(--color-bg-card);
+}
+
+.cloud-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}

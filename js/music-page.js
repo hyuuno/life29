@@ -28,16 +28,84 @@ class MusicPage {
         
         this.showLoading(false);
         this.renderGrid();
+        
+        // 同步全局播放器状态
+        this.syncWithGlobalPlayer();
+        
         this.updatePlayerUI();
     }
     
-    async initCloud() {
-        if (window.supabaseService) {
-            this.isCloudMode = await window.supabaseService.init();
-            if (this.isCloudMode) {
-                this.showToast('☁️ 云端已连接', 'success');
+    syncWithGlobalPlayer() {
+        if (!window.globalMusicPlayer) {
+            // 如果没有全局播放器，绑定本地audio事件
+            this.audio.addEventListener('timeupdate', () => this.updateProgress());
+            this.audio.addEventListener('ended', () => this.playNext());
+            this.audio.addEventListener('play', () => {
+                this.isPlaying = true;
+                document.getElementById('playPauseBtn')?.classList.add('playing');
+            });
+            this.audio.addEventListener('pause', () => {
+                this.isPlaying = false;
+                document.getElementById('playPauseBtn')?.classList.remove('playing');
+            });
+            return;
+        }
+        
+        const gp = window.globalMusicPlayer;
+        
+        // 使用全局播放器的audio
+        this.audio = gp.audio;
+        
+        // 如果全局播放器有正在播放的歌曲，同步状态
+        if (gp.currentSong) {
+            // 找到对应的歌曲索引
+            const index = this.songs.findIndex(s => s.file === gp.currentSong.file);
+            if (index !== -1) {
+                this.currentIndex = index;
+                this.currentSong = this.songs[index];
+                this.isPlaying = gp.isPlaying;
+                
+                // 更新UI状态
+                if (this.isPlaying) {
+                    document.getElementById('playPauseBtn')?.classList.add('playing');
+                }
             }
         }
+        
+        // 绑定audio事件
+        this.audio.addEventListener('timeupdate', () => this.updateProgress());
+        
+        this.audio.addEventListener('play', () => {
+            this.isPlaying = true;
+            document.getElementById('playPauseBtn')?.classList.add('playing');
+            this.updatePlayingState();
+        });
+        
+        this.audio.addEventListener('pause', () => {
+            this.isPlaying = false;
+            document.getElementById('playPauseBtn')?.classList.remove('playing');
+        });
+        
+        this.audio.addEventListener('ended', () => this.playNext());
+    }
+    
+    async initCloud() {
+        const statusEl = document.getElementById('cloudStatus');
+        
+        if (window.supabaseService) {
+            this.isCloudMode = await window.supabaseService.init();
+            if (this.isCloudMode && statusEl) {
+                statusEl.classList.remove('disconnected');
+                statusEl.classList.add('connected');
+                statusEl.title = '云端已连接';
+            }
+        }
+        
+        // 点击显示状态
+        statusEl?.addEventListener('click', () => {
+            const isConnected = statusEl.classList.contains('connected');
+            alert(isConnected ? '☁️ 云端已连接\n\nSupabase 和 Cloudinary 服务正常' : '⚠️ 云端未连接\n\n请检查 config.js 中的配置');
+        });
     }
     
     async loadSongs() {
@@ -164,17 +232,7 @@ class MusicPage {
             this.audio.currentTime = percent * this.audio.duration;
         });
         
-        // Audio 事件
-        this.audio.addEventListener('timeupdate', () => this.updateProgress());
-        this.audio.addEventListener('ended', () => this.playNext());
-        this.audio.addEventListener('play', () => {
-            this.isPlaying = true;
-            document.getElementById('playPauseBtn')?.classList.add('playing');
-        });
-        this.audio.addEventListener('pause', () => {
-            this.isPlaying = false;
-            document.getElementById('playPauseBtn')?.classList.remove('playing');
-        });
+        // Audio 事件会在 syncWithGlobalPlayer 中绑定
         
         // Reroll
         document.getElementById('rerollBtn')?.addEventListener('click', () => {
@@ -261,6 +319,22 @@ class MusicPage {
             const file = e.target.files[0];
             if (file) this.setCoverFile(file);
         });
+        
+        // 预览按钮
+        document.getElementById('showPreviewBtn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.showCoverPreview();
+        });
+        
+        document.getElementById('closePreview')?.addEventListener('click', () => {
+            this.hideCoverPreview();
+        });
+        
+        document.getElementById('previewOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'previewOverlay') {
+                this.hideCoverPreview();
+            }
+        });
     }
     
     setMusicFile(file) {
@@ -281,13 +355,24 @@ class MusicPage {
         document.getElementById('coverFileName').textContent = file.name;
         document.getElementById('coverFileArea')?.classList.add('has-file');
         
+        // 存储预览数据用于预览按钮
         const reader = new FileReader();
         reader.onload = (e) => {
-            const preview = document.getElementById('coverPreview');
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
+            this.coverPreviewData = e.target.result;
         };
         reader.readAsDataURL(file);
+    }
+    
+    showCoverPreview() {
+        if (!this.coverPreviewData) return;
+        const overlay = document.getElementById('previewOverlay');
+        const img = document.getElementById('previewImage');
+        img.src = this.coverPreviewData;
+        overlay.classList.add('show');
+    }
+    
+    hideCoverPreview() {
+        document.getElementById('previewOverlay')?.classList.remove('show');
     }
     
     renderGrid() {
@@ -307,12 +392,12 @@ class MusicPage {
                 const coverUrl = song.cover ? 
                     (window.cloudinaryService?.getThumbnailUrl(song.cover, 300) || song.cover) : '';
                 
+                const hasCover = coverUrl && coverUrl.length > 0;
+                
                 item.innerHTML = `
-                    <img class="album-cover" src="${coverUrl}" alt="${song.title}" 
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="album-placeholder" style="background: ${placeholderColors[gridIndex]}; display: none;">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-                    </div>
+                    ${hasCover ? `<img class="album-cover" src="${coverUrl}" alt="${song.title}" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">` : ''}
+                    <div class="album-placeholder" style="background: ${placeholderColors[gridIndex]}; ${hasCover ? 'display: none;' : ''}"></div>
                     <div class="album-info">
                         <div class="album-info-title">${song.title}</div>
                         <div class="album-info-artist">${song.artist}</div>
@@ -329,11 +414,7 @@ class MusicPage {
                 `;
                 item.addEventListener('click', () => this.playSong(orderIndex));
             } else {
-                item.innerHTML = `
-                    <div class="album-placeholder" style="background: ${placeholderColors[gridIndex]};">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-                    </div>
-                `;
+                item.innerHTML = `<div class="album-placeholder" style="background: ${placeholderColors[gridIndex]};"></div>`;
                 item.style.opacity = '0.4';
                 item.style.cursor = 'default';
             }
@@ -372,8 +453,13 @@ class MusicPage {
         this.currentIndex = index;
         this.currentSong = song;
         
-        this.audio.src = song.file;
-        this.audio.play().catch(e => console.warn('Play failed:', e));
+        // 使用全局播放器（如果存在）
+        if (window.globalMusicPlayer) {
+            window.globalMusicPlayer.play(song);
+        } else {
+            this.audio.src = song.file;
+            this.audio.play().catch(e => console.warn('Play failed:', e));
+        }
         
         this.updatePlayerUI();
         this.updatePlayingState();
@@ -388,10 +474,14 @@ class MusicPage {
             return;
         }
         
-        if (this.isPlaying) {
-            this.audio.pause();
+        if (window.globalMusicPlayer) {
+            window.globalMusicPlayer.toggle();
         } else {
-            this.audio.play().catch(e => console.warn('Play failed:', e));
+            if (this.isPlaying) {
+                this.audio.pause();
+            } else {
+                this.audio.play().catch(e => console.warn('Play failed:', e));
+            }
         }
     }
     
@@ -593,10 +683,10 @@ class MusicPage {
         document.getElementById('uploadForm')?.reset();
         document.getElementById('musicFileName').textContent = '';
         document.getElementById('coverFileName').textContent = '';
-        document.getElementById('coverPreview')?.classList.add('hidden');
         document.querySelectorAll('.upload-file-area').forEach(el => el.classList.remove('has-file'));
         this.selectedMusicFile = null;
         this.selectedCoverFile = null;
+        this.coverPreviewData = null;
     }
 }
 

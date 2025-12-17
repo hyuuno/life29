@@ -50,6 +50,12 @@
             <a href="relax.html" class="nav-link">Relax</a>
         </nav>
         <div class="header-actions">
+            <div class="cloud-status disconnected" id="cloudStatus" title="云端状态">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                </svg>
+                <span class="cloud-status-dot"></span>
+            </div>
             <div class="bg-color-picker" id="bgColorPicker">
                 <button class="bg-color-btn active" data-bg="gray" title="灰色"></button>
                 <button class="bg-color-btn" data-bg="pink" title="粉色"></button>
@@ -201,7 +207,13 @@
         <div class="footer-right"><span class="footer-date" id="currentDate"></span></div>
     </footer>
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script src="js/config.js"></script>
+    <script src="js/cloudinary-service.js"></script>
+    <script src="js/supabase-service.js"></script>
+    <script src="js/global-music.js"></script>
     <script src="js/data.js"></script>
     <script src="js/globe.js"></script>
     <script src="js/app.js"></script>
