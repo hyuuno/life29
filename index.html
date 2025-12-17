@@ -46,6 +46,7 @@
             <a href="#" class="nav-link" data-view="timeline">时间线</a>
             <a href="#" class="nav-link" data-view="memories">回忆</a>
             <a href="schedule.html" class="nav-link">做咩</a>
+            <a href="music.html" class="nav-link">Music</a>
             <a href="relax.html" class="nav-link">Relax</a>
         </nav>
         <div class="header-actions">
@@ -192,37 +193,17 @@
     <footer class="footer">
         <div class="footer-left"><span class="user-status" id="userStatus">未登录</span></div>
         <div class="footer-center">
-            <div class="music-player" id="musicPlayer">
-                <div class="player-controls">
-                    <button class="player-btn" id="playPauseBtn" title="播放/暂停">
-                        <svg class="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        <svg class="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                    </button>
-                    <button class="player-btn" id="shuffleBtn" title="随机下一首">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-                    </button>
-                </div>
-                <div class="player-info">
-                    <span class="song-title" id="songTitle">未播放</span>
-                    <span class="song-time" id="songTime">--:--</span>
-                </div>
-                <div class="player-volume">
-                    <button class="player-btn volume-btn" id="volumeBtn" title="音量">
-                        <svg class="icon-volume" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                        <svg class="icon-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-                    </button>
-                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
-                </div>
-            </div>
+            <a href="music.html" class="footer-music-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span>Music</span>
+            </a>
         </div>
         <div class="footer-right"><span class="footer-date" id="currentDate"></span></div>
     </footer>
 
-    <audio id="audioPlayer"></audio>
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
     <script src="js/globe.js"></script>
-    <script src="js/music.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

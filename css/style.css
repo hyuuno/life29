@@ -520,3 +520,21 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--color-text-muted); border-radius: var(--radius-full); opacity: 0.3; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-text-light); }
 ::selection { background: var(--color-primary-light); color: var(--color-text); }
+
+/* Footer Music Link */
+.footer-music-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-full);
+    transition: all 0.2s;
+}
+
+.footer-music-link:hover {
+    color: var(--color-text);
+    background: var(--color-bg-card);
+}

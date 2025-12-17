@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d2d3a"/>
+      <stop offset="100%" style="stop-color:#1f1f2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg2)"/>
+  <circle cx="200" cy="150" r="50" fill="none" stroke="#c9b896" stroke-width="2" opacity="0.5"/>
+  <line x1="200" y1="100" x2="200" y2="150" stroke="#c9b896" stroke-width="2" opacity="0.6"/>
+  <line x1="200" y1="150" x2="230" y2="170" stroke="#c9b896" stroke-width="2" opacity="0.6"/>
+  <text x="200" y="280" text-anchor="middle" fill="#c9b896" font-family="serif" font-size="32">时光</text>
+  <text x="200" y="320" text-anchor="middle" fill="#9a968e" font-family="serif" font-size="16">尼格买提·热合曼</text>
+</svg>

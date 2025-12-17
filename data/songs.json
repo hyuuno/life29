@@ -1,0 +1,30 @@
+{
+  "songs": [
+    {
+      "id": "song_001",
+      "title": "カタオモイ",
+      "titleCn": "单相思",
+      "artist": "Aimer",
+      "album": "THE FIRST TAKE",
+      "language": "日语",
+      "genre": "J-Pop / Ballad",
+      "duration": 285,
+      "file": "music/Aimer_-_カタオモイ_-_From_THE_FIRST_TAKE__单相思_.mp3",
+      "cover": "covers/aimer_kataomoi.svg",
+      "addedAt": "2024-12-15"
+    },
+    {
+      "id": "song_002",
+      "title": "时光",
+      "titleCn": "时光",
+      "artist": "尼格买提·热合曼",
+      "album": "时光",
+      "language": "中文",
+      "genre": "华语流行",
+      "duration": 268,
+      "file": "music/尼格买提_热合曼_-_时光.mp3",
+      "cover": "covers/shiguang.svg",
+      "addedAt": "2024-12-15"
+    }
+  ]
+}
