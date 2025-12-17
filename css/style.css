@@ -540,13 +540,13 @@ body {
 }
 
 /* ============================================
-   Mini Music Player (Global)
+   Mini Music Player (Global) - 炫彩文字
    ============================================ */
 .mini-music-player {
     position: fixed;
-    bottom: 20px;
+    bottom: 24px;
     left: 50%;
-    transform: translateX(-50%) translateY(100px);
+    transform: translateX(-50%) translateY(60px);
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
@@ -560,47 +560,39 @@ body {
 }
 
 .mini-player-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #d4a574 0%, #c9956c 50%, #b8860b 100%);
-    color: #1a1a1a;
+    display: block;
     text-decoration: none;
-    border-radius: 50px;
-    font-size: 0.875rem;
+    padding: 8px 16px;
+}
+
+.shimmer-text {
+    font-size: 0.9375rem;
     font-weight: 500;
-    box-shadow: 0 4px 20px rgba(212, 165, 116, 0.4);
-    transition: all 0.3s;
+    font-family: var(--font-display);
+    background: linear-gradient(
+        90deg,
+        #ff6b6b,
+        #feca57,
+        #48dbfb,
+        #ff9ff3,
+        #54a0ff,
+        #5f27cd,
+        #ff6b6b
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
 }
 
-.mini-player-link:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 28px rgba(212, 165, 116, 0.5);
+.mini-music-player.playing .shimmer-text {
+    animation: shimmer 2s linear infinite;
 }
 
-.mini-music-player.playing .mini-player-link {
-    animation: goldPulse 2s ease-in-out infinite;
-}
-
-@keyframes goldPulse {
-    0%, 100% {
-        box-shadow: 0 4px 20px rgba(212, 165, 116, 0.4);
-    }
-    50% {
-        box-shadow: 0 4px 30px rgba(212, 165, 116, 0.7);
-    }
-}
-
-.mini-player-link svg {
-    flex-shrink: 0;
-}
-
-.mini-player-title {
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+@keyframes shimmer {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
 }
 
 /* Cloud Status Indicator */

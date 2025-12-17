@@ -1,50 +1,82 @@
 /**
  * Life29 - Global Music Player
- * 跨页面音乐播放状态管理
+ * 跨页面音乐播放 - 使用 localStorage + BroadcastChannel 同步
  */
 
 class GlobalMusicPlayer {
     constructor() {
+        this.storageKey = 'life29-music-state';
+        this.channelName = 'life29-music-channel';
+        this.channel = null;
         this.audio = null;
         this.currentSong = null;
         this.isPlaying = false;
-        this.storageKey = 'life29-music-state';
+        this.isMusicPage = window.location.pathname.includes('music.html');
         
         this.init();
     }
     
     init() {
-        // 创建或获取audio元素
-        this.audio = document.getElementById('globalAudioPlayer');
+        // 创建 BroadcastChannel 用于跨标签页通信
+        if ('BroadcastChannel' in window) {
+            this.channel = new BroadcastChannel(this.channelName);
+            this.channel.onmessage = (e) => this.handleMessage(e.data);
+        }
+        
+        // 获取或创建 audio 元素
+        this.audio = document.getElementById('globalAudioPlayer') || document.getElementById('audioPlayer');
         if (!this.audio) {
             this.audio = document.createElement('audio');
             this.audio.id = 'globalAudioPlayer';
             document.body.appendChild(this.audio);
         }
         
-        // 恢复播放状态
+        // 恢复状态
         this.restoreState();
         
-        // 监听storage变化（跨标签页同步）
-        window.addEventListener('storage', (e) => {
-            if (e.key === this.storageKey) {
-                this.onStateChange();
-            }
-        });
-        
-        // 音频事件
+        // 绑定 audio 事件
         this.audio.addEventListener('play', () => this.onPlay());
         this.audio.addEventListener('pause', () => this.onPause());
         this.audio.addEventListener('ended', () => this.onEnded());
         this.audio.addEventListener('timeupdate', () => this.onTimeUpdate());
         
-        // 渲染迷你播放器（非Music页面）
-        if (!window.location.pathname.includes('music.html')) {
+        // 设置音量
+        this.audio.volume = parseFloat(localStorage.getItem('life29-music-volume') || '0.7');
+        
+        // 非 Music 页面渲染迷你播放器
+        if (!this.isMusicPage) {
             this.renderMiniPlayer();
         }
         
-        // 设置音量
-        this.audio.volume = parseFloat(localStorage.getItem('life29-music-volume') || '0.7');
+        // 页面卸载时保存状态
+        window.addEventListener('beforeunload', () => this.saveState());
+    }
+    
+    handleMessage(data) {
+        switch (data.type) {
+            case 'play':
+                if (!this.isMusicPage) {
+                    this.currentSong = data.song;
+                    this.isPlaying = true;
+                    this.updateMiniPlayer();
+                }
+                break;
+            case 'pause':
+                this.isPlaying = false;
+                this.updateMiniPlayer();
+                break;
+            case 'stop':
+                this.isPlaying = false;
+                this.currentSong = null;
+                this.updateMiniPlayer();
+                break;
+        }
+    }
+    
+    broadcast(type, data = {}) {
+        if (this.channel) {
+            this.channel.postMessage({ type, ...data });
+        }
     }
     
     restoreState() {
@@ -54,12 +86,16 @@ class GlobalMusicPlayer {
                 const state = JSON.parse(saved);
                 this.currentSong = state.song;
                 
-                if (state.song && state.isPlaying) {
+                // 如果之前在播放，恢复状态
+                if (state.song && state.isPlaying && this.isMusicPage) {
                     this.audio.src = state.song.file;
                     this.audio.currentTime = state.currentTime || 0;
-                    // 自动播放需要用户交互，所以先暂停
-                    this.updateMiniPlayer();
+                    // 自动播放需要用户交互
+                } else if (state.song) {
+                    this.isPlaying = state.isPlaying;
                 }
+                
+                this.updateMiniPlayer();
             }
         } catch (e) {
             console.warn('Failed to restore music state:', e);
@@ -70,16 +106,10 @@ class GlobalMusicPlayer {
         const state = {
             song: this.currentSong,
             isPlaying: this.isPlaying,
-            currentTime: this.audio.currentTime,
+            currentTime: this.audio?.currentTime || 0,
             timestamp: Date.now()
         };
         localStorage.setItem(this.storageKey, JSON.stringify(state));
-    }
-    
-    onStateChange() {
-        // 其他标签页的状态变化
-        this.restoreState();
-        this.updateMiniPlayer();
     }
     
     play(song) {
@@ -88,10 +118,12 @@ class GlobalMusicPlayer {
             this.audio.src = song.file;
         }
         this.audio.play().catch(e => console.warn('Play failed:', e));
+        this.broadcast('play', { song: this.currentSong });
     }
     
     pause() {
         this.audio.pause();
+        this.broadcast('pause');
     }
     
     toggle() {
@@ -118,34 +150,26 @@ class GlobalMusicPlayer {
         this.isPlaying = false;
         this.saveState();
         this.updateMiniPlayer();
-        // 触发自定义事件
         window.dispatchEvent(new CustomEvent('music-ended'));
     }
     
     onTimeUpdate() {
-        // 每10秒保存一次进度
-        if (Math.floor(this.audio.currentTime) % 10 === 0) {
+        // 每5秒保存一次
+        if (Math.floor(this.audio.currentTime) % 5 === 0) {
             this.saveState();
         }
-        this.updateMiniPlayer();
     }
     
     renderMiniPlayer() {
-        // 检查是否有播放中的歌曲
-        if (!this.currentSong) return;
-        
         const existing = document.getElementById('miniMusicPlayer');
-        if (existing) return;
+        if (existing) existing.remove();
         
         const mini = document.createElement('div');
         mini.id = 'miniMusicPlayer';
         mini.className = 'mini-music-player';
         mini.innerHTML = `
-            <a href="music.html" class="mini-player-link" title="打开音乐页面">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                </svg>
-                <span class="mini-player-title"></span>
+            <a href="music.html" class="mini-player-link">
+                <span class="shimmer-text"></span>
             </a>
         `;
         document.body.appendChild(mini);
@@ -156,21 +180,21 @@ class GlobalMusicPlayer {
     updateMiniPlayer() {
         const mini = document.getElementById('miniMusicPlayer');
         if (!mini) {
-            if (this.currentSong && !window.location.pathname.includes('music.html')) {
+            if (this.currentSong && !this.isMusicPage) {
                 this.renderMiniPlayer();
             }
             return;
         }
         
-        const titleEl = mini.querySelector('.mini-player-title');
+        const textEl = mini.querySelector('.shimmer-text');
         
         if (this.currentSong && this.isPlaying) {
             mini.classList.add('show', 'playing');
-            titleEl.textContent = this.currentSong.title;
+            textEl.textContent = `♪ ${this.currentSong.title}`;
         } else if (this.currentSong) {
             mini.classList.add('show');
             mini.classList.remove('playing');
-            titleEl.textContent = this.currentSong.title;
+            textEl.textContent = `♪ ${this.currentSong.title}`;
         } else {
             mini.classList.remove('show', 'playing');
         }
@@ -179,18 +203,6 @@ class GlobalMusicPlayer {
     setVolume(value) {
         this.audio.volume = value;
         localStorage.setItem('life29-music-volume', value.toString());
-    }
-    
-    getCurrentTime() {
-        return this.audio.currentTime;
-    }
-    
-    getDuration() {
-        return this.audio.duration;
-    }
-    
-    seek(time) {
-        this.audio.currentTime = time;
     }
 }
 

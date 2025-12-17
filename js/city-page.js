@@ -90,6 +90,7 @@ class CityPage {
         const grid = document.getElementById('photosGrid');
         const empty = document.getElementById('photosEmpty');
         const photos = this.city.photos || [];
+        const isLoggedIn = !!localStorage.getItem('life29-user');
         
         if (photos.length === 0) {
             grid.style.display = 'none';
@@ -101,21 +102,49 @@ class CityPage {
         empty.style.display = 'none';
         
         grid.innerHTML = photos.map((photo, i) => `
-            <div class="photo-card" data-index="${i}">
+            <div class="photo-card" data-index="${i}" data-id="${photo.id}">
                 <img src="${photo.url}" alt="${photo.caption || ''}" loading="lazy">
                 <div class="photo-card-overlay"><p class="photo-caption">${photo.caption || ''}</p></div>
+                ${isLoggedIn ? `<button class="photo-delete-btn" data-index="${i}" title="删除照片">×</button>` : ''}
             </div>
         `).join('');
         
         grid.querySelectorAll('.photo-card').forEach(card => {
-            card.addEventListener('click', () => this.openViewer(parseInt(card.dataset.index)));
+            card.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('photo-delete-btn')) {
+                    this.openViewer(parseInt(card.dataset.index));
+                }
+            });
         });
+        
+        // 删除按钮事件
+        grid.querySelectorAll('.photo-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deletePhoto(parseInt(btn.dataset.index));
+            });
+        });
+    }
+    
+    async deletePhoto(index) {
+        if (!confirm('确定删除这张照片吗？')) return;
+        
+        const photo = this.city.photos[index];
+        
+        // 从本地删除
+        this.city.photos.splice(index, 1);
+        dataManager.save();
+        
+        // TODO: 从云端删除（需要 moment 关联）
+        
+        this.render();
     }
     
     renderJournals() {
         const list = document.getElementById('journalsList');
         const empty = document.getElementById('journalsEmpty');
         const journals = this.city.journals || [];
+        const isLoggedIn = !!localStorage.getItem('life29-user');
         
         if (journals.length === 0) {
             list.style.display = 'none';
@@ -126,15 +155,38 @@ class CityPage {
         list.style.display = 'flex';
         empty.style.display = 'none';
         
-        list.innerHTML = journals.map(journal => `
-            <article class="journal-card">
+        list.innerHTML = journals.map((journal, i) => `
+            <article class="journal-card" data-index="${i}">
                 <div class="journal-header">
                     <h3 class="journal-title">${journal.title}</h3>
-                    <span class="journal-date">${new Date(journal.date || journal.createdAt).toLocaleDateString('zh-CN')}</span>
+                    <div class="journal-actions">
+                        <span class="journal-date">${new Date(journal.date || journal.createdAt).toLocaleDateString('zh-CN')}</span>
+                        ${isLoggedIn ? `<button class="journal-delete-btn" data-index="${i}" title="删除日志">×</button>` : ''}
+                    </div>
                 </div>
                 <p class="journal-content">${journal.content}</p>
             </article>
         `).join('');
+        
+        // 删除按钮事件
+        list.querySelectorAll('.journal-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteJournal(parseInt(btn.dataset.index));
+            });
+        });
+    }
+    
+    async deleteJournal(index) {
+        if (!confirm('确定删除这篇日志吗？')) return;
+        
+        // 从本地删除
+        this.city.journals.splice(index, 1);
+        dataManager.save();
+        
+        // TODO: 从云端删除
+        
+        this.render();
     }
     
     bindEvents() {

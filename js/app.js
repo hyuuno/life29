@@ -371,7 +371,7 @@ class App {
         document.getElementById('momentDate').value = new Date().toISOString().split('T')[0];
     }
     
-    submitMoment() {
+    async submitMoment() {
         const content = document.getElementById('momentContent').value;
         const { country, city, date } = this.momentData;
         
@@ -382,51 +382,98 @@ class App {
             return;
         }
         
-        // 查找或创建城市
-        let existingCity = this.dataManager.cities.find(c => c.name === city && c.country === country);
-        
-        if (!existingCity) {
-            // 创建新城市
-            const colors = ['#E8B4B8', '#A8D5E5', '#B8D4A8', '#C8B8E5', '#E5C8B8', '#D5E5D8'];
-            existingCity = this.dataManager.addCity({
-                name: city,
-                nameEn: city,
-                country: country,
-                lat: coords.lat,
-                lng: coords.lng,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                visitDate: date
-            });
+        const submitBtn = document.querySelector('#momentContentForm .btn-primary');
+        const originalText = submitBtn?.textContent;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
         }
         
-        // 添加照片
-        this.uploadedPhotos.forEach(photoData => {
-            this.dataManager.addPhoto(existingCity.id, {
-                url: photoData,
-                caption: ''
+        try {
+            // 上传照片到 Cloudinary（如果有）
+            let imageUrls = [];
+            if (this.uploadedPhotos.length > 0 && window.cloudinaryService) {
+                submitBtn.textContent = '上传图片...';
+                for (let i = 0; i < this.uploadedPhotos.length; i++) {
+                    // 将 base64 转为 File
+                    const base64 = this.uploadedPhotos[i];
+                    const response = await fetch(base64);
+                    const blob = await response.blob();
+                    const file = new File([blob], `moment_${Date.now()}_${i}.jpg`, { type: 'image/jpeg' });
+                    
+                    const result = await window.cloudinaryService.uploadMomentImage(file);
+                    imageUrls.push(result.url);
+                }
+            }
+            
+            // 保存到 Supabase
+            if (window.supabaseService?.isConnected()) {
+                submitBtn.textContent = '保存数据...';
+                await window.supabaseService.addMoment({
+                    userName: this.currentUser,
+                    content: content,
+                    imageUrls: JSON.stringify(imageUrls),
+                    country: country,
+                    city: city,
+                    date: date
+                });
+            }
+            
+            // 查找或创建城市（本地）
+            let existingCity = this.dataManager.cities.find(c => c.name === city && c.country === country);
+            
+            if (!existingCity) {
+                const colors = ['#E8B4B8', '#A8D5E5', '#B8D4A8', '#C8B8E5', '#E5C8B8', '#D5E5D8'];
+                existingCity = this.dataManager.addCity({
+                    name: city,
+                    nameEn: city,
+                    country: country,
+                    lat: coords.lat,
+                    lng: coords.lng,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    visitDate: date
+                });
+            }
+            
+            // 添加照片（本地）
+            const photoUrls = imageUrls.length > 0 ? imageUrls : this.uploadedPhotos;
+            photoUrls.forEach(photoUrl => {
+                this.dataManager.addPhoto(existingCity.id, {
+                    url: photoUrl,
+                    caption: ''
+                });
             });
-        });
-        
-        // 添加日志
-        if (content.trim()) {
-            this.dataManager.addJournal(existingCity.id, {
-                title: `${city}的记忆`,
-                content: content,
-                date: date
-            });
+            
+            // 添加日志（本地）
+            if (content.trim()) {
+                this.dataManager.addJournal(existingCity.id, {
+                    title: `${city}的记忆`,
+                    content: content,
+                    date: date
+                });
+            }
+            
+            // 更新UI
+            this.globe?.updateCities(this.dataManager.cities);
+            this.updateStats();
+            this.updateCityList();
+            this.initHomeControl();
+            
+            // 聚焦到新城市
+            this.globe?.focusOnCity(existingCity);
+            
+            // 关闭模态框
+            document.getElementById('addMomentModal')?.classList.add('hidden');
+            
+        } catch (e) {
+            console.error('Submit moment failed:', e);
+            alert('发布失败: ' + e.message);
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
-        
-        // 更新UI
-        this.globe?.updateCities(this.dataManager.cities);
-        this.updateStats();
-        this.updateCityList();
-        this.initHomeControl();
-        
-        // 聚焦到新城市
-        this.globe?.focusOnCity(existingCity);
-        
-        // 关闭模态框
-        document.getElementById('addMomentModal')?.classList.add('hidden');
     }
     
     showCityPreview(city, event) {

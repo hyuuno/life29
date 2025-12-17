@@ -9,17 +9,17 @@ class MusicPage {
         this.currentSong = null;
         this.currentIndex = -1;
         this.isPlaying = false;
-        this.audio = document.getElementById('audioPlayer');
+        this.audio = null;
         this.displayOrder = [];
         this.isCloudMode = false;
         this.currentUser = localStorage.getItem('life29-user') || 'wiwi';
+        this.eventsBound = false;
         
         this.init();
     }
     
     async init() {
         this.setupTheme();
-        this.bindEvents();
         this.showLoading(true);
         
         // 尝试连接云端
@@ -29,64 +29,51 @@ class MusicPage {
         this.showLoading(false);
         this.renderGrid();
         
-        // 同步全局播放器状态
-        this.syncWithGlobalPlayer();
-        
+        // 初始化音频（必须在 loadSongs 之后）
+        this.initAudio();
+        this.bindEvents();
         this.updatePlayerUI();
     }
     
-    syncWithGlobalPlayer() {
-        if (!window.globalMusicPlayer) {
-            // 如果没有全局播放器，绑定本地audio事件
+    initAudio() {
+        // 优先使用全局播放器
+        if (window.globalMusicPlayer && window.globalMusicPlayer.audio) {
+            this.audio = window.globalMusicPlayer.audio;
+            
+            // 同步当前状态
+            const gp = window.globalMusicPlayer;
+            if (gp.currentSong) {
+                const index = this.songs.findIndex(s => s.file === gp.currentSong.file);
+                if (index !== -1) {
+                    this.currentIndex = index;
+                    this.currentSong = this.songs[index];
+                    this.isPlaying = gp.isPlaying;
+                }
+            }
+        } else {
+            this.audio = document.getElementById('audioPlayer');
+        }
+        
+        // 绑定音频事件
+        if (!this.eventsBound) {
             this.audio.addEventListener('timeupdate', () => this.updateProgress());
-            this.audio.addEventListener('ended', () => this.playNext());
             this.audio.addEventListener('play', () => {
                 this.isPlaying = true;
                 document.getElementById('playPauseBtn')?.classList.add('playing');
+                this.updatePlayingState();
             });
             this.audio.addEventListener('pause', () => {
                 this.isPlaying = false;
                 document.getElementById('playPauseBtn')?.classList.remove('playing');
             });
-            return;
+            this.audio.addEventListener('ended', () => this.playNext());
+            this.eventsBound = true;
         }
         
-        const gp = window.globalMusicPlayer;
-        
-        // 使用全局播放器的audio
-        this.audio = gp.audio;
-        
-        // 如果全局播放器有正在播放的歌曲，同步状态
-        if (gp.currentSong) {
-            // 找到对应的歌曲索引
-            const index = this.songs.findIndex(s => s.file === gp.currentSong.file);
-            if (index !== -1) {
-                this.currentIndex = index;
-                this.currentSong = this.songs[index];
-                this.isPlaying = gp.isPlaying;
-                
-                // 更新UI状态
-                if (this.isPlaying) {
-                    document.getElementById('playPauseBtn')?.classList.add('playing');
-                }
-            }
-        }
-        
-        // 绑定audio事件
-        this.audio.addEventListener('timeupdate', () => this.updateProgress());
-        
-        this.audio.addEventListener('play', () => {
-            this.isPlaying = true;
+        // 更新UI状态
+        if (this.isPlaying) {
             document.getElementById('playPauseBtn')?.classList.add('playing');
-            this.updatePlayingState();
-        });
-        
-        this.audio.addEventListener('pause', () => {
-            this.isPlaying = false;
-            document.getElementById('playPauseBtn')?.classList.remove('playing');
-        });
-        
-        this.audio.addEventListener('ended', () => this.playNext());
+        }
     }
     
     async initCloud() {
@@ -207,10 +194,20 @@ class MusicPage {
         const volumeSlider = document.getElementById('volumeSlider');
         const volumeBtn = document.getElementById('volumeBtn');
         
+        const updateVolumeVisual = () => {
+            if (volumeSlider) {
+                volumeSlider.style.setProperty('--volume-percent', volumeSlider.value + '%');
+            }
+        };
+        
         volumeSlider?.addEventListener('input', (e) => {
             this.audio.volume = e.target.value / 100;
             volumeBtn?.classList.toggle('muted', this.audio.volume === 0);
+            updateVolumeVisual();
         });
+        
+        // 初始化音量视觉
+        updateVolumeVisual();
         
         volumeBtn?.addEventListener('click', () => {
             if (this.audio.volume > 0) {
@@ -222,6 +219,7 @@ class MusicPage {
                 volumeSlider.value = this.audio.volume * 100;
             }
             volumeBtn.classList.toggle('muted', this.audio.volume === 0);
+            updateVolumeVisual();
         });
         
         // 进度条
@@ -453,12 +451,15 @@ class MusicPage {
         this.currentIndex = index;
         this.currentSong = song;
         
-        // 使用全局播放器（如果存在）
+        // 设置音频源并播放
+        this.audio.src = song.file;
+        this.audio.play().catch(e => console.warn('Play failed:', e));
+        
+        // 同步到全局播放器
         if (window.globalMusicPlayer) {
-            window.globalMusicPlayer.play(song);
-        } else {
-            this.audio.src = song.file;
-            this.audio.play().catch(e => console.warn('Play failed:', e));
+            window.globalMusicPlayer.currentSong = song;
+            window.globalMusicPlayer.isPlaying = true;
+            window.globalMusicPlayer.saveState();
         }
         
         this.updatePlayerUI();
@@ -474,14 +475,10 @@ class MusicPage {
             return;
         }
         
-        if (window.globalMusicPlayer) {
-            window.globalMusicPlayer.toggle();
+        if (this.audio.paused) {
+            this.audio.play().catch(e => console.warn('Play failed:', e));
         } else {
-            if (this.isPlaying) {
-                this.audio.pause();
-            } else {
-                this.audio.play().catch(e => console.warn('Play failed:', e));
-            }
+            this.audio.pause();
         }
     }
     
