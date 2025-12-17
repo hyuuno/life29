@@ -1,6 +1,6 @@
 /**
  * Life29 - Music Page
- * 4x4专辑展示 + 播放器
+ * 4x4专辑展示 + 云端存储
  */
 
 class MusicPage {
@@ -10,38 +10,110 @@ class MusicPage {
         this.currentIndex = -1;
         this.isPlaying = false;
         this.audio = document.getElementById('audioPlayer');
-        this.displayOrder = []; // 随机排序后的索引
+        this.displayOrder = [];
+        this.isCloudMode = false;
+        this.currentUser = localStorage.getItem('life29-user') || 'wiwi';
         
         this.init();
     }
     
     async init() {
-        await this.loadSongs();
         this.setupTheme();
         this.bindEvents();
+        this.showLoading(true);
+        
+        // 尝试连接云端
+        await this.initCloud();
+        await this.loadSongs();
+        
+        this.showLoading(false);
         this.renderGrid();
         this.updatePlayerUI();
     }
     
+    async initCloud() {
+        if (window.supabaseService) {
+            this.isCloudMode = await window.supabaseService.init();
+            if (this.isCloudMode) {
+                this.showToast('☁️ 云端已连接', 'success');
+            }
+        }
+    }
+    
     async loadSongs() {
+        // 优先从云端加载
+        if (this.isCloudMode) {
+            try {
+                const cloudSongs = await window.supabaseService.getMusicList();
+                this.songs = cloudSongs.map(s => ({
+                    id: s.id,
+                    title: s.music_name,
+                    artist: s.artist,
+                    album: s.album || s.music_name,
+                    language: s.language,
+                    genre: s.music_genre,
+                    file: s.file_url,
+                    cover: s.cover_url,
+                    uploadUser: s.upload_user,
+                    createdAt: s.created_at
+                }));
+                console.log(`☁️ Loaded ${this.songs.length} songs from cloud`);
+            } catch (e) {
+                console.error('Cloud load failed:', e);
+                await this.loadLocalSongs();
+            }
+        } else {
+            await this.loadLocalSongs();
+        }
+        
+        this.shuffleOrder();
+    }
+    
+    async loadLocalSongs() {
         try {
             const res = await fetch('data/songs.json');
             const data = await res.json();
             this.songs = data.songs || [];
         } catch (e) {
-            console.warn('Failed to load songs:', e);
+            console.warn('Failed to load local songs:', e);
             this.songs = [];
         }
-        this.shuffleOrder();
     }
     
     shuffleOrder() {
-        // Fisher-Yates shuffle
         this.displayOrder = [...Array(16).keys()];
         for (let i = this.displayOrder.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [this.displayOrder[i], this.displayOrder[j]] = [this.displayOrder[j], this.displayOrder[i]];
         }
+    }
+    
+    showLoading(show) {
+        const grid = document.getElementById('albumGrid');
+        if (show) {
+            grid.innerHTML = `
+                <div class="loading-state" style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 16px; color: var(--color-text-muted);">加载中...</p>
+                </div>
+            `;
+        }
+    }
+    
+    showToast(message, type = 'info') {
+        const existing = document.querySelector('.toast');
+        if (existing) existing.remove();
+        
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
     
     setupTheme() {
@@ -110,7 +182,7 @@ class MusicPage {
             this.renderGrid();
         });
         
-        // 上传
+        // 上传模态框
         document.getElementById('uploadBtn')?.addEventListener('click', () => {
             document.getElementById('uploadModal')?.classList.remove('hidden');
         });
@@ -124,35 +196,7 @@ class MusicPage {
         });
         
         // 文件选择
-        const musicFileArea = document.getElementById('musicFileArea');
-        const coverFileArea = document.getElementById('coverFileArea');
-        
-        musicFileArea?.addEventListener('click', () => document.getElementById('musicFile')?.click());
-        coverFileArea?.addEventListener('click', () => document.getElementById('coverFile')?.click());
-        
-        document.getElementById('musicFile')?.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('musicFileName').textContent = file.name;
-                musicFileArea?.classList.add('has-file');
-            }
-        });
-        
-        document.getElementById('coverFile')?.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('coverFileName').textContent = file.name;
-                coverFileArea?.classList.add('has-file');
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const preview = document.getElementById('coverPreview');
-                    preview.src = e.target.result;
-                    preview.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        this.setupFileInputs();
         
         // 上传表单
         document.getElementById('uploadForm')?.addEventListener('submit', (e) => {
@@ -173,13 +217,84 @@ class MusicPage {
         this.audio.volume = 0.7;
     }
     
+    setupFileInputs() {
+        const musicFileArea = document.getElementById('musicFileArea');
+        const coverFileArea = document.getElementById('coverFileArea');
+        
+        musicFileArea?.addEventListener('click', () => document.getElementById('musicFile')?.click());
+        coverFileArea?.addEventListener('click', () => document.getElementById('coverFile')?.click());
+        
+        // 拖拽支持
+        [musicFileArea, coverFileArea].forEach(area => {
+            if (!area) return;
+            
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                
+                const file = e.dataTransfer.files[0];
+                if (!file) return;
+                
+                if (area.id === 'musicFileArea' && file.type.startsWith('audio/')) {
+                    this.setMusicFile(file);
+                } else if (area.id === 'coverFileArea' && file.type.startsWith('image/')) {
+                    this.setCoverFile(file);
+                }
+            });
+        });
+        
+        document.getElementById('musicFile')?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) this.setMusicFile(file);
+        });
+        
+        document.getElementById('coverFile')?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) this.setCoverFile(file);
+        });
+    }
+    
+    setMusicFile(file) {
+        this.selectedMusicFile = file;
+        document.getElementById('musicFileName').textContent = file.name;
+        document.getElementById('musicFileArea')?.classList.add('has-file');
+        
+        // 自动填充歌曲名
+        const titleInput = document.getElementById('songTitle');
+        if (titleInput && !titleInput.value) {
+            const name = file.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+            titleInput.value = name;
+        }
+    }
+    
+    setCoverFile(file) {
+        this.selectedCoverFile = file;
+        document.getElementById('coverFileName').textContent = file.name;
+        document.getElementById('coverFileArea')?.classList.add('has-file');
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('coverPreview');
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+    
     renderGrid() {
         const grid = document.getElementById('albumGrid');
         if (!grid) return;
         
         grid.innerHTML = '';
-        
-        // 生成16个随机颜色（用于占位）
         const placeholderColors = this.generatePlaceholderColors(16);
         
         this.displayOrder.forEach((orderIndex, gridIndex) => {
@@ -189,9 +304,11 @@ class MusicPage {
             item.dataset.index = orderIndex;
             
             if (song) {
-                // 有歌曲数据
+                const coverUrl = song.cover ? 
+                    (window.cloudinaryService?.getThumbnailUrl(song.cover, 300) || song.cover) : '';
+                
                 item.innerHTML = `
-                    <img class="album-cover" src="${song.cover}" alt="${song.title}" 
+                    <img class="album-cover" src="${coverUrl}" alt="${song.title}" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="album-placeholder" style="background: ${placeholderColors[gridIndex]}; display: none;">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
@@ -200,6 +317,7 @@ class MusicPage {
                         <div class="album-info-title">${song.title}</div>
                         <div class="album-info-artist">${song.artist}</div>
                         <div class="album-info-meta">${song.language || ''} ${song.genre ? '· ' + song.genre : ''}</div>
+                        ${song.uploadUser ? `<div class="album-info-user">by ${song.uploadUser}</div>` : ''}
                     </div>
                     <div class="album-playing-indicator">
                         <div class="equalizer-bars">
@@ -211,7 +329,6 @@ class MusicPage {
                 `;
                 item.addEventListener('click', () => this.playSong(orderIndex));
             } else {
-                // 占位符
                 item.innerHTML = `
                     <div class="album-placeholder" style="background: ${placeholderColors[gridIndex]};">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
@@ -240,7 +357,6 @@ class MusicPage {
             colors.push(`hsl(${hue}, ${sat}%, ${light}%)`);
         }
         
-        // Shuffle colors
         for (let i = colors.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [colors[i], colors[j]] = [colors[j], colors[i]];
@@ -265,7 +381,6 @@ class MusicPage {
     
     togglePlay() {
         if (!this.currentSong) {
-            // 播放第一首有效歌曲
             const firstValidIndex = this.displayOrder.find(i => this.songs[i]);
             if (firstValidIndex !== undefined) {
                 this.playSong(firstValidIndex);
@@ -283,11 +398,9 @@ class MusicPage {
     playPrev() {
         if (this.songs.length === 0) return;
         
-        // 在displayOrder中找当前歌曲的位置
         const currentPos = this.displayOrder.indexOf(this.currentIndex);
         let prevPos = currentPos - 1;
         
-        // 循环查找上一首有效歌曲
         for (let i = 0; i < 16; i++) {
             if (prevPos < 0) prevPos = 15;
             const songIndex = this.displayOrder[prevPos];
@@ -334,7 +447,9 @@ class MusicPage {
         const artistEl = document.getElementById('nowPlayingArtist');
         
         if (this.currentSong) {
-            coverEl.innerHTML = `<img src="${this.currentSong.cover}" alt="" onerror="this.style.display='none'">`;
+            const coverUrl = this.currentSong.cover ? 
+                (window.cloudinaryService?.getThumbnailUrl(this.currentSong.cover, 100) || this.currentSong.cover) : '';
+            coverEl.innerHTML = coverUrl ? `<img src="${coverUrl}" alt="">` : '';
             titleEl.textContent = this.currentSong.title;
             artistEl.textContent = this.currentSong.artist;
         } else {
@@ -389,7 +504,6 @@ class MusicPage {
             
             const match = 
                 song.title?.toLowerCase().includes(q) ||
-                song.titleCn?.toLowerCase().includes(q) ||
                 song.artist?.toLowerCase().includes(q) ||
                 song.album?.toLowerCase().includes(q) ||
                 song.genre?.toLowerCase().includes(q);
@@ -399,53 +513,90 @@ class MusicPage {
         });
     }
     
-    handleUpload() {
-        const musicFile = document.getElementById('musicFile').files[0];
-        const coverFile = document.getElementById('coverFile').files[0];
-        const title = document.getElementById('songTitle').value;
-        const artist = document.getElementById('songArtist').value;
-        const album = document.getElementById('songAlbum').value;
+    async handleUpload() {
+        const title = document.getElementById('songTitle').value.trim();
+        const artist = document.getElementById('songArtist').value.trim();
+        const album = document.getElementById('songAlbum').value.trim();
         const language = document.getElementById('songLanguage').value;
-        const genre = document.getElementById('songGenre').value;
+        const genre = document.getElementById('songGenre').value.trim();
         
-        if (!musicFile || !title || !artist) {
-            alert('请填写必填项');
+        if (!this.selectedMusicFile || !title || !artist) {
+            this.showToast('请选择音乐文件并填写歌曲名和歌手', 'error');
             return;
         }
         
-        // 生成新歌曲数据
-        const newSong = {
-            id: 'song_' + Date.now(),
-            title: title,
-            artist: artist,
-            album: album || title,
-            language: language,
-            genre: genre,
-            file: 'music/' + musicFile.name,
-            cover: coverFile ? 'covers/' + coverFile.name : '',
-            addedAt: new Date().toISOString().split('T')[0]
-        };
+        const submitBtn = document.querySelector('#uploadForm button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '上传中...';
         
-        // 添加到列表
-        this.songs.push(newSong);
-        
-        // 提示用户
-        alert(`歌曲已添加！\n\n请手动将文件复制到对应文件夹：\n• 音乐文件: music/${musicFile.name}\n• 封面图片: covers/${coverFile?.name || '(无)'}\n\n并更新 data/songs.json`);
-        
-        // 关闭模态框并刷新
-        document.getElementById('uploadModal')?.classList.add('hidden');
-        this.shuffleOrder();
-        this.renderGrid();
-        
-        // 重置表单
+        try {
+            // 检查是否配置了云服务
+            if (!this.isCloudMode || !window.cloudinaryService) {
+                throw new Error('云服务未配置，请先配置 Supabase 和 Cloudinary');
+            }
+            
+            // 上传音乐文件
+            submitBtn.textContent = '上传音乐文件...';
+            const musicResult = await window.cloudinaryService.uploadMusic(
+                this.selectedMusicFile,
+                (p) => { submitBtn.textContent = `上传音乐 ${p}%`; }
+            );
+            
+            // 上传封面（如果有）
+            let coverResult = null;
+            if (this.selectedCoverFile) {
+                submitBtn.textContent = '上传封面...';
+                coverResult = await window.cloudinaryService.uploadCover(
+                    this.selectedCoverFile,
+                    (p) => { submitBtn.textContent = `上传封面 ${p}%`; }
+                );
+            }
+            
+            // 保存到数据库
+            submitBtn.textContent = '保存数据...';
+            const saved = await window.supabaseService.addMusic({
+                title,
+                artist,
+                album: album || title,
+                language,
+                genre,
+                fileUrl: musicResult.url,
+                coverUrl: coverResult?.url || '',
+                uploadUser: this.currentUser
+            });
+            
+            if (!saved) {
+                throw new Error('保存到数据库失败');
+            }
+            
+            this.showToast('🎵 上传成功！', 'success');
+            
+            // 刷新列表
+            await this.loadSongs();
+            this.renderGrid();
+            
+            // 关闭模态框并重置
+            document.getElementById('uploadModal')?.classList.add('hidden');
+            this.resetUploadForm();
+            
+        } catch (e) {
+            console.error('Upload failed:', e);
+            this.showToast('上传失败: ' + e.message, 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    }
+    
+    resetUploadForm() {
         document.getElementById('uploadForm')?.reset();
         document.getElementById('musicFileName').textContent = '';
         document.getElementById('coverFileName').textContent = '';
         document.getElementById('coverPreview')?.classList.add('hidden');
         document.querySelectorAll('.upload-file-area').forEach(el => el.classList.remove('has-file'));
-        
-        // 打印JSON供用户复制
-        console.log('新歌曲数据 (复制到 data/songs.json):\n', JSON.stringify(newSong, null, 2));
+        this.selectedMusicFile = null;
+        this.selectedCoverFile = null;
     }
 }
 
