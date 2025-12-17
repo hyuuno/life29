@@ -137,8 +137,8 @@ class App {
         const container = document.getElementById('globeContainer');
         if (!container) return;
         
-        // 使用Life29Globe类（在globe.js中定义）
-        this.globe = new Life29Globe(container, this.dataManager.cities);
+        // 使用Globe类（在globe.js中定义）
+        this.globe = new Globe(container, this.dataManager.cities);
         
         this.globe.onCityHover = (city, event) => this.showCityPreview(city, event);
         this.globe.onCityClick = (city) => { window.location.href = `city.html?id=${city.id}`; };
