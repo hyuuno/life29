@@ -68,9 +68,18 @@
         .game-info {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
             font-size: 0.9rem;
             color: var(--color-text-light);
+        }
+        .game-scores {
+            display: flex;
+            gap: 20px;
+        }
+        .high-score {
+            color: #e8b4b8;
+            font-size: 0.8rem;
         }
         .color-grid {
             display: grid;
@@ -155,6 +164,16 @@
             color: var(--color-text-muted);
             margin-top: 16px;
         }
+        
+        .new-record {
+            color: #e8b4b8;
+            font-weight: 500;
+            animation: pulse 0.5s ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
     </style>
 </head>
 <body>
@@ -194,8 +213,11 @@
             <div class="game-area active" id="colorGame">
                 <div class="color-game">
                     <div class="game-info">
-                        <span>Level: <strong id="colorLevel">1</strong></span>
-                        <span>Score: <strong id="colorScore">0</strong></span>
+                        <div class="game-scores">
+                            <span>Level: <strong id="colorLevel">1</strong></span>
+                            <span>Score: <strong id="colorScore">0</strong></span>
+                        </div>
+                        <span class="high-score">最高: <strong id="colorHighScore">0</strong></span>
                     </div>
                     <div class="color-grid" id="colorGrid"></div>
                     <button class="game-btn" id="colorStartBtn">开始游戏</button>
@@ -206,7 +228,10 @@
             <div class="game-area" id="game2048">
                 <div class="game-2048">
                     <div class="game-info">
-                        <span>Score: <strong id="score2048">0</strong></span>
+                        <div class="game-scores">
+                            <span>Score: <strong id="score2048">0</strong></span>
+                            <span class="high-score">最高: <strong id="highScore2048">0</strong></span>
+                        </div>
                         <button class="game-btn" id="reset2048">重新开始</button>
                     </div>
                     <div class="grid-2048" id="grid2048"></div>
@@ -217,7 +242,10 @@
             <div class="game-area" id="memoryGame">
                 <div class="memory-game">
                     <div class="game-info">
-                        <span>Moves: <strong id="memoryMoves">0</strong></span>
+                        <div class="game-scores">
+                            <span>Moves: <strong id="memoryMoves">0</strong></span>
+                            <span class="high-score">最少: <strong id="memoryBest">-</strong></span>
+                        </div>
                         <button class="game-btn" id="resetMemory">重新开始</button>
                     </div>
                     <div class="memory-grid" id="memoryGrid"></div>
@@ -248,8 +276,26 @@
             });
         });
         
-        // Color Tiles
+        // ========== High Score Management ==========
+        function getHighScore(game) {
+            return parseInt(localStorage.getItem(`life29-${game}-highscore`) || '0');
+        }
+        function setHighScore(game, score) {
+            localStorage.setItem(`life29-${game}-highscore`, score);
+        }
+        function getBestMoves() {
+            const val = localStorage.getItem('life29-memory-best');
+            return val ? parseInt(val) : null;
+        }
+        function setBestMoves(moves) {
+            localStorage.setItem('life29-memory-best', moves);
+        }
+        
+        // ========== Color Tiles ==========
         let colorLevel = 1, colorScore = 0;
+        let colorHighScore = getHighScore('color');
+        document.getElementById('colorHighScore').textContent = colorHighScore;
+        
         function initColorGame() {
             const grid = document.getElementById('colorGrid');
             const size = Math.min(2 + Math.floor(colorLevel / 2), 6);
@@ -268,6 +314,14 @@
                     if (tile.dataset.different) {
                         colorScore += colorLevel * 10;
                         colorLevel++;
+                        // Check high score
+                        if (colorScore > colorHighScore) {
+                            colorHighScore = colorScore;
+                            setHighScore('color', colorHighScore);
+                            document.getElementById('colorHighScore').textContent = colorHighScore;
+                            document.getElementById('colorHighScore').classList.add('new-record');
+                            setTimeout(() => document.getElementById('colorHighScore').classList.remove('new-record'), 500);
+                        }
                     } else {
                         colorLevel = 1;
                         colorScore = 0;
@@ -279,25 +333,150 @@
                 grid.appendChild(tile);
             }
         }
-        document.getElementById('colorStartBtn').onclick = () => { colorLevel = 1; colorScore = 0; document.getElementById('colorScore').textContent = 0; document.getElementById('colorLevel').textContent = 1; initColorGame(); };
+        document.getElementById('colorStartBtn').onclick = () => { 
+            colorLevel = 1; colorScore = 0; 
+            document.getElementById('colorScore').textContent = 0; 
+            document.getElementById('colorLevel').textContent = 1; 
+            initColorGame(); 
+        };
         initColorGame();
         
-        // 2048
+        // ========== 2048 ==========
         let grid2048 = Array(16).fill(0), score2048 = 0;
-        function init2048() { grid2048 = Array(16).fill(0); score2048 = 0; addTile(); addTile(); render2048(); }
-        function addTile() { const empty = grid2048.map((v, i) => v === 0 ? i : -1).filter(i => i >= 0); if (empty.length) grid2048[empty[Math.floor(Math.random() * empty.length)]] = Math.random() < 0.9 ? 2 : 4; }
-        function render2048() { const c = document.getElementById('grid2048'); c.innerHTML = ''; grid2048.forEach(v => { const t = document.createElement('div'); t.className = 'tile-2048'; t.textContent = v || ''; t.dataset.value = v; c.appendChild(t); }); document.getElementById('score2048').textContent = score2048; }
-        function slide(arr) { const f = arr.filter(x => x), m = []; let i = 0; while (i < f.length) { if (i + 1 < f.length && f[i] === f[i + 1]) { m.push(f[i] * 2); score2048 += f[i] * 2; i += 2; } else { m.push(f[i]); i++; } } while (m.length < 4) m.push(0); return m; }
-        function move2048(dir) { const old = [...grid2048]; if (dir === 'left' || dir === 'right') { for (let r = 0; r < 4; r++) { let row = grid2048.slice(r * 4, r * 4 + 4); if (dir === 'right') row.reverse(); row = slide(row); if (dir === 'right') row.reverse(); for (let c = 0; c < 4; c++) grid2048[r * 4 + c] = row[c]; } } else { for (let c = 0; c < 4; c++) { let col = [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]]; if (dir === 'down') col.reverse(); col = slide(col); if (dir === 'down') col.reverse(); [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]] = col; } } if (old.join() !== grid2048.join()) addTile(); render2048(); }
-        document.addEventListener('keydown', e => { if (!document.getElementById('game2048').classList.contains('active')) return; const m = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' }; if (m[e.key]) { e.preventDefault(); move2048(m[e.key]); } });
+        let highScore2048 = getHighScore('2048');
+        document.getElementById('highScore2048').textContent = highScore2048;
+        
+        function init2048() { 
+            grid2048 = Array(16).fill(0); 
+            score2048 = 0; 
+            addTile(); addTile(); 
+            render2048(); 
+        }
+        function addTile() { 
+            const empty = grid2048.map((v, i) => v === 0 ? i : -1).filter(i => i >= 0); 
+            if (empty.length) grid2048[empty[Math.floor(Math.random() * empty.length)]] = Math.random() < 0.9 ? 2 : 4; 
+        }
+        function render2048() { 
+            const c = document.getElementById('grid2048'); 
+            c.innerHTML = ''; 
+            grid2048.forEach(v => { 
+                const t = document.createElement('div'); 
+                t.className = 'tile-2048'; 
+                t.textContent = v || ''; 
+                t.dataset.value = v; 
+                c.appendChild(t); 
+            }); 
+            document.getElementById('score2048').textContent = score2048;
+            // Check high score
+            if (score2048 > highScore2048) {
+                highScore2048 = score2048;
+                setHighScore('2048', highScore2048);
+                document.getElementById('highScore2048').textContent = highScore2048;
+            }
+        }
+        function slide(arr) { 
+            const f = arr.filter(x => x), m = []; 
+            let i = 0; 
+            while (i < f.length) { 
+                if (i + 1 < f.length && f[i] === f[i + 1]) { 
+                    m.push(f[i] * 2); 
+                    score2048 += f[i] * 2; 
+                    i += 2; 
+                } else { 
+                    m.push(f[i]); 
+                    i++; 
+                } 
+            } 
+            while (m.length < 4) m.push(0); 
+            return m; 
+        }
+        function move2048(dir) { 
+            const old = [...grid2048]; 
+            if (dir === 'left' || dir === 'right') { 
+                for (let r = 0; r < 4; r++) { 
+                    let row = grid2048.slice(r * 4, r * 4 + 4); 
+                    if (dir === 'right') row.reverse(); 
+                    row = slide(row); 
+                    if (dir === 'right') row.reverse(); 
+                    for (let c = 0; c < 4; c++) grid2048[r * 4 + c] = row[c]; 
+                } 
+            } else { 
+                for (let c = 0; c < 4; c++) { 
+                    let col = [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]]; 
+                    if (dir === 'down') col.reverse(); 
+                    col = slide(col); 
+                    if (dir === 'down') col.reverse(); 
+                    [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]] = col; 
+                } 
+            } 
+            if (old.join() !== grid2048.join()) addTile(); 
+            render2048(); 
+        }
+        document.addEventListener('keydown', e => { 
+            if (!document.getElementById('game2048').classList.contains('active')) return; 
+            const m = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' }; 
+            if (m[e.key]) { e.preventDefault(); move2048(m[e.key]); } 
+        });
         document.getElementById('reset2048').onclick = init2048;
         init2048();
         
-        // Memory
+        // ========== Memory ==========
         const emojis = ['🌸', '🌺', '🌻', '🌼', '🌷', '🌹', '💐', '🪻'];
-        let memoryCards = [], flipped = [], moves = 0, canFlip = true;
-        function initMemory() { memoryCards = [...emojis, ...emojis].sort(() => Math.random() - 0.5); flipped = []; moves = 0; canFlip = true; document.getElementById('memoryMoves').textContent = 0; const g = document.getElementById('memoryGrid'); g.innerHTML = ''; memoryCards.forEach((e, i) => { const c = document.createElement('div'); c.className = 'memory-card'; c.onclick = () => flipCard(c, i); g.appendChild(c); }); }
-        function flipCard(card, i) { if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return; card.classList.add('flipped'); card.textContent = memoryCards[i]; flipped.push({ card, i }); if (flipped.length === 2) { moves++; document.getElementById('memoryMoves').textContent = moves; canFlip = false; const [a, b] = flipped; if (memoryCards[a.i] === memoryCards[b.i]) { a.card.classList.add('matched'); b.card.classList.add('matched'); flipped = []; canFlip = true; } else { setTimeout(() => { a.card.classList.remove('flipped'); a.card.textContent = ''; b.card.classList.remove('flipped'); b.card.textContent = ''; flipped = []; canFlip = true; }, 800); } } }
+        let memoryCards = [], flipped = [], moves = 0, canFlip = true, matchedCount = 0;
+        let memoryBest = getBestMoves();
+        document.getElementById('memoryBest').textContent = memoryBest || '-';
+        
+        function initMemory() { 
+            memoryCards = [...emojis, ...emojis].sort(() => Math.random() - 0.5); 
+            flipped = []; moves = 0; canFlip = true; matchedCount = 0;
+            document.getElementById('memoryMoves').textContent = 0; 
+            const g = document.getElementById('memoryGrid'); 
+            g.innerHTML = ''; 
+            memoryCards.forEach((e, i) => { 
+                const c = document.createElement('div'); 
+                c.className = 'memory-card'; 
+                c.onclick = () => flipCard(c, i); 
+                g.appendChild(c); 
+            }); 
+        }
+        function flipCard(card, i) { 
+            if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return; 
+            card.classList.add('flipped'); 
+            card.textContent = memoryCards[i]; 
+            flipped.push({ card, i }); 
+            if (flipped.length === 2) { 
+                moves++; 
+                document.getElementById('memoryMoves').textContent = moves; 
+                canFlip = false; 
+                const [a, b] = flipped; 
+                if (memoryCards[a.i] === memoryCards[b.i]) { 
+                    a.card.classList.add('matched'); 
+                    b.card.classList.add('matched'); 
+                    flipped = []; 
+                    canFlip = true;
+                    matchedCount += 2;
+                    // Check if game complete
+                    if (matchedCount === 16) {
+                        if (memoryBest === null || moves < memoryBest) {
+                            memoryBest = moves;
+                            setBestMoves(moves);
+                            document.getElementById('memoryBest').textContent = memoryBest;
+                            document.getElementById('memoryBest').classList.add('new-record');
+                            setTimeout(() => document.getElementById('memoryBest').classList.remove('new-record'), 500);
+                        }
+                    }
+                } else { 
+                    setTimeout(() => { 
+                        a.card.classList.remove('flipped'); 
+                        a.card.textContent = ''; 
+                        b.card.classList.remove('flipped'); 
+                        b.card.textContent = ''; 
+                        flipped = []; 
+                        canFlip = true; 
+                    }, 800); 
+                } 
+            } 
+        }
         document.getElementById('resetMemory').onclick = initMemory;
         initMemory();
     </script>

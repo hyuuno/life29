@@ -1,9 +1,9 @@
 /**
- * Life29 - 3D 地球模块 (使用 Globe.gl)
- * 显示中国省份和美国州的精确轮廓
+ * Life29 - 3D 地球模块
+ * 使用 Globe.gl 库
  */
 
-class Globe {
+class Life29Globe {
     constructor(container, cities = []) {
         this.container = container;
         this.cities = cities;
@@ -12,28 +12,27 @@ class Globe {
         this.homeCity = null;
         this.onCityClick = null;
         this.onCityHover = null;
-        
-        // 中国省份 ISO 代码
-        this.chinaProvinces = [
-            'CN-11', 'CN-12', 'CN-13', 'CN-14', 'CN-15', // 北京、天津、河北、山西、内蒙古
-            'CN-21', 'CN-22', 'CN-23', // 辽宁、吉林、黑龙江
-            'CN-31', 'CN-32', 'CN-33', 'CN-34', 'CN-35', 'CN-36', 'CN-37', // 上海、江苏、浙江、安徽、福建、江西、山东
-            'CN-41', 'CN-42', 'CN-43', 'CN-44', 'CN-45', 'CN-46', // 河南、湖北、湖南、广东、广西、海南
-            'CN-50', 'CN-51', 'CN-52', 'CN-53', 'CN-54', // 重庆、四川、贵州、云南、西藏
-            'CN-61', 'CN-62', 'CN-63', 'CN-64', 'CN-65', // 陕西、甘肃、青海、宁夏、新疆
-            'CN-71', 'CN-91', 'CN-92' // 台湾、香港、澳门
-        ];
+        this.stars = null;
         
         this.init();
     }
     
-    async init() {
+    init() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         
-        // 创建 Globe.gl 实例
-        this.world = Globe()(this.container);
+        // 使用 globe.gl 的 Globe 构造函数
+        // Globe 是 globe.gl 库暴露的全局函数
+        const GlobeGL = window.Globe;
         
-        // 基础配置
+        if (!GlobeGL) {
+            console.error('Globe.gl library not loaded');
+            return;
+        }
+        
+        // 创建地球实例
+        this.world = GlobeGL()(this.container);
+        
+        // 配置地球
         this.world
             .backgroundColor('rgba(0,0,0,0)')
             .showAtmosphere(true)
@@ -42,94 +41,78 @@ class Globe {
             .globeImageUrl(null)
             .pointOfView({ altitude: 2.2 });
         
-        // 设置地球材质
+        // 地球准备好后设置材质
         this.world.onGlobeReady(() => {
-            const material = this.world.globeMaterial();
-            if (isDark) {
-                material.color = new THREE.Color(0x1a1816);
-                material.emissive = new THREE.Color(0x0a0908);
-                material.emissiveIntensity = 0.3;
-            } else {
-                material.color = new THREE.Color(0xdedad5);
-                material.emissive = new THREE.Color(0x333333);
-                material.emissiveIntensity = 0.1;
-            }
-            material.shininess = 5;
+            this.setupGlobeMaterial(isDark);
+            this.loadGeoData(isDark);
+            this.setupCityMarkers();
+            this.addStars(isDark);
+            this.updateCities(this.cities);
         });
-        
-        // 加载地理数据
-        await this.loadGeoData(isDark);
-        
-        // 配置城市标记
-        this.setupCityMarkers();
-        
-        // 添加星星背景
-        this.addStars(isDark);
     }
     
-    async loadGeoData(isDark) {
-        try {
-            // 加载国家边界 (用于中美轮廓)
-            const countriesRes = await fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson');
-            const countries = await countriesRes.json();
-            
-            // 过滤只显示中国和美国
-            const targetCountries = countries.features.filter(d => 
-                ['USA', 'CHN'].includes(d.properties.ISO_A3)
-            );
-            
-            // 加载中国省份边界
-            const chinaProvRes = await fetch('https://raw.githubusercontent.com/AshKyd/geojson-regions/master/countries/50m/CHN.geojson');
-            let chinaProvinces = [];
-            try {
-                const chinaData = await chinaProvRes.json();
-                chinaProvinces = chinaData.features || [];
-            } catch (e) {
-                console.log('Using country outline for China');
-            }
-            
-            // 加载美国州边界
-            const usaStatesRes = await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
-            let usaStates = [];
-            try {
-                const usaData = await usaStatesRes.json();
-                usaStates = usaData.features || [];
-            } catch (e) {
-                console.log('Using country outline for USA');
-            }
-            
-            // 合并所有区域数据
-            const allRegions = [...targetCountries, ...chinaProvinces, ...usaStates];
-            
-            // 颜色配置
-            const colors = ['#f8d0d8', '#c8e8c8', '#f8f0c0', '#c8d8f0', '#f8e0c0', '#e0d0e8'];
-            
-            this.world
-                .polygonsData(allRegions)
-                .polygonCapColor((d, i) => {
-                    const color = colors[i % colors.length];
-                    // 转换为RGBA
-                    const r = parseInt(color.slice(1, 3), 16);
-                    const g = parseInt(color.slice(3, 5), 16);
-                    const b = parseInt(color.slice(5, 7), 16);
-                    if (isDark) {
-                        return `rgba(${Math.floor(r*0.3)}, ${Math.floor(g*0.3)}, ${Math.floor(b*0.3)}, 0.6)`;
-                    }
-                    return `rgba(${r}, ${g}, ${b}, 0.7)`;
-                })
-                .polygonSideColor(() => 'rgba(0, 0, 0, 0)')
-                .polygonStrokeColor(() => isDark ? '#5a5652' : '#9a9692')
-                .polygonAltitude(0.006)
-                .polygonsTransitionDuration(0);
-                
-        } catch (error) {
-            console.error('Failed to load geo data:', error);
-            // 降级：只显示基本地球
+    setupGlobeMaterial(isDark) {
+        const material = this.world.globeMaterial();
+        if (isDark) {
+            material.color.setHex(0x1a1816);
+            material.emissive.setHex(0x0a0908);
+            material.emissiveIntensity = 0.3;
+        } else {
+            material.color.setHex(0xdedad5);
+            material.emissive.setHex(0x333333);
+            material.emissiveIntensity = 0.1;
         }
+        material.shininess = 5;
+    }
+    
+    loadGeoData(isDark) {
+        // 加载国家边界
+        fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+            .then(res => res.json())
+            .then(countries => {
+                // 只显示中国和美国
+                const targetCountries = countries.features.filter(d => 
+                    ['USA', 'CHN'].includes(d.properties.ISO_A3)
+                );
+                
+                // 加载美国州边界
+                fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+                    .then(res => res.json())
+                    .then(usaData => {
+                        const allRegions = [...targetCountries, ...(usaData.features || [])];
+                        this.renderPolygons(allRegions, isDark);
+                    })
+                    .catch(() => {
+                        this.renderPolygons(targetCountries, isDark);
+                    });
+            })
+            .catch(error => {
+                console.error('Failed to load geo data:', error);
+            });
+    }
+    
+    renderPolygons(regions, isDark) {
+        const colors = ['#f8d0d8', '#c8e8c8', '#f8f0c0', '#c8d8f0', '#f8e0c0', '#e0d0e8'];
+        
+        this.world
+            .polygonsData(regions)
+            .polygonCapColor((d, i) => {
+                const color = colors[i % colors.length];
+                const r = parseInt(color.slice(1, 3), 16);
+                const g = parseInt(color.slice(3, 5), 16);
+                const b = parseInt(color.slice(5, 7), 16);
+                if (isDark) {
+                    return `rgba(${Math.floor(r*0.3)}, ${Math.floor(g*0.3)}, ${Math.floor(b*0.3)}, 0.6)`;
+                }
+                return `rgba(${r}, ${g}, ${b}, 0.7)`;
+            })
+            .polygonSideColor(() => 'rgba(0, 0, 0, 0)')
+            .polygonStrokeColor(() => isDark ? '#5a5652' : '#9a9692')
+            .polygonAltitude(0.006)
+            .polygonsTransitionDuration(0);
     }
     
     setupCityMarkers() {
-        // 配置城市点
         this.world
             .pointsData([])
             .pointAltitude(0.02)
@@ -158,12 +141,8 @@ class Globe {
             // 点击事件
             .onPointClick(city => {
                 this.selectedCity = city;
-                this.updateCityMarkers();
-                
-                // 添加波纹
+                this.refreshMarkers();
                 this.world.ringsData([city]);
-                
-                // 飞向目标
                 this.world.pointOfView({ lat: city.lat, lng: city.lng, altitude: 1.2 }, 1000);
                 
                 if (this.onCityClick) {
@@ -184,12 +163,14 @@ class Globe {
                 if (this.selectedCity) {
                     this.selectedCity = null;
                     this.world.ringsData([]);
-                    this.updateCityMarkers();
+                    this.refreshMarkers();
                 }
             });
     }
     
-    updateCityMarkers() {
+    refreshMarkers() {
+        if (!this.world) return;
+        
         const citiesWithContent = this.cities.filter(city => 
             (city.photos?.length > 0) || (city.journals?.length > 0)
         );
@@ -200,15 +181,17 @@ class Globe {
     
     updateCities(cities) {
         this.cities = cities;
-        this.updateCityMarkers();
+        this.refreshMarkers();
     }
     
     addStars(isDark) {
         if (!isDark) return;
         
         const scene = this.world.scene();
+        const THREE = window.THREE;
         
-        // 创建星星
+        if (!THREE || !scene) return;
+        
         const starsGeometry = new THREE.BufferGeometry();
         const starPositions = [];
         const starCount = 2000;
@@ -240,6 +223,7 @@ class Globe {
     }
     
     focusOnCity(city, animate = true) {
+        if (!this.world) return;
         const duration = animate ? 1000 : 0;
         this.world.pointOfView({ lat: city.lat, lng: city.lng, altitude: 1.5 }, duration);
     }
@@ -258,41 +242,23 @@ class Globe {
     }
     
     updateTheme() {
+        if (!this.world) return;
+        
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         
-        // 更新地球材质
-        const material = this.world.globeMaterial();
-        if (isDark) {
-            material.color = new THREE.Color(0x1a1816);
-            material.emissive = new THREE.Color(0x0a0908);
-            material.emissiveIntensity = 0.3;
-        } else {
-            material.color = new THREE.Color(0xdedad5);
-            material.emissive = new THREE.Color(0x333333);
-            material.emissiveIntensity = 0.1;
-        }
-        
-        // 更新大气层
+        this.setupGlobeMaterial(isDark);
         this.world.atmosphereColor(isDark ? 'rgba(180, 140, 150, 0.3)' : 'rgba(200, 180, 190, 0.2)');
-        
-        // 更新边框颜色
         this.world.polygonStrokeColor(() => isDark ? '#5a5652' : '#9a9692');
         
-        // 更新背景色
-        this.world.backgroundColor('rgba(0,0,0,0)');
-        
-        // 星星显示/隐藏
         if (this.stars) {
             this.stars.visible = isDark;
         } else if (isDark) {
             this.addStars(true);
         }
         
-        // 重新加载地理数据以更新颜色
         this.loadGeoData(isDark);
     }
     
-    // 获取城市坐标 (用于添加新城市)
     getCityCoordinates(country, cityName) {
         const chinaCities = {
             '北京': [39.9, 116.4], '上海': [31.2, 121.5], '天津': [39.1, 117.2],

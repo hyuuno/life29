@@ -40,7 +40,7 @@
             align-items: center;
             gap: 8px;
         }
-        .date-selector select, .date-selector input {
+        .date-selector select {
             padding: 6px 12px;
             border: 1px solid var(--color-border);
             border-radius: 6px;
@@ -293,8 +293,8 @@
                 </div>
                 <div class="timezone-toggle">
                     <span>时区:</span>
-                    <button id="tzSF" class="active">旧金山</button>
-                    <button id="tzBJ">北京</button>
+                    <button id="tzSF">旧金山</button>
+                    <button id="tzBJ" class="active">北京</button>
                 </div>
             </div>
         </div>
@@ -307,20 +307,20 @@
         <div class="tables-container">
             <div class="person-section">
                 <div class="person-header">
-                    <span class="person-name">👦 小魏</span>
-                    <span class="person-tz" id="myTz">北京时间 (UTC+8)</span>
+                    <span class="person-name">👦 wiwi</span>
+                    <span class="person-tz" id="wiwiTz">北京时间 (UTC+8)</span>
                 </div>
                 <div class="table-wrapper">
-                    <table class="schedule-table" id="tableMe"></table>
+                    <table class="schedule-table" id="tableWiwi"></table>
                 </div>
             </div>
             <div class="person-section">
                 <div class="person-header">
-                    <span class="person-name">👧 女朋友</span>
-                    <span class="person-tz" id="herTz">旧金山时间 (UTC-8)</span>
+                    <span class="person-name">👧 yuyu</span>
+                    <span class="person-tz" id="yuyuTz">北京时间 (UTC+8)</span>
                 </div>
                 <div class="table-wrapper">
-                    <table class="schedule-table" id="tableHer"></table>
+                    <table class="schedule-table" id="tableYuyu"></table>
                 </div>
             </div>
         </div>
@@ -352,9 +352,9 @@
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth();
         let currentWeekInMonth = 0;
-        let timezone = 'sf'; // 'sf' or 'bj'
+        let timezone = 'bj'; // 'sf' or 'bj' - 统一时区
         
-        const HOUR_DIFF = 16; // SF比BJ晚16小时 (UTC-8 vs UTC+8)
+        const HOUR_DIFF = 16; // 北京比旧金山快16小时
         
         // Initialize selectors
         const yearSelect = document.getElementById('yearSelect');
@@ -391,7 +391,6 @@
                 weekSelect.appendChild(opt);
             }
             
-            // Find current week
             const today = new Date();
             if (today.getFullYear() === currentYear && today.getMonth() === currentMonth) {
                 currentWeekInMonth = Math.floor((today.getDate() + firstDay.getDay() - 1) / 7);
@@ -403,7 +402,7 @@
         
         function getWeekDates() {
             const firstDay = new Date(currentYear, currentMonth, 1);
-            const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Monday = 0
+            const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
             const weekStart = new Date(currentYear, currentMonth, 1 - startOffset + currentWeekInMonth * 7);
             
             const dates = [];
@@ -415,6 +414,17 @@
             return dates;
         }
         
+        // 根据时区调整日期显示
+        function adjustDateForTimezone(date) {
+            if (timezone === 'sf') {
+                // 如果当前显示旧金山时间，需要减去16小时
+                const adjusted = new Date(date);
+                adjusted.setHours(adjusted.getHours() - HOUR_DIFF);
+                return adjusted;
+            }
+            return date;
+        }
+        
         function buildTable(tableId, person) {
             const table = document.getElementById(tableId);
             const dates = getWeekDates();
@@ -422,13 +432,7 @@
             
             let html = '<thead><tr><th class="time-col"></th>';
             dates.forEach((d, i) => {
-                // 时区调整
-                let displayDate = new Date(d);
-                if (person === 'her' && timezone === 'bj') {
-                    displayDate.setHours(displayDate.getHours() - HOUR_DIFF);
-                } else if (person === 'me' && timezone === 'sf') {
-                    displayDate.setHours(displayDate.getHours() + HOUR_DIFF);
-                }
+                const displayDate = adjustDateForTimezone(d);
                 html += `<th><div class="day-name">${dayNames[i]}</div><div class="day-date">${displayDate.getMonth()+1}/${displayDate.getDate()}</div></th>`;
             });
             html += '</tr></thead><tbody>';
@@ -439,7 +443,13 @@
             for (let h = 0; h <= 2; h++) hours.push(h);
             
             hours.forEach((h, rowIdx) => {
-                const timeStr = `${h}:00`;
+                // 根据时区调整时间显示
+                let displayHour = h;
+                if (timezone === 'sf') {
+                    displayHour = (h - HOUR_DIFF + 24) % 24;
+                }
+                const timeStr = `${displayHour}:00`;
+                
                 html += `<tr><td class="time-cell">${timeStr}</td>`;
                 for (let day = 0; day < 7; day++) {
                     html += `<td class="schedule-cell" data-person="${person}" data-row="${rowIdx}" data-day="${day}">
@@ -452,7 +462,6 @@
             html += '</tbody>';
             table.innerHTML = html;
             
-            // Add event listeners
             table.querySelectorAll('.schedule-cell').forEach(cell => {
                 cell.addEventListener('contextmenu', handleRightClick);
                 cell.querySelector('.cell-content').addEventListener('input', saveData);
@@ -460,27 +469,32 @@
         }
         
         function renderTables() {
-            buildTable('tableMe', 'me');
-            buildTable('tableHer', 'her');
+            buildTable('tableWiwi', 'wiwi');
+            buildTable('tableYuyu', 'yuyu');
             updateWeekLabel();
+            updateTimezoneDisplay();
             loadData();
         }
         
         function updateWeekLabel() {
             const dates = getWeekDates();
-            const start = dates[0];
-            const end = dates[6];
+            const start = adjustDateForTimezone(dates[0]);
+            const end = adjustDateForTimezone(dates[6]);
             document.getElementById('weekLabel').textContent = 
                 `${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()}`;
         }
         
-        // Timezone toggle
+        function updateTimezoneDisplay() {
+            const tzText = timezone === 'bj' ? '北京时间 (UTC+8)' : '旧金山时间 (UTC-8)';
+            document.getElementById('wiwiTz').textContent = tzText;
+            document.getElementById('yuyuTz').textContent = tzText;
+        }
+        
+        // Timezone toggle - 统一切换
         document.getElementById('tzSF').addEventListener('click', () => {
             timezone = 'sf';
             document.getElementById('tzSF').classList.add('active');
             document.getElementById('tzBJ').classList.remove('active');
-            document.getElementById('myTz').textContent = '转换为旧金山时间';
-            document.getElementById('herTz').textContent = '旧金山时间 (UTC-8)';
             renderTables();
         });
         
@@ -488,8 +502,6 @@
             timezone = 'bj';
             document.getElementById('tzBJ').classList.add('active');
             document.getElementById('tzSF').classList.remove('active');
-            document.getElementById('myTz').textContent = '北京时间 (UTC+8)';
-            document.getElementById('herTz').textContent = '转换为北京时间';
             renderTables();
         });
         
@@ -571,7 +583,7 @@
         }
         
         function saveData() {
-            const data = { me: {}, her: {} };
+            const data = { wiwi: {}, yuyu: {} };
             document.querySelectorAll('.schedule-cell').forEach(cell => {
                 const person = cell.dataset.person;
                 const key = `${cell.dataset.row}-${cell.dataset.day}`;
@@ -585,7 +597,7 @@
         }
         
         function loadData() {
-            const data = JSON.parse(localStorage.getItem(getWeekKey()) || '{"me":{},"her":{}}');
+            const data = JSON.parse(localStorage.getItem(getWeekKey()) || '{"wiwi":{},"yuyu":{}}');
             document.querySelectorAll('.schedule-cell').forEach(cell => {
                 const person = cell.dataset.person;
                 const key = `${cell.dataset.row}-${cell.dataset.day}`;
