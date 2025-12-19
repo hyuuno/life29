@@ -55,7 +55,13 @@ class App {
         // 点击显示状态
         statusEl.addEventListener('click', () => {
             const isConnected = statusEl.classList.contains('connected');
-            alert(isConnected ? '☁️ 云端已连接\n\nSupabase 和 Cloudinary 服务正常' : '⚠️ 云端未连接\n\n请检查 config.js 中的配置');
+            if (window.showGlobalToast) {
+                if (isConnected) {
+                    window.showGlobalToast('云端已连接', 'Supabase 和 Cloudinary 服务正常', 'success');
+                } else {
+                    window.showGlobalToast('云端未连接', '请检查 config.js 中的配置', 'error');
+                }
+            }
         });
     }
     
@@ -227,6 +233,9 @@ class App {
         closeCityList?.addEventListener('click', () => cityListPanel?.classList.remove('open'));
         document.getElementById('citySearch')?.addEventListener('input', (e) => this.filterCityList(e.target.value));
         
+        // 地图级别控制
+        this.initMapLevelControl();
+        
         // Moment 相关
         this.initMomentModal();
         
@@ -236,6 +245,60 @@ class App {
                 cityListPanel?.classList.remove('open');
             }
         });
+    }
+    
+    initMapLevelControl() {
+        const mapLevelBtn = document.getElementById('mapLevelBtn');
+        const mapLevelMenu = document.getElementById('mapLevelMenu');
+        
+        mapLevelBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mapLevelMenu?.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', () => mapLevelMenu?.classList.remove('show'));
+        
+        mapLevelMenu?.querySelectorAll('.dropdown-item[data-level]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const level = item.dataset.level;
+                
+                // 更新UI
+                mapLevelMenu.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                mapLevelMenu.classList.remove('show');
+                
+                // 更新地球显示级别
+                this.setMapLevel(level);
+                
+                // 保存设置
+                localStorage.setItem('life29-map-level', level);
+                
+                // 显示提示
+                const levelNames = {
+                    'country': '国家轮廓',
+                    'province': '省份/州',
+                    'city': '城市区域',
+                    'none': '仅标记点'
+                };
+                if (window.showGlobalToast) {
+                    window.showGlobalToast('地图详细度', `已切换到「${levelNames[level]}」`, 'info', 2000);
+                }
+            });
+        });
+        
+        // 恢复保存的设置
+        const savedLevel = localStorage.getItem('life29-map-level') || 'country';
+        mapLevelMenu?.querySelectorAll('.dropdown-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.level === savedLevel);
+        });
+        this.setMapLevel(savedLevel);
+    }
+    
+    setMapLevel(level) {
+        if (this.globe) {
+            this.globe.setDetailLevel(level);
+        }
     }
     
     initMomentModal() {

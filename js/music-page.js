@@ -91,7 +91,13 @@ class MusicPage {
         // 点击显示状态
         statusEl?.addEventListener('click', () => {
             const isConnected = statusEl.classList.contains('connected');
-            alert(isConnected ? '☁️ 云端已连接\n\nSupabase 和 Cloudinary 服务正常' : '⚠️ 云端未连接\n\n请检查 config.js 中的配置');
+            if (window.showGlobalToast) {
+                if (isConnected) {
+                    window.showGlobalToast('云端已连接', 'Supabase 和 Cloudinary 服务正常', 'success');
+                } else {
+                    window.showGlobalToast('云端未连接', '请检查 config.js 中的配置', 'error');
+                }
+            }
         });
     }
     
@@ -606,6 +612,7 @@ class MusicPage {
         const album = document.getElementById('songAlbum').value.trim();
         const language = document.getElementById('songLanguage').value;
         const genre = document.getElementById('songGenre').value.trim();
+        const thoughts = document.getElementById('songThoughts').value.trim();
         
         if (!this.selectedMusicFile || !title || !artist) {
             this.showToast('请选择音乐文件并填写歌曲名和歌手', 'error');
@@ -648,6 +655,7 @@ class MusicPage {
                 album: album || title,
                 language,
                 genre,
+                thoughts,
                 fileUrl: musicResult.url,
                 coverUrl: coverResult?.url || '',
                 uploadUser: this.currentUser

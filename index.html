@@ -56,6 +56,31 @@
                 </svg>
                 <span class="cloud-status-dot"></span>
             </div>
+            <div class="map-level-dropdown" id="mapLevelDropdown">
+                <button class="btn-icon map-level-btn" id="mapLevelBtn" title="地图详细度">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                </button>
+                <div class="dropdown-menu map-level-menu" id="mapLevelMenu">
+                    <div class="dropdown-label">地图详细度</div>
+                    <button class="dropdown-item active" data-level="country">
+                        <span class="level-icon">🌍</span><span class="level-name">国家轮廓</span>
+                    </button>
+                    <button class="dropdown-item" data-level="province">
+                        <span class="level-icon">🗺️</span><span class="level-name">省份/州</span>
+                    </button>
+                    <button class="dropdown-item" data-level="city">
+                        <span class="level-icon">🏙️</span><span class="level-name">城市区域</span>
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item" data-level="none">
+                        <span class="level-icon">○</span><span class="level-name">仅标记点</span>
+                    </button>
+                </div>
+            </div>
             <div class="bg-color-picker" id="bgColorPicker">
                 <button class="bg-color-btn active" data-bg="gray" title="灰色"></button>
                 <button class="bg-color-btn" data-bg="pink" title="粉色"></button>

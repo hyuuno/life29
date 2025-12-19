@@ -72,6 +72,7 @@ class SupabaseService {
                     album: musicData.album,
                     music_genre: musicData.genre,
                     language: musicData.language,
+                    thoughts: musicData.thoughts || null,
                     file_url: musicData.fileUrl,
                     cover_url: musicData.coverUrl,
                     upload_user: musicData.uploadUser || CONFIG.users[0]
@@ -184,6 +185,45 @@ class SupabaseService {
             return true;
         } catch (e) {
             console.error('Failed to delete moment:', e);
+            return false;
+        }
+    }
+    
+    async deleteMomentByCondition(city, content) {
+        if (!this.isConnected()) return false;
+        
+        try {
+            // 先查询匹配的moment
+            let query = this.client
+                .from('moments')
+                .select('id')
+                .eq('city', city);
+            
+            if (content) {
+                query = query.eq('content', content);
+            }
+            
+            const { data, error: queryError } = await query;
+            
+            if (queryError) throw queryError;
+            
+            if (!data || data.length === 0) {
+                console.log('No matching moment found in cloud');
+                return true; // 云端没有数据也算成功
+            }
+            
+            // 删除找到的第一条记录
+            const { error: deleteError } = await this.client
+                .from('moments')
+                .delete()
+                .eq('id', data[0].id);
+            
+            if (deleteError) throw deleteError;
+            
+            console.log('✅ Moment deleted from cloud:', data[0].id);
+            return true;
+        } catch (e) {
+            console.error('Failed to delete moment by condition:', e);
             return false;
         }
     }

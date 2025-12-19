@@ -6,6 +6,7 @@ class CityPage {
     constructor() {
         this.city = null;
         this.currentPhotoIndex = 0;
+        this.isCloudMode = false;
         this.init();
     }
     
@@ -17,12 +18,21 @@ class CityPage {
         this.initTheme();
         this.initUser();
         
+        // 初始化云端服务
+        await this.initCloud();
+        
         await dataManager.load();
         this.city = dataManager.getCity(cityId);
         if (!this.city) { window.location.href = 'index.html'; return; }
         
         this.render();
         this.bindEvents();
+    }
+    
+    async initCloud() {
+        if (window.supabaseService) {
+            this.isCloudMode = await window.supabaseService.init();
+        }
     }
     
     initTheme() {
@@ -127,17 +137,96 @@ class CityPage {
     }
     
     async deletePhoto(index) {
-        if (!confirm('确定删除这张照片吗？')) return;
+        // 使用自定义确认
+        this.showConfirmDialog('确定删除这张照片吗？', async () => {
+            const photo = this.city.photos[index];
+            
+            // 显示处理中提示
+            if (window.showGlobalToast) {
+                window.showGlobalToast('删除中...', '正在同步到云端', 'info', 1500);
+            }
+            
+            // 从本地删除
+            this.city.photos.splice(index, 1);
+            dataManager.save();
+            
+            // 尝试从云端删除（通过city匹配）
+            if (this.isCloudMode && window.supabaseService) {
+                try {
+                    // 查找并删除包含该图片的moment
+                    const moments = await window.supabaseService.getMoments({ 
+                        city: this.city.name 
+                    });
+                    
+                    // 查找包含该图片URL的moment
+                    for (const moment of moments) {
+                        const imageUrls = JSON.parse(moment.image_urls || '[]');
+                        if (imageUrls.includes(photo.url)) {
+                            // 更新moment，移除该图片
+                            const newUrls = imageUrls.filter(u => u !== photo.url);
+                            if (newUrls.length === 0 && !moment.content) {
+                                // 如果没有图片也没有内容，删除整个moment
+                                await window.supabaseService.deleteMoment(moment.id);
+                            } else {
+                                // 否则只更新图片列表
+                                await window.supabaseService.updateMoment(moment.id, {
+                                    image_urls: JSON.stringify(newUrls)
+                                });
+                            }
+                            break;
+                        }
+                    }
+                    
+                    if (window.showGlobalToast) {
+                        window.showGlobalToast('删除成功', '照片已从云端移除', 'success');
+                    }
+                } catch (e) {
+                    console.error('Cloud delete failed:', e);
+                }
+            }
+            
+            this.render();
+        });
+    }
+    
+    showConfirmDialog(message, onConfirm) {
+        // 移除现有对话框
+        document.getElementById('confirmDialog')?.remove();
         
-        const photo = this.city.photos[index];
+        const dialog = document.createElement('div');
+        dialog.id = 'confirmDialog';
+        dialog.className = 'confirm-dialog-overlay';
+        dialog.innerHTML = `
+            <div class="confirm-dialog">
+                <p class="confirm-message">${message}</p>
+                <div class="confirm-actions">
+                    <button class="confirm-btn cancel">取消</button>
+                    <button class="confirm-btn confirm">确定删除</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(dialog);
         
-        // 从本地删除
-        this.city.photos.splice(index, 1);
-        dataManager.save();
+        // 显示动画
+        requestAnimationFrame(() => dialog.classList.add('show'));
         
-        // TODO: 从云端删除（需要 moment 关联）
+        dialog.querySelector('.cancel').onclick = () => {
+            dialog.classList.remove('show');
+            setTimeout(() => dialog.remove(), 300);
+        };
         
-        this.render();
+        dialog.querySelector('.confirm').onclick = () => {
+            dialog.classList.remove('show');
+            setTimeout(() => dialog.remove(), 300);
+            onConfirm();
+        };
+        
+        dialog.onclick = (e) => {
+            if (e.target === dialog) {
+                dialog.classList.remove('show');
+                setTimeout(() => dialog.remove(), 300);
+            }
+        };
     }
     
     renderJournals() {
@@ -178,15 +267,37 @@ class CityPage {
     }
     
     async deleteJournal(index) {
-        if (!confirm('确定删除这篇日志吗？')) return;
-        
-        // 从本地删除
-        this.city.journals.splice(index, 1);
-        dataManager.save();
-        
-        // TODO: 从云端删除
-        
-        this.render();
+        this.showConfirmDialog('确定删除这篇日志吗？', async () => {
+            const journal = this.city.journals[index];
+            
+            // 显示处理中提示
+            if (window.showGlobalToast) {
+                window.showGlobalToast('删除中...', '正在同步到云端', 'info', 1500);
+            }
+            
+            // 从本地删除
+            this.city.journals.splice(index, 1);
+            dataManager.save();
+            
+            // 尝试从云端删除
+            if (this.isCloudMode && window.supabaseService) {
+                try {
+                    // 通过城市和内容匹配删除
+                    await window.supabaseService.deleteMomentByCondition(
+                        this.city.name,
+                        journal.content
+                    );
+                    
+                    if (window.showGlobalToast) {
+                        window.showGlobalToast('删除成功', '日志已从云端移除', 'success');
+                    }
+                } catch (e) {
+                    console.error('Cloud delete failed:', e);
+                }
+            }
+            
+            this.render();
+        });
     }
     
     bindEvents() {

@@ -560,9 +560,30 @@ body {
 }
 
 .mini-player-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     text-decoration: none;
     padding: 8px 16px;
+}
+
+.mini-player-note {
+    font-size: 1rem;
+    background: linear-gradient(
+        90deg,
+        #ff6b6b,
+        #feca57,
+        #48dbfb,
+        #ff9ff3,
+        #54a0ff,
+        #5f27cd,
+        #ff6b6b
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
 }
 
 .shimmer-text {
@@ -586,7 +607,8 @@ body {
     animation: shimmer 3s linear infinite;
 }
 
-.mini-music-player.playing .shimmer-text {
+.mini-music-player.playing .shimmer-text,
+.mini-music-player.playing .mini-player-note {
     animation: shimmer 2s linear infinite;
 }
 
@@ -624,4 +646,115 @@ body {
     height: 6px;
     border-radius: 50%;
     background: currentColor;
+}
+
+/* ============================================
+   Global Toast Notification
+   ============================================ */
+.global-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    z-index: 9999;
+    padding: 12px 24px;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 400px;
+}
+
+.global-toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.global-toast-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.global-toast-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.global-toast-title {
+    font-weight: 500;
+    font-size: 0.9375rem;
+    color: var(--color-text);
+}
+
+.global-toast-message {
+    font-size: 0.8125rem;
+    color: var(--color-text-light);
+}
+
+.global-toast.success {
+    border-color: #4caf50;
+}
+
+.global-toast.success .global-toast-icon {
+    color: #4caf50;
+}
+
+.global-toast.error {
+    border-color: #f44336;
+}
+
+.global-toast.error .global-toast-icon {
+    color: #f44336;
+}
+
+.global-toast.info {
+    border-color: #2196f3;
+}
+
+.global-toast.info .global-toast-icon {
+    color: #2196f3;
+}
+
+/* ============================================
+   Map Level Dropdown
+   ============================================ */
+.map-level-dropdown {
+    position: relative;
+}
+
+.map-level-btn {
+    color: var(--color-text-light);
+}
+
+.map-level-menu {
+    min-width: 160px;
+}
+
+.map-level-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.level-icon {
+    font-size: 1rem;
+    width: 24px;
+    text-align: center;
+}
+
+.level-name {
+    font-size: 0.875rem;
+}
+
+.map-level-menu .dropdown-item.active {
+    background: rgba(232, 180, 184, 0.1);
+    color: var(--color-primary);
 }

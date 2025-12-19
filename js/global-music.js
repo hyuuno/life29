@@ -3,6 +3,43 @@
  * 跨页面音乐播放 - 使用 localStorage + BroadcastChannel 同步
  */
 
+// 全局Toast通知函数
+window.showGlobalToast = function(title, message, type = 'info', duration = 3000) {
+    // 移除现有的toast
+    const existing = document.getElementById('globalToast');
+    if (existing) existing.remove();
+    
+    const icons = {
+        success: '✓',
+        error: '✕',
+        info: '☁',
+        warning: '⚠'
+    };
+    
+    const toast = document.createElement('div');
+    toast.id = 'globalToast';
+    toast.className = `global-toast ${type}`;
+    toast.innerHTML = `
+        <span class="global-toast-icon">${icons[type] || icons.info}</span>
+        <div class="global-toast-content">
+            <span class="global-toast-title">${title}</span>
+            ${message ? `<span class="global-toast-message">${message}</span>` : ''}
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    // 显示动画
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+    
+    // 自动隐藏
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, duration);
+};
+
 class GlobalMusicPlayer {
     constructor() {
         this.storageKey = 'life29-music-state';
@@ -169,6 +206,7 @@ class GlobalMusicPlayer {
         mini.className = 'mini-music-player';
         mini.innerHTML = `
             <a href="music.html" class="mini-player-link">
+                <span class="mini-player-note">𝄞</span>
                 <span class="shimmer-text"></span>
             </a>
         `;
@@ -190,11 +228,11 @@ class GlobalMusicPlayer {
         
         if (this.currentSong && this.isPlaying) {
             mini.classList.add('show', 'playing');
-            textEl.textContent = `♪ ${this.currentSong.title}`;
+            textEl.textContent = this.currentSong.title;
         } else if (this.currentSong) {
             mini.classList.add('show');
             mini.classList.remove('playing');
-            textEl.textContent = `♪ ${this.currentSong.title}`;
+            textEl.textContent = this.currentSong.title;
         } else {
             mini.classList.remove('show', 'playing');
         }

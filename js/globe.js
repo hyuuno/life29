@@ -584,4 +584,35 @@ class Globe {
         
         this.renderer.render(this.scene, this.camera);
     }
+    
+    setDetailLevel(level) {
+        this.detailLevel = level;
+        
+        // 控制国家轮廓线的显示
+        if (this.countryLines) {
+            switch (level) {
+                case 'none':
+                    this.countryLines.visible = false;
+                    break;
+                case 'country':
+                case 'province':
+                case 'city':
+                default:
+                    this.countryLines.visible = true;
+                    break;
+            }
+        }
+        
+        // 控制标记点的大小
+        this.markers.forEach(marker => {
+            if (marker.point) {
+                const scale = level === 'none' ? 1.5 : 1;
+                marker.point.scale.setScalar(scale);
+            }
+        });
+        
+        // 注意：完整的省份/城市轮廓需要额外的GeoJSON数据
+        // 可以通过加载不同精度的GeoJSON来实现
+        console.log(`Map detail level set to: ${level}`);
+    }
 }
