@@ -11,6 +11,9 @@ class Globe {
         this.hoveredMarker = null;
         this.homeCity = null;
         this.isHovering = false;
+        this.provinceLines = [];  // 省份边界线
+        this.cityLines = [];      // 城市边界线
+        this.detailLevel = 'country';  // 默认详细级别
         
         this.config = {
             radius: 180,
@@ -587,32 +590,210 @@ class Globe {
     
     setDetailLevel(level) {
         this.detailLevel = level;
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        // 清除之前的省份/城市线
+        if (this.provinceLines && this.provinceLines.length > 0) {
+            this.provinceLines.forEach(line => {
+                this.globeGroup.remove(line);
+                if (line.geometry) line.geometry.dispose();
+                if (line.material) line.material.dispose();
+            });
+            this.provinceLines = [];
+        }
+        if (this.cityLines && this.cityLines.length > 0) {
+            this.cityLines.forEach(line => {
+                this.globeGroup.remove(line);
+                if (line.geometry) line.geometry.dispose();
+                if (line.material) line.material.dispose();
+            });
+            this.cityLines = [];
+        }
         
         // 控制国家轮廓线的显示
         if (this.countryLines) {
-            switch (level) {
-                case 'none':
-                    this.countryLines.visible = false;
-                    break;
-                case 'country':
-                case 'province':
-                case 'city':
-                default:
-                    this.countryLines.visible = true;
-                    break;
-            }
+            this.countryLines.visible = level !== 'none';
+        }
+        
+        // 根据级别加载对应的边界数据
+        switch (level) {
+            case 'none':
+                // 不显示任何边界
+                break;
+            case 'country':
+                // 只显示国家边界（已加载）
+                break;
+            case 'province':
+                // 加载省份边界
+                this.loadProvinceLines(isDark);
+                break;
+            case 'city':
+                // 加载省份和城市边界
+                this.loadProvinceLines(isDark);
+                this.loadCityLines(isDark);
+                break;
         }
         
         // 控制标记点的大小
         this.markers.forEach(marker => {
-            if (marker.point) {
+            if (marker.mesh) {
                 const scale = level === 'none' ? 1.5 : 1;
-                marker.point.scale.setScalar(scale);
+                marker.mesh.scale.setScalar(scale);
             }
         });
         
-        // 注意：完整的省份/城市轮廓需要额外的GeoJSON数据
-        // 可以通过加载不同精度的GeoJSON来实现
         console.log(`Map detail level set to: ${level}`);
+    }
+    
+    // 加载省份边界线
+    loadProvinceLines(isDark) {
+        if (!this.provinceLines) this.provinceLines = [];
+        const provinceColor = isDark ? 0x6a6560 : 0xa8a4a0;
+        const material = new THREE.LineBasicMaterial({
+            color: provinceColor,
+            transparent: true,
+            opacity: 0.45
+        });
+        
+        // 中国省份边界 GeoJSON (使用阿里云 DataV GeoJSON)
+        const chinaProvincesUrl = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+        
+        fetch(chinaProvincesUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (data.features) {
+                    data.features.forEach(feature => {
+                        this.drawBoundaryFeature(feature, material, this.provinceLines, 0.5);
+                    });
+                }
+                console.log('✅ 中国省份边界已加载');
+            })
+            .catch(err => {
+                console.warn('省份边界加载失败，使用备用数据:', err);
+                this.drawFallbackProvinces(material);
+            });
+        
+        // 美国州边界
+        const usStatesUrl = 'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json';
+        
+        fetch(usStatesUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (data.features) {
+                    data.features.forEach(feature => {
+                        this.drawBoundaryFeature(feature, material, this.provinceLines, 0.5);
+                    });
+                }
+                console.log('✅ 美国州边界已加载');
+            })
+            .catch(err => {
+                console.warn('美国州边界加载失败:', err);
+            });
+    }
+    
+    // 加载城市边界线
+    loadCityLines(isDark) {
+        if (!this.cityLines) this.cityLines = [];
+        const cityColor = isDark ? 0x7a7570 : 0x989490;
+        const material = new THREE.LineBasicMaterial({
+            color: cityColor,
+            transparent: true,
+            opacity: 0.35
+        });
+        
+        // 加载主要城市的边界
+        const majorCities = [
+            { name: '上海', code: '310000' },
+            { name: '北京', code: '110000' },
+            { name: '南京', code: '320100' },
+            { name: '杭州', code: '330100' },
+            { name: '广州', code: '440100' },
+            { name: '深圳', code: '440300' },
+            { name: '成都', code: '510100' },
+            { name: '武汉', code: '420100' },
+            { name: '西安', code: '610100' },
+            { name: '苏州', code: '320500' },
+        ];
+        
+        majorCities.forEach(city => {
+            const cityUrl = `https://geo.datav.aliyun.com/areas_v3/bound/${city.code}_full.json`;
+            
+            fetch(cityUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.features) {
+                        data.features.forEach(feature => {
+                            this.drawBoundaryFeature(feature, material, this.cityLines, 0.6);
+                        });
+                    }
+                })
+                .catch(() => {
+                    // 静默失败，城市边界是可选的
+                });
+        });
+        
+        console.log('✅ 城市边界加载中...');
+    }
+    
+    // 绘制边界要素（通用方法）
+    drawBoundaryFeature(feature, material, targetArray, heightOffset) {
+        const geometry = feature.geometry;
+        if (!geometry) return;
+        
+        const drawCoords = (coordinates) => {
+            coordinates.forEach(ring => {
+                const points = [];
+                // 处理不同的坐标格式
+                let coords = ring;
+                if (Array.isArray(ring[0]) && Array.isArray(ring[0][0])) {
+                    coords = ring[0];
+                }
+                
+                coords.forEach(coord => {
+                    if (Array.isArray(coord) && coord.length >= 2 && typeof coord[0] === 'number') {
+                        const lng = coord[0];
+                        const lat = coord[1];
+                        const point = this.latLngToVector3(lat, lng, this.config.radius + heightOffset);
+                        points.push(point);
+                    }
+                });
+                
+                if (points.length > 2) {
+                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(lineGeometry, material.clone());
+                    this.globeGroup.add(line);
+                    targetArray.push(line);
+                }
+            });
+        };
+        
+        if (geometry.type === 'Polygon') {
+            drawCoords(geometry.coordinates);
+        } else if (geometry.type === 'MultiPolygon') {
+            geometry.coordinates.forEach(polygon => drawCoords(polygon));
+        }
+    }
+    
+    // 备用省份边界（简化版）
+    drawFallbackProvinces(material) {
+        // 中国主要省份边界的简化坐标
+        const provinces = [
+            // 广东省
+            [[23.4, 113.5], [23.8, 116.5], [24.5, 117], [25.5, 116.5], [25, 114], [24, 112], [22.5, 110.5], [21.5, 110], [22, 113], [23.4, 113.5]],
+            // 江苏省
+            [[32, 119], [33, 119.5], [34.5, 119], [34.5, 117], [33, 116.5], [32, 118], [31, 120], [31.5, 121.5], [32, 119]],
+            // 浙江省
+            [[30.5, 120], [31, 121.5], [30, 122], [28, 121.5], [27.5, 120], [28.5, 118.5], [30, 119], [30.5, 120]],
+            // 上海市
+            [[31.5, 121], [31.5, 122], [30.7, 122], [30.7, 121], [31.5, 121]],
+        ];
+        
+        provinces.forEach(coords => {
+            const points = coords.map(([lat, lng]) => this.latLngToVector3(lat, lng, this.config.radius + 0.5));
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const line = new THREE.Line(geometry, material.clone());
+            this.globeGroup.add(line);
+            this.provinceLines.push(line);
+        });
     }
 }

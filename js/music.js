@@ -1,6 +1,6 @@
 /**
  * Life29 - 音乐播放器
- * 支持music文件夹中任意添加的音乐文件
+ * 支持云端和本地音乐文件
  */
 
 class MusicPlayer {
@@ -29,13 +29,46 @@ class MusicPlayer {
     }
     
     async loadPlaylist() {
-        // 从music.json加载播放列表
-        // 用户可以在music.json中添加任意歌曲
-        // 只需按格式添加: {"id": "唯一ID", "title": "歌曲名", "filename": "文件名.mp3"}
+        // 优先从云端加载
+        if (window.supabaseService) {
+            try {
+                const isConnected = await window.supabaseService.init();
+                if (isConnected) {
+                    const cloudSongs = await window.supabaseService.getMusicList();
+                    this.playlist = cloudSongs.map(s => ({
+                        id: s.id,
+                        title: s.music_name,
+                        file: s.file_url
+                    }));
+                    console.log(`☁️ Mini player loaded ${this.playlist.length} songs from cloud`);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Cloud load failed, falling back to local:', e);
+            }
+        }
+        
+        // 本地备用
         try {
             const response = await fetch(CONFIG.storage.musicFile);
-            if (response.ok) this.playlist = await response.json();
-            console.log(`已加载 ${this.playlist.length} 首歌曲`);
+            if (response.ok) {
+                const data = await response.json();
+                // 支持新旧格式
+                if (Array.isArray(data)) {
+                    this.playlist = data.map(s => ({
+                        id: s.id,
+                        title: s.title,
+                        file: s.filename ? `music/${s.filename}` : s.file
+                    }));
+                } else if (data.songs) {
+                    this.playlist = data.songs.map(s => ({
+                        id: s.id,
+                        title: s.title,
+                        file: s.file
+                    }));
+                }
+            }
+            console.log(`📁 Mini player loaded ${this.playlist.length} songs locally`);
         } catch (error) {
             console.warn('Failed to load playlist:', error);
             this.playlist = [];
@@ -72,7 +105,7 @@ class MusicPlayer {
         
         this.currentIndex = newIndex;
         const song = this.playlist[this.currentIndex];
-        this.audio.src = `music/${song.filename}`;
+        this.audio.src = song.file;
         if (this.songTitle) this.songTitle.textContent = song.title;
         
         this.audio.play().catch(() => {

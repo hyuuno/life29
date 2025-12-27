@@ -417,6 +417,23 @@
     margin-top: 4px;
 }
 
+/* Thoughts 感想样式 */
+.album-info-thoughts {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.6875rem;
+    font-style: italic;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    line-height: 1.4;
+    max-height: 3.5em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
 /* 正在播放指示器 */
 .album-playing-indicator {
     position: absolute;

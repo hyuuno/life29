@@ -16,6 +16,12 @@ const CONFIG = {
         uploadPreset: 'life29_unsigned'
     },
     
+    // 本地存储配置（备用）
+    storage: {
+        musicFile: 'data/songs.json',
+        citiesFile: 'data/cities.json'
+    },
+    
     // 应用配置
     users: ['wiwi', 'yuyu'],
     

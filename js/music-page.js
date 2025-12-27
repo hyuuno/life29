@@ -113,6 +113,7 @@ class MusicPage {
                     album: s.album || s.music_name,
                     language: s.language,
                     genre: s.music_genre,
+                    thoughts: s.thoughts || '',  // 添加 thoughts 字段
                     file: s.file_url,
                     cover: s.cover_url,
                     uploadUser: s.upload_user,
@@ -397,6 +398,7 @@ class MusicPage {
                     (window.cloudinaryService?.getThumbnailUrl(song.cover, 300) || song.cover) : '';
                 
                 const hasCover = coverUrl && coverUrl.length > 0;
+                const hasThoughts = song.thoughts && song.thoughts.trim().length > 0;
                 
                 item.innerHTML = `
                     ${hasCover ? `<img class="album-cover" src="${coverUrl}" alt="${song.title}" 
@@ -406,6 +408,7 @@ class MusicPage {
                         <div class="album-info-title">${song.title}</div>
                         <div class="album-info-artist">${song.artist}</div>
                         <div class="album-info-meta">${song.language || ''} ${song.genre ? '· ' + song.genre : ''}</div>
+                        ${hasThoughts ? `<div class="album-info-thoughts">"${song.thoughts}"</div>` : ''}
                         ${song.uploadUser ? `<div class="album-info-user">by ${song.uploadUser}</div>` : ''}
                     </div>
                     <div class="album-playing-indicator">
