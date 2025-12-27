@@ -278,7 +278,6 @@ class App {
                 const levelNames = {
                     'country': '国家轮廓',
                     'province': '省份/州',
-                    'city': '城市区域',
                     'none': '仅标记点'
                 };
                 if (window.showGlobalToast) {

@@ -278,6 +278,75 @@ class SupabaseService {
             return [];
         }
     }
+    
+    // ==========================================
+    // Schedule 日程操作
+    // ==========================================
+    
+    async getSchedule(weekKey) {
+        if (!this.isConnected()) return null;
+        
+        try {
+            const { data, error } = await this.client
+                .from('schedules')
+                .select('*')
+                .eq('week_key', weekKey)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+            return data;
+        } catch (e) {
+            console.error('Failed to fetch schedule:', e);
+            return null;
+        }
+    }
+    
+    async saveSchedule(weekKey, scheduleData) {
+        if (!this.isConnected()) {
+            console.warn('Supabase not connected');
+            return null;
+        }
+        
+        try {
+            // 使用 upsert 来插入或更新
+            const { data, error } = await this.client
+                .from('schedules')
+                .upsert({
+                    week_key: weekKey,
+                    wiwi_data: scheduleData.wiwi || {},
+                    yuyu_data: scheduleData.yuyu || {},
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'week_key'
+                })
+                .select()
+                .single();
+            
+            if (error) throw error;
+            console.log('✅ Schedule saved:', weekKey);
+            return data;
+        } catch (e) {
+            console.error('Failed to save schedule:', e);
+            return null;
+        }
+    }
+    
+    async deleteSchedule(weekKey) {
+        if (!this.isConnected()) return false;
+        
+        try {
+            const { error } = await this.client
+                .from('schedules')
+                .delete()
+                .eq('week_key', weekKey);
+            
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error('Failed to delete schedule:', e);
+            return false;
+        }
+    }
 }
 
 // 全局实例

@@ -592,7 +592,7 @@ class Globe {
         this.detailLevel = level;
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         
-        // 清除之前的省份/城市线
+        // 清除之前的省份线
         if (this.provinceLines && this.provinceLines.length > 0) {
             this.provinceLines.forEach(line => {
                 this.globeGroup.remove(line);
@@ -600,14 +600,6 @@ class Globe {
                 if (line.material) line.material.dispose();
             });
             this.provinceLines = [];
-        }
-        if (this.cityLines && this.cityLines.length > 0) {
-            this.cityLines.forEach(line => {
-                this.globeGroup.remove(line);
-                if (line.geometry) line.geometry.dispose();
-                if (line.material) line.material.dispose();
-            });
-            this.cityLines = [];
         }
         
         // 控制国家轮廓线的显示
@@ -624,13 +616,8 @@ class Globe {
                 // 只显示国家边界（已加载）
                 break;
             case 'province':
-                // 加载省份边界
+                // 加载省份/州边界
                 this.loadProvinceLines(isDark);
-                break;
-            case 'city':
-                // 加载省份和城市边界
-                this.loadProvinceLines(isDark);
-                this.loadCityLines(isDark);
                 break;
         }
         
@@ -652,26 +639,44 @@ class Globe {
         const material = new THREE.LineBasicMaterial({
             color: provinceColor,
             transparent: true,
-            opacity: 0.45
+            opacity: 0.5
         });
         
-        // 中国省份边界 GeoJSON (使用阿里云 DataV GeoJSON)
-        const chinaProvincesUrl = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+        // 中国各省份代码
+        const chinaProvinces = [
+            '110000', '120000', '130000', '140000', '150000', // 北京、天津、河北、山西、内蒙古
+            '210000', '220000', '230000',                     // 辽宁、吉林、黑龙江
+            '310000', '320000', '330000', '340000', '350000', // 上海、江苏、浙江、安徽、福建
+            '360000', '370000',                               // 江西、山东
+            '410000', '420000', '430000', '440000', '450000', // 河南、湖北、湖南、广东、广西
+            '460000',                                         // 海南
+            '500000', '510000', '520000', '530000', '540000', // 重庆、四川、贵州、云南、西藏
+            '610000', '620000', '630000', '640000', '650000', // 陕西、甘肃、青海、宁夏、新疆
+            '710000', '810000', '820000'                      // 台湾、香港、澳门
+        ];
         
-        fetch(chinaProvincesUrl)
-            .then(res => res.json())
-            .then(data => {
-                if (data.features) {
-                    data.features.forEach(feature => {
-                        this.drawBoundaryFeature(feature, material, this.provinceLines, 0.5);
-                    });
-                }
-                console.log('✅ 中国省份边界已加载');
-            })
-            .catch(err => {
-                console.warn('省份边界加载失败，使用备用数据:', err);
-                this.drawFallbackProvinces(material);
-            });
+        // 分别加载每个省份的边界
+        chinaProvinces.forEach(code => {
+            const url = `https://geo.datav.aliyun.com/areas_v3/bound/${code}.json`;
+            
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Network error');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.features && data.features.length > 0) {
+                        data.features.forEach(feature => {
+                            this.drawBoundaryFeature(feature, material, this.provinceLines, 0.5);
+                        });
+                    }
+                })
+                .catch(() => {
+                    // 静默失败，单个省份加载失败不影响整体
+                });
+        });
+        
+        console.log('✅ 中国省份边界加载中...');
         
         // 美国州边界
         const usStatesUrl = 'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json';
@@ -691,48 +696,10 @@ class Globe {
             });
     }
     
-    // 加载城市边界线
-    loadCityLines(isDark) {
-        if (!this.cityLines) this.cityLines = [];
-        const cityColor = isDark ? 0x7a7570 : 0x989490;
-        const material = new THREE.LineBasicMaterial({
-            color: cityColor,
-            transparent: true,
-            opacity: 0.35
-        });
-        
-        // 加载主要城市的边界
-        const majorCities = [
-            { name: '上海', code: '310000' },
-            { name: '北京', code: '110000' },
-            { name: '南京', code: '320100' },
-            { name: '杭州', code: '330100' },
-            { name: '广州', code: '440100' },
-            { name: '深圳', code: '440300' },
-            { name: '成都', code: '510100' },
-            { name: '武汉', code: '420100' },
-            { name: '西安', code: '610100' },
-            { name: '苏州', code: '320500' },
-        ];
-        
-        majorCities.forEach(city => {
-            const cityUrl = `https://geo.datav.aliyun.com/areas_v3/bound/${city.code}_full.json`;
-            
-            fetch(cityUrl)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.features) {
-                        data.features.forEach(feature => {
-                            this.drawBoundaryFeature(feature, material, this.cityLines, 0.6);
-                        });
-                    }
-                })
-                .catch(() => {
-                    // 静默失败，城市边界是可选的
-                });
-        });
-        
-        console.log('✅ 城市边界加载中...');
+    // 备用中国省份加载
+    loadChinaProvincesBackup(material) {
+        // 使用简化边界作为最终备用
+        this.drawFallbackProvinces(material);
     }
     
     // 绘制边界要素（通用方法）

@@ -774,3 +774,150 @@
     margin-top: 2px;
     font-style: italic;
 }
+
+/* ========================================== */
+/* 背景模式切换 */
+/* ========================================== */
+
+.bg-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+}
+
+.bg-mode-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.bg-mode-btn:hover {
+    color: var(--color-text);
+}
+
+.bg-mode-btn.active {
+    background: var(--color-text);
+    color: var(--color-bg);
+}
+
+/* ========================================== */
+/* 泛光背景 */
+/* ========================================== */
+
+.glow-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    overflow: hidden;
+}
+
+.glow-background.active {
+    opacity: 1;
+}
+
+.glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+    animation: glowFloat 8s ease-in-out infinite;
+}
+
+.glow-orb-1 {
+    width: 400px;
+    height: 400px;
+    top: -100px;
+    left: -100px;
+    background: radial-gradient(circle, var(--glow-color-1, #E8B4B8) 0%, transparent 70%);
+    animation-delay: 0s;
+}
+
+.glow-orb-2 {
+    width: 500px;
+    height: 500px;
+    bottom: -150px;
+    right: -150px;
+    background: radial-gradient(circle, var(--glow-color-2, #A8D5E5) 0%, transparent 70%);
+    animation-delay: -3s;
+}
+
+.glow-orb-3 {
+    width: 350px;
+    height: 350px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--glow-color-3, #B8D4A8) 0%, transparent 70%);
+    animation-delay: -5s;
+}
+
+@keyframes glowFloat {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    25% {
+        transform: translate(30px, -30px) scale(1.1);
+    }
+    50% {
+        transform: translate(-20px, 20px) scale(0.95);
+    }
+    75% {
+        transform: translate(20px, 10px) scale(1.05);
+    }
+}
+
+/* 泛光模式下的页面样式调整 */
+body.glow-mode {
+    background: #0a0a0a !important;
+}
+
+body.glow-mode .music-main {
+    background: transparent;
+}
+
+body.glow-mode .header {
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(20px);
+}
+
+body.glow-mode .player-bar {
+    background: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(20px);
+}
+
+body.glow-mode .album-item {
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(10px);
+}
+
+body.glow-mode .album-item:hover {
+    background: rgba(40, 40, 40, 0.8);
+}
+
+body.glow-mode .action-btn,
+body.glow-mode .bg-mode-toggle {
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+body.glow-mode .noise-overlay {
+    opacity: 0.02;
+}

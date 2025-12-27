@@ -188,6 +188,145 @@ class MusicPage {
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('life29-theme', next);
         });
+        
+        // 背景模式切换
+        this.bgMode = localStorage.getItem('life29-music-bg-mode') || 'theme';
+        this.setupBgMode();
+    }
+    
+    setupBgMode() {
+        const toggle = document.getElementById('bgModeToggle');
+        const glowBg = document.getElementById('glowBackground');
+        
+        if (!toggle || !glowBg) return;
+        
+        // 设置初始状态
+        toggle.querySelectorAll('.bg-mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === this.bgMode);
+        });
+        
+        if (this.bgMode === 'glow') {
+            document.body.classList.add('glow-mode');
+            glowBg.classList.add('active');
+        }
+        
+        // 绑定切换事件
+        toggle.querySelectorAll('.bg-mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                this.bgMode = mode;
+                localStorage.setItem('life29-music-bg-mode', mode);
+                
+                // 更新按钮状态
+                toggle.querySelectorAll('.bg-mode-btn').forEach(b => {
+                    b.classList.toggle('active', b.dataset.mode === mode);
+                });
+                
+                // 切换模式
+                if (mode === 'glow') {
+                    document.body.classList.add('glow-mode');
+                    glowBg.classList.add('active');
+                    // 如果有当前播放的歌曲，更新泛光颜色
+                    if (this.currentSong?.cover) {
+                        this.updateGlowColors(this.currentSong.cover);
+                    }
+                } else {
+                    document.body.classList.remove('glow-mode');
+                    glowBg.classList.remove('active');
+                }
+            });
+        });
+    }
+    
+    // 从专辑图片提取颜色并更新泛光背景
+    updateGlowColors(imageUrl) {
+        if (this.bgMode !== 'glow' || !imageUrl) return;
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            try {
+                // 创建 canvas 提取颜色
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 50;
+                canvas.height = 50;
+                ctx.drawImage(img, 0, 0, 50, 50);
+                
+                const imageData = ctx.getImageData(0, 0, 50, 50).data;
+                const colors = this.extractDominantColors(imageData);
+                
+                // 应用颜色到泛光背景
+                const glowBg = document.getElementById('glowBackground');
+                if (glowBg && colors.length >= 3) {
+                    glowBg.style.setProperty('--glow-color-1', colors[0]);
+                    glowBg.style.setProperty('--glow-color-2', colors[1]);
+                    glowBg.style.setProperty('--glow-color-3', colors[2]);
+                }
+            } catch (e) {
+                console.warn('Failed to extract colors:', e);
+            }
+        };
+        img.onerror = () => {
+            // 使用默认颜色
+            this.setDefaultGlowColors();
+        };
+        img.src = imageUrl;
+    }
+    
+    // 提取主要颜色
+    extractDominantColors(imageData) {
+        const colorMap = new Map();
+        
+        // 采样像素
+        for (let i = 0; i < imageData.length; i += 16) { // 每4个像素采样一次
+            const r = imageData[i];
+            const g = imageData[i + 1];
+            const b = imageData[i + 2];
+            const a = imageData[i + 3];
+            
+            if (a < 128) continue; // 跳过透明像素
+            
+            // 量化颜色（减少颜色数量）
+            const qr = Math.round(r / 32) * 32;
+            const qg = Math.round(g / 32) * 32;
+            const qb = Math.round(b / 32) * 32;
+            
+            // 跳过太暗或太亮的颜色
+            const brightness = (qr + qg + qb) / 3;
+            if (brightness < 30 || brightness > 230) continue;
+            
+            const key = `${qr},${qg},${qb}`;
+            colorMap.set(key, (colorMap.get(key) || 0) + 1);
+        }
+        
+        // 排序获取最常见的颜色
+        const sorted = Array.from(colorMap.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        // 转换为 RGB 字符串，并调整亮度使其更适合作为泛光
+        const colors = sorted.map(([key]) => {
+            const [r, g, b] = key.split(',').map(Number);
+            // 提高饱和度和亮度
+            return `rgba(${Math.min(255, r + 30)}, ${Math.min(255, g + 30)}, ${Math.min(255, b + 30)}, 0.8)`;
+        });
+        
+        // 确保至少有3种颜色
+        while (colors.length < 3) {
+            colors.push(colors[0] || 'rgba(200, 180, 200, 0.8)');
+        }
+        
+        return colors;
+    }
+    
+    setDefaultGlowColors() {
+        const glowBg = document.getElementById('glowBackground');
+        if (glowBg) {
+            glowBg.style.setProperty('--glow-color-1', '#E8B4B8');
+            glowBg.style.setProperty('--glow-color-2', '#A8D5E5');
+            glowBg.style.setProperty('--glow-color-3', '#B8D4A8');
+        }
     }
     
     bindEvents() {
@@ -473,6 +612,11 @@ class MusicPage {
         
         this.updatePlayerUI();
         this.updatePlayingState();
+        
+        // 更新泛光背景颜色
+        if (song.cover) {
+            this.updateGlowColors(song.cover);
+        }
     }
     
     togglePlay() {

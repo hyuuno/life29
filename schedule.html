@@ -577,7 +577,21 @@
             if (!colorPicker.contains(e.target)) colorPicker.classList.remove('show');
         });
         
-        // Data persistence
+        // Data persistence - 支持云端和本地存储
+        let isCloudMode = false;
+        let saveTimeout = null;
+        
+        async function initSupabase() {
+            if (window.supabaseService) {
+                isCloudMode = await window.supabaseService.init();
+                if (isCloudMode) {
+                    console.log('☁️ 做咩页面已连接云端');
+                    // 云端已连接，重新加载数据
+                    loadData();
+                }
+            }
+        }
+        
         function getWeekKey() {
             const dates = getWeekDates();
             return `schedule-${dates[0].toISOString().split('T')[0]}`;
@@ -594,11 +608,40 @@
                     data[person][key] = { content, color: colorClass || '' };
                 }
             });
+            
+            // 保存到本地
             localStorage.setItem(getWeekKey(), JSON.stringify(data));
+            
+            // 防抖保存到云端
+            if (isCloudMode) {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(async () => {
+                    await window.supabaseService.saveSchedule(getWeekKey(), data);
+                }, 1000); // 1秒防抖
+            }
         }
         
-        function loadData() {
-            const data = JSON.parse(localStorage.getItem(getWeekKey()) || '{"wiwi":{},"yuyu":{}}');
+        async function loadData() {
+            let data = null;
+            
+            // 优先从云端加载
+            if (isCloudMode) {
+                const cloudData = await window.supabaseService.getSchedule(getWeekKey());
+                if (cloudData) {
+                    data = {
+                        wiwi: cloudData.wiwi_data || {},
+                        yuyu: cloudData.yuyu_data || {}
+                    };
+                    // 同步到本地
+                    localStorage.setItem(getWeekKey(), JSON.stringify(data));
+                }
+            }
+            
+            // 如果云端没有数据，使用本地数据
+            if (!data) {
+                data = JSON.parse(localStorage.getItem(getWeekKey()) || '{"wiwi":{},"yuyu":{}}');
+            }
+            
             document.querySelectorAll('.schedule-cell').forEach(cell => {
                 const person = cell.dataset.person;
                 const key = `${cell.dataset.row}-${cell.dataset.day}`;
@@ -614,18 +657,25 @@
             });
         }
         
-        document.getElementById('clearAllBtn').addEventListener('click', () => {
+        document.getElementById('clearAllBtn').addEventListener('click', async () => {
             if (confirm('确定清空本周所有内容?')) {
                 localStorage.removeItem(getWeekKey());
+                if (isCloudMode) {
+                    await window.supabaseService.deleteSchedule(getWeekKey());
+                }
                 loadData();
             }
         });
         
         // Init
+        initSupabase();
         updateWeekOptions();
         renderTables();
     </script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/global-music.js"></script>
 </body>
 </html>
