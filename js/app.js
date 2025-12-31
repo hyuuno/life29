@@ -200,8 +200,8 @@ class App {
         const colorPickerMenu = document.getElementById('colorPickerMenu');
         
         // 设置初始激活状态
-        document.querySelectorAll('.color-option').forEach(option => {
-            if (option.dataset.bg === savedBg) option.classList.add('active');
+        document.querySelectorAll('.color-swatch-btn').forEach(btn => {
+            if (btn.dataset.bg === savedBg) btn.classList.add('active');
         });
         
         colorPickerBtn?.addEventListener('click', (e) => {
@@ -209,11 +209,11 @@ class App {
             colorPickerMenu?.classList.toggle('show');
         });
         
-        document.querySelectorAll('.color-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
-                option.classList.add('active');
-                const bg = option.dataset.bg;
+        document.querySelectorAll('.color-swatch-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.color-swatch-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const bg = btn.dataset.bg;
                 document.documentElement.setAttribute('data-bg', bg);
                 localStorage.setItem('life29-bg', bg);
                 colorPickerMenu?.classList.remove('show');
@@ -708,17 +708,6 @@ class App {
     }
     
     updateStats() {
-        const stats = this.dataManager.getStats();
-        
-        // 更新总计数字
-        const totalCitiesEl = document.getElementById('totalCities');
-        const totalPhotosEl = document.getElementById('totalPhotos');
-        const totalJournalsEl = document.getElementById('totalJournals');
-        
-        if (totalCitiesEl) totalCitiesEl.textContent = stats.cities;
-        if (totalPhotosEl) totalPhotosEl.textContent = stats.photos;
-        if (totalJournalsEl) totalJournalsEl.textContent = stats.journals;
-        
         // 初始化排行榜
         this.currentRankingSort = 'journals';
         this.renderCityRanking();
@@ -755,28 +744,23 @@ class App {
         
         if (citiesWithContent.length === 0) {
             container.innerHTML = `
-                <div class="ranking-empty">
-                    <p style="font-size: 0.8rem; color: var(--color-text-muted); text-align: center; padding: var(--space-lg) 0;">
-                        还没有足迹记录
-                    </p>
+                <div class="ranking-empty" style="padding: var(--space-xl) 0; color: var(--color-text-muted); font-size: 0.8rem;">
+                    暂无足迹
                 </div>
             `;
             return;
         }
         
-        container.innerHTML = citiesWithContent.map((city, index) => {
+        container.innerHTML = citiesWithContent.map((city) => {
             const count = this.currentRankingSort === 'photos' ? city.photoCount : city.journalCount;
-            const unit = this.currentRankingSort === 'photos' ? '张' : '篇';
-            const positionClass = index < 3 ? `top-${index + 1}` : '';
             
             return `
                 <div class="ranking-item" data-id="${city.id}">
-                    <div class="ranking-position ${positionClass}">${index + 1}</div>
                     <div class="ranking-info">
-                        <div class="ranking-city">${city.name}</div>
-                        <div class="ranking-country">${city.country}</div>
+                        <span class="ranking-country">${city.country}</span>
+                        <span class="ranking-city">${city.name}</span>
                     </div>
-                    <div class="ranking-count">${count}${unit}</div>
+                    <div class="ranking-count">${count}</div>
                 </div>
             `;
         }).join('');
@@ -786,8 +770,12 @@ class App {
             item.addEventListener('click', () => {
                 const city = this.dataManager.getCity(item.dataset.id);
                 if (city) {
-                    // 打开城市页面
-                    window.location.href = `city.html?id=${city.id}`;
+                    // 使用城市名称和国家作为参数
+                    const params = new URLSearchParams({
+                        city: city.name,
+                        country: city.country || ''
+                    });
+                    window.location.href = `city.html?${params.toString()}`;
                 }
             });
         });

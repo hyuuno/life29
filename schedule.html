@@ -128,31 +128,6 @@
             cursor: not-allowed;
         }
         
-        .user-selector {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-            font-size: 0.75rem;
-            color: var(--color-text-muted);
-        }
-        .user-btn {
-            padding: 4px 10px;
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 4px;
-            font-size: 0.75rem;
-            color: var(--color-text-light);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .user-btn:hover { background: var(--color-bg); }
-        .user-btn.active {
-            background: var(--color-primary);
-            border-color: var(--color-primary);
-            color: white;
-        }
-        
         .legend {
             display: flex;
             align-items: center;
@@ -161,18 +136,6 @@
             font-size: 0.75rem;
             color: var(--color-text-muted);
         }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .legend-color {
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-        }
-        .legend-color.wiwi { background: rgba(134, 239, 172, 0.4); }
-        .legend-color.yuyu { background: rgba(147, 197, 253, 0.4); }
         .timezone-label { margin-left: auto; }
         
         .table-container {
@@ -248,30 +211,6 @@
             position: relative;
         }
         .schedule-cell:hover { background: rgba(0,0,0,0.02); }
-        
-        /* wiwi 和 yuyu 的不同背景色 */
-        .schedule-cell.cell-wiwi {
-            background: rgba(134, 239, 172, 0.08);
-        }
-        .schedule-cell.cell-yuyu {
-            background: rgba(147, 197, 253, 0.08);
-        }
-        .schedule-cell.cell-wiwi:hover {
-            background: rgba(134, 239, 172, 0.15);
-        }
-        .schedule-cell.cell-yuyu:hover {
-            background: rgba(147, 197, 253, 0.15);
-        }
-        
-        /* 只读状态 */
-        .schedule-cell.readonly {
-            opacity: 0.7;
-            cursor: default;
-        }
-        .schedule-cell.readonly .cell-content {
-            pointer-events: none;
-            color: var(--color-text-muted);
-        }
         
         /* Excel 聚焦效果 - 高亮行列 */
         .schedule-table tr.row-highlight td {
@@ -451,16 +390,9 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 上传云端
             </button>
-            <div class="user-selector">
-                <span>当前用户:</span>
-                <button class="user-btn active" data-user="wiwi">👦 wiwi</button>
-                <button class="user-btn" data-user="yuyu">👧 yuyu</button>
-            </div>
         </div>
         
         <div class="legend">
-            <span class="legend-item"><span class="legend-color wiwi"></span>wiwi</span>
-            <span class="legend-item"><span class="legend-color yuyu"></span>yuyu</span>
             <span class="timezone-label" id="timezoneLabel">北京时间 (UTC+8)</span>
         </div>
         
@@ -606,16 +538,14 @@
                 html += `<tr><td class="time-cell">${timeStr}</td>`;
                 for (let day = 0; day < 7; day++) {
                     // wiwi 单元格
-                    const isWiwiReadonly = currentUser !== 'wiwi';
-                    html += `<td class="schedule-cell cell-wiwi day-group ${isWiwiReadonly ? 'readonly' : ''}" 
+                    html += `<td class="schedule-cell day-group" 
                         data-person="wiwi" data-row="${rowIdx}" data-day="${day}">
-                        <textarea class="cell-content" placeholder="+" ${isWiwiReadonly ? 'readonly' : ''}></textarea>
+                        <textarea class="cell-content" placeholder="+"></textarea>
                     </td>`;
                     // yuyu 单元格
-                    const isYuyuReadonly = currentUser !== 'yuyu';
-                    html += `<td class="schedule-cell cell-yuyu ${isYuyuReadonly ? 'readonly' : ''}" 
+                    html += `<td class="schedule-cell" 
                         data-person="yuyu" data-row="${rowIdx}" data-day="${day}">
-                        <textarea class="cell-content" placeholder="+" ${isYuyuReadonly ? 'readonly' : ''}></textarea>
+                        <textarea class="cell-content" placeholder="+"></textarea>
                     </td>`;
                 }
                 html += '</tr>';
@@ -626,10 +556,8 @@
             
             // 绑定事件
             table.querySelectorAll('.schedule-cell').forEach(cell => {
-                if (!cell.classList.contains('readonly')) {
-                    cell.addEventListener('contextmenu', handleRightClick);
-                    cell.querySelector('.cell-content').addEventListener('input', saveData);
-                }
+                cell.addEventListener('contextmenu', handleRightClick);
+                cell.querySelector('.cell-content').addEventListener('input', saveData);
                 
                 // Excel 聚焦效果
                 cell.addEventListener('mouseenter', () => {
@@ -665,17 +593,6 @@
             const tzText = timezone === 'bj' ? '北京时间 (UTC+8)' : '旧金山时间 (UTC-8)';
             document.getElementById('timezoneLabel').textContent = tzText;
         }
-        
-        // 用户切换
-        document.querySelectorAll('.user-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentUser = btn.dataset.user;
-                localStorage.setItem('life29-user', currentUser);
-                renderTables();
-            });
-        })
         
         // Timezone toggle - 统一切换
         document.getElementById('tzSF').addEventListener('click', () => {
@@ -932,11 +849,6 @@
         
         // Init - 等待外部脚本加载完成
         document.addEventListener('DOMContentLoaded', () => {
-            // 初始化用户按钮状态
-            document.querySelectorAll('.user-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.user === currentUser);
-            });
-            
             updateWeekOptions();
             renderTables();
         });

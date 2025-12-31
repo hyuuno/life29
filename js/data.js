@@ -58,7 +58,8 @@ class DataManager {
     }
     
     addCity(city) {
-        city.id = 'city_' + Date.now();
+        // 使用城市名作为 ID
+        city.id = city.name;
         city.slug = this.generateSlug(city.nameEn);
         city.createdAt = new Date().toISOString();
         city.photos = city.photos || [];
@@ -134,7 +135,7 @@ class DataManager {
     getDefaultCities() {
         return [
             {
-                id: 'city_1',
+                id: '旧金山',
                 name: '旧金山',
                 nameEn: 'San Francisco',
                 slug: 'san-francisco',
@@ -143,11 +144,11 @@ class DataManager {
                 lng: -122.4194,
                 color: '#E8B4B8',
                 visitDate: '2024-06-15',
-                photos: [{ id: 'photo_1', url: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800', caption: '金门大桥的日落', uploadedAt: '2024-06-15T18:30:00.000Z' }],
-                journals: [{ id: 'journal_1', title: '旧金山初印象', content: '第一次来到旧金山，被这座城市独特的魅力所吸引...', date: '2024-06-15', createdAt: '2024-06-15T22:00:00.000Z' }]
+                photos: [],
+                journals: []
             },
             {
-                id: 'city_2',
+                id: '南京',
                 name: '南京',
                 nameEn: 'Nanjing',
                 slug: 'nanjing',
@@ -156,11 +157,11 @@ class DataManager {
                 lng: 118.7969,
                 color: '#A8D5E5',
                 visitDate: '2024-03-20',
-                photos: [{ id: 'photo_2', url: 'https://images.unsplash.com/photo-1589650600407-979c3c1d9d24?w=800', caption: '玄武湖畔', uploadedAt: '2024-03-20T10:00:00.000Z' }],
-                journals: [{ id: 'journal_2', title: '春日南京', content: '三月的南京，樱花盛开...', date: '2024-03-20', createdAt: '2024-03-20T20:00:00.000Z' }]
+                photos: [],
+                journals: []
             },
             {
-                id: 'city_3',
+                id: '东京',
                 name: '东京',
                 nameEn: 'Tokyo',
                 slug: 'tokyo',
@@ -173,7 +174,7 @@ class DataManager {
                 journals: []
             },
             {
-                id: 'city_4',
+                id: '巴黎',
                 name: '巴黎',
                 nameEn: 'Paris',
                 slug: 'paris',
