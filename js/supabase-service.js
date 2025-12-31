@@ -308,26 +308,61 @@ class SupabaseService {
         }
         
         try {
-            // 使用 upsert 来插入或更新
-            const { data, error } = await this.client
+            // 先检查是否存在
+            const { data: existing, error: checkError } = await this.client
                 .from('schedules')
-                .upsert({
-                    week_key: weekKey,
-                    wiwi_data: scheduleData.wiwi || {},
-                    yuyu_data: scheduleData.yuyu || {},
-                    updated_at: new Date().toISOString()
-                }, {
-                    onConflict: 'week_key'
-                })
-                .select()
-                .single();
+                .select('id')
+                .eq('week_key', weekKey)
+                .maybeSingle(); // 使用 maybeSingle 而不是 single，不会在没有记录时报错
             
-            if (error) throw error;
-            console.log('✅ Schedule saved:', weekKey);
-            return data;
+            let result;
+            if (existing) {
+                // 更新现有记录
+                console.log('Updating existing schedule:', weekKey);
+                const { data, error } = await this.client
+                    .from('schedules')
+                    .update({
+                        wiwi_data: scheduleData.wiwi || {},
+                        yuyu_data: scheduleData.yuyu || {},
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('week_key', weekKey)
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                result = data;
+            } else {
+                // 插入新记录
+                console.log('Inserting new schedule:', weekKey);
+                const newId = crypto.randomUUID ? crypto.randomUUID() : 
+                    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                        const r = Math.random() * 16 | 0;
+                        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+                    });
+                
+                const { data, error } = await this.client
+                    .from('schedules')
+                    .insert({
+                        id: newId,
+                        week_key: weekKey,
+                        wiwi_data: scheduleData.wiwi || {},
+                        yuyu_data: scheduleData.yuyu || {},
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                result = data;
+            }
+            
+            console.log('✅ Schedule saved:', weekKey, result);
+            return result;
         } catch (e) {
             console.error('Failed to save schedule:', e);
-            return null;
+            throw e; // 重新抛出错误以便调用者处理
         }
     }
     

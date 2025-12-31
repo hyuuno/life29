@@ -802,8 +802,14 @@
             if (isCloudMode) {
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(async () => {
-                    await window.supabaseService.saveSchedule(getWeekKey(), data);
-                }, 1000); // 1秒防抖
+                    try {
+                        console.log('Auto-saving to cloud:', getWeekKey(), data);
+                        await window.supabaseService.saveSchedule(getWeekKey(), data);
+                        console.log('Auto-save successful');
+                    } catch (e) {
+                        console.error('Auto-save failed:', e);
+                    }
+                }, 1500); // 1.5秒防抖
             }
         }
         
@@ -866,7 +872,7 @@
         
         document.getElementById('uploadBtn').addEventListener('click', async () => {
             if (!isCloudMode) {
-                alert('云端未连接，无法上传');
+                alert('云端未连接，无法上传。请检查网络连接和 Supabase 配置。');
                 return;
             }
             
@@ -888,15 +894,23 @@
                     }
                 });
                 
-                // 上传到云端（会自动覆盖旧数据）
-                await window.supabaseService.saveSchedule(getWeekKey(), data.wiwi, data.yuyu);
+                const weekKey = getWeekKey();
+                console.log('Uploading schedule:', weekKey, data);
                 
-                // 同步到本地
-                localStorage.setItem(getWeekKey(), JSON.stringify(data));
+                // 上传到云端
+                const result = await window.supabaseService.saveSchedule(weekKey, data);
                 
-                showToast('上传成功', 'success');
+                if (result) {
+                    // 同步到本地
+                    localStorage.setItem(weekKey, JSON.stringify(data));
+                    showToast('上传成功', 'success');
+                    console.log('Upload successful:', result);
+                } else {
+                    throw new Error('保存返回空结果');
+                }
             } catch (e) {
-                showToast('上传失败: ' + e.message, 'error');
+                console.error('Upload failed:', e);
+                showToast('上传失败: ' + (e.message || '未知错误'), 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传云端';

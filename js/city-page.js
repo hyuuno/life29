@@ -867,29 +867,28 @@ class CityPage {
             activityMap[dateKey][user === 'yuyu' ? 'yuyu' : 'wiwi']++;
         });
         
-        if (this.moments.length === 0) {
-            container.parentElement.style.display = 'none';
-            emptyState.style.display = 'block';
-            return;
-        }
-        
+        // 即使没有 moments 也显示空的贡献图
         container.parentElement.style.display = 'block';
         emptyState.style.display = 'none';
         
-        // 生成贡献图
+        // 生成贡献图 - 按列（周）组织
         const weeks = [];
         let currentDate = new Date(oneYearAgo);
-        currentDate.setDate(currentDate.getDate() - currentDate.getDay()); // 从周日开始
+        // 调整到该周的周日
+        currentDate.setDate(currentDate.getDate() - currentDate.getDay());
         
         while (currentDate <= today) {
             const week = [];
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 7; i++) { // 周日(0)到周六(6)
                 const dateKey = currentDate.toISOString().split('T')[0];
                 const activity = activityMap[dateKey] || { wiwi: 0, yuyu: 0 };
+                const total = activity.wiwi + activity.yuyu;
                 week.push({
                     date: dateKey,
+                    dayOfWeek: currentDate.getDay(),
                     wiwi: activity.wiwi,
                     yuyu: activity.yuyu,
+                    total: total,
                     isToday: dateKey === today.toISOString().split('T')[0],
                     isFuture: currentDate > today
                 });
@@ -898,51 +897,78 @@ class CityPage {
             weeks.push(week);
         }
         
-        // 月份标签
+        // 月份标签位置
         const monthLabels = [];
         let lastMonth = -1;
         weeks.forEach((week, i) => {
-            const month = new Date(week[0].date).getMonth();
-            if (month !== lastMonth) {
-                monthLabels.push({ index: i, name: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month] });
-                lastMonth = month;
+            const firstDayMonth = new Date(week[0].date).getMonth();
+            if (firstDayMonth !== lastMonth) {
+                monthLabels.push({ 
+                    weekIndex: i, 
+                    name: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][firstDayMonth] 
+                });
+                lastMonth = firstDayMonth;
             }
+        });
+        
+        // 生成月份标签 HTML
+        let monthsHtml = '';
+        monthLabels.forEach((m, idx) => {
+            const nextMonth = monthLabels[idx + 1];
+            const colSpan = nextMonth ? nextMonth.weekIndex - m.weekIndex : weeks.length - m.weekIndex;
+            monthsHtml += `<span class="month-label" style="width: ${colSpan * 14}px">${m.name}</span>`;
         });
         
         container.innerHTML = `
             <div class="activity-graph">
-                <div class="activity-months">
-                    ${monthLabels.map(m => `<span style="grid-column: ${m.index + 2}">${m.name}</span>`).join('')}
-                </div>
-                <div class="activity-days">
-                    <span>Mon</span>
-                    <span>Wed</span>
-                    <span>Fri</span>
-                </div>
-                <div class="activity-grid">
-                    ${weeks.map(week => `
-                        <div class="activity-week">
-                            ${week.map(day => {
-                                const level = day.isFuture ? 'future' : 
-                                    (day.wiwi + day.yuyu === 0 ? 'empty' :
-                                    day.wiwi + day.yuyu <= 2 ? 'low' :
-                                    day.wiwi + day.yuyu <= 4 ? 'medium' : 'high');
-                                const userClass = day.wiwi > day.yuyu ? 'wiwi' : 
-                                    (day.yuyu > day.wiwi ? 'yuyu' : 
-                                    (day.wiwi > 0 ? 'both' : ''));
-                                return `<div class="activity-day ${level} ${userClass} ${day.isToday ? 'today' : ''}" 
-                                    data-date="${day.date}" 
-                                    data-wiwi="${day.wiwi}" 
-                                    data-yuyu="${day.yuyu}"
-                                    title="${day.date}: wiwi ${day.wiwi}, yuyu ${day.yuyu}"></div>`;
-                            }).join('')}
+                <div class="activity-container">
+                    <div class="activity-row-labels">
+                        <span></span>
+                        <span>Mon</span>
+                        <span></span>
+                        <span>Wed</span>
+                        <span></span>
+                        <span>Fri</span>
+                        <span></span>
+                    </div>
+                    <div class="activity-main">
+                        <div class="activity-months">${monthsHtml}</div>
+                        <div class="activity-grid">
+                            ${weeks.map(week => `
+                                <div class="activity-week">
+                                    ${week.map(day => {
+                                        if (day.isFuture) {
+                                            return `<div class="activity-day future"></div>`;
+                                        }
+                                        const level = day.total === 0 ? 'empty' :
+                                            day.total <= 2 ? 'low' :
+                                            day.total <= 4 ? 'medium' : 'high';
+                                        const userClass = day.wiwi > day.yuyu ? 'wiwi' : 
+                                            (day.yuyu > day.wiwi ? 'yuyu' : 
+                                            (day.wiwi > 0 ? 'both' : ''));
+                                        return `<div class="activity-day ${level} ${userClass} ${day.isToday ? 'today' : ''}" 
+                                            data-date="${day.date}" 
+                                            title="${day.date}\nwiwi: ${day.wiwi}, yuyu: ${day.yuyu}"></div>`;
+                                    }).join('')}
+                                </div>
+                            `).join('')}
                         </div>
-                    `).join('')}
+                    </div>
                 </div>
-                <div class="activity-legend">
-                    <span class="legend-item"><span class="legend-box wiwi"></span>wiwi</span>
-                    <span class="legend-item"><span class="legend-box yuyu"></span>yuyu</span>
-                    <span class="legend-item"><span class="legend-box both"></span>both</span>
+                <div class="activity-footer">
+                    <div class="activity-legend">
+                        <span class="legend-item"><span class="legend-box wiwi"></span>wiwi</span>
+                        <span class="legend-item"><span class="legend-box yuyu"></span>yuyu</span>
+                        <span class="legend-item"><span class="legend-box both"></span>both</span>
+                    </div>
+                    <div class="activity-scale">
+                        <span>Less</span>
+                        <span class="scale-box empty"></span>
+                        <span class="scale-box low wiwi"></span>
+                        <span class="scale-box medium wiwi"></span>
+                        <span class="scale-box high wiwi"></span>
+                        <span>More</span>
+                    </div>
                 </div>
             </div>
         `;
