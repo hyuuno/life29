@@ -163,6 +163,96 @@
     transform: scale(0.95);
 }
 
+/* 调色板下拉菜单 */
+.color-palette-dropdown {
+    position: absolute;
+    bottom: var(--space-xl);
+    right: calc(var(--space-xl) + 70px);
+    z-index: 10;
+}
+
+.color-palette-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.color-palette-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+    transform: scale(1.05);
+}
+
+.color-palette-menu {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: 0;
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    min-width: 180px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s;
+}
+
+.color-palette-dropdown.open .color-palette-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.palette-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: var(--space-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.palette-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.palette-option {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    background: transparent;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.palette-option:hover {
+    transform: scale(1.1);
+}
+
+.palette-option.active {
+    border-color: white;
+}
+
+.palette-swatch {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: calc(var(--radius-md) - 4px);
+}
+
 /* ============================================
    标签页导航
    ============================================ */
@@ -1007,6 +1097,25 @@
         height: 48px;
         bottom: var(--space-lg);
         right: var(--space-lg);
+    }
+    
+    .color-palette-dropdown {
+        right: calc(var(--space-lg) + 58px);
+        bottom: var(--space-lg);
+    }
+    
+    .color-palette-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .color-palette-menu {
+        min-width: 160px;
+    }
+    
+    .palette-option {
+        width: 42px;
+        height: 42px;
     }
     
     .tabs-container {

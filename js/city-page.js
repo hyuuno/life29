@@ -6,7 +6,11 @@
 
 class CityPage {
     constructor() {
-        this.cityId = new URLSearchParams(window.location.search).get('id');
+        // 从 URL 获取城市和国家参数
+        const params = new URLSearchParams(window.location.search);
+        this.cityName = params.get('city') || params.get('id') || ''; // 兼容旧格式
+        this.countryName = params.get('country') || '';
+        
         this.cityData = null;
         this.moments = [];
         this.allImages = [];
@@ -26,8 +30,20 @@ class CityPage {
         // 上传相关
         this.uploadFiles = [];
         
-        // 背景颜色
-        this.bgColor = this.getRandomColor();
+        // 背景颜色配置
+        this.colorPresets = {
+            rose: { h: 350, s: 60, l: 70 },
+            sky: { h: 200, s: 60, l: 70 },
+            mint: { h: 160, s: 50, l: 65 },
+            lavender: { h: 270, s: 50, l: 70 },
+            peach: { h: 30, s: 70, l: 70 },
+            gold: { h: 45, s: 60, l: 70 }
+        };
+        
+        // 读取保存的颜色或随机选择
+        const savedColor = localStorage.getItem(`life29-city-color-${this.cityName}`);
+        this.currentColorName = savedColor || this.getRandomColorName();
+        this.bgColor = this.colorPresets[this.currentColorName];
         
         this.init();
     }
@@ -37,6 +53,7 @@ class CityPage {
         this.setupScrollHeader();
         this.setupTabs();
         this.setupUserDropdown();
+        this.setupColorPalette();
         this.initCanvas();
         
         await this.initCloud();
@@ -51,20 +68,64 @@ class CityPage {
     }
     
     // ==========================================
-    // 随机颜色背景 + 互动效果
+    // 调色板功能
     // ==========================================
     
-    getRandomColor() {
-        const colors = [
-            { h: 350, s: 60, l: 70 }, // 粉红
-            { h: 200, s: 60, l: 70 }, // 天蓝
-            { h: 160, s: 50, l: 65 }, // 薄荷绿
-            { h: 270, s: 50, l: 70 }, // 淡紫
-            { h: 30, s: 70, l: 70 },  // 橙色
-            { h: 45, s: 60, l: 70 },  // 金色
-        ];
-        return colors[Math.floor(Math.random() * colors.length)];
+    getRandomColorName() {
+        const names = Object.keys(this.colorPresets);
+        return names[Math.floor(Math.random() * names.length)];
     }
+    
+    setupColorPalette() {
+        const dropdown = document.getElementById('colorPaletteDropdown');
+        const btn = document.getElementById('colorPaletteBtn');
+        const menu = document.getElementById('colorPaletteMenu');
+        
+        // 标记当前选中的颜色
+        menu?.querySelectorAll('.palette-option').forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.color === this.currentColorName);
+        });
+        
+        btn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown?.classList.toggle('open');
+        });
+        
+        document.addEventListener('click', () => {
+            dropdown?.classList.remove('open');
+        });
+        
+        menu?.querySelectorAll('.palette-option').forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const colorName = opt.dataset.color;
+                this.changeColor(colorName);
+                
+                // 更新选中状态
+                menu.querySelectorAll('.palette-option').forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                
+                dropdown?.classList.remove('open');
+            });
+        });
+    }
+    
+    changeColor(colorName) {
+        if (!this.colorPresets[colorName]) return;
+        
+        this.currentColorName = colorName;
+        this.bgColor = this.colorPresets[colorName];
+        
+        // 保存到 localStorage
+        localStorage.setItem(`life29-city-color-${this.cityName}`, colorName);
+        
+        // 重新初始化画布（会自动使用新颜色）
+        this.initCanvas();
+    }
+    
+    // ==========================================
+    // 随机颜色背景 + 互动效果
+    // ==========================================
     
     initCanvas() {
         const canvas = document.getElementById('coverCanvas');
@@ -308,15 +369,17 @@ class CityPage {
     }
     
     async loadCityData() {
-        if (!this.cityId) {
+        if (!this.cityName) {
             window.location.href = 'index.html';
             return;
         }
         
-        const cityName = decodeURIComponent(this.cityId);
+        const cityName = decodeURIComponent(this.cityName);
+        const countryName = decodeURIComponent(this.countryName);
         
         // 从云端加载 moments
         if (window.supabaseService?.isConnected()) {
+            // 使用城市名称查询
             this.moments = await window.supabaseService.getMoments({ city: cityName });
             
             // 提取城市信息
@@ -330,14 +393,14 @@ class CityPage {
             } else {
                 this.cityData = {
                     name: cityName,
-                    country: '',
+                    country: countryName,
                     nameEn: cityName
                 };
             }
         } else {
             this.cityData = {
                 name: cityName,
-                country: '',
+                country: countryName,
                 nameEn: cityName
             };
         }

@@ -56,6 +56,39 @@
                 <span class="stat-item"><span class="stat-num" id="momentCount">0</span> 篇日志</span>
             </div>
         </div>
+        <!-- 调色板按钮 -->
+        <div class="color-palette-dropdown" id="colorPaletteDropdown">
+            <button class="color-palette-btn" id="colorPaletteBtn" title="选择背景颜色">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.3"/>
+                    <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                </svg>
+            </button>
+            <div class="color-palette-menu" id="colorPaletteMenu">
+                <div class="palette-label">选择背景色</div>
+                <div class="palette-options">
+                    <button class="palette-option" data-color="rose" title="玫瑰粉">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(350, 60%, 80%), hsl(370, 50%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="sky" title="天空蓝">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(200, 60%, 80%), hsl(220, 50%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="mint" title="薄荷绿">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(160, 50%, 75%), hsl(180, 40%, 50%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="lavender" title="薰衣草紫">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(270, 50%, 80%), hsl(290, 40%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="peach" title="蜜桃橙">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(30, 70%, 80%), hsl(50, 60%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="gold" title="金色">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(45, 60%, 80%), hsl(65, 50%, 55%));"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- 添加 Moment 按钮 -->
         <button class="add-moment-btn" id="addMomentBtn" title="添加新回忆">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

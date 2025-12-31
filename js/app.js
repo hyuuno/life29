@@ -27,6 +27,7 @@ class App {
             this.initUser();
             await this.initCloud();
             this.initGlobe();
+            await this.loadCloudMoments(); // 加载云端 moments 并更新标记
             this.initHomeControl();
             this.bindEvents();
             this.updateStats();
@@ -35,6 +36,126 @@ class App {
         } catch (error) {
             console.error('App init error:', error);
         }
+    }
+    
+    async loadCloudMoments() {
+        if (!window.supabaseService?.isConnected()) return;
+        
+        try {
+            const moments = await window.supabaseService.getMoments();
+            if (!moments || moments.length === 0) return;
+            
+            // 按城市分组 moments
+            const cityMoments = {};
+            moments.forEach(m => {
+                const key = `${m.city}-${m.country}`;
+                if (!cityMoments[key]) {
+                    cityMoments[key] = {
+                        city: m.city,
+                        country: m.country,
+                        photos: [],
+                        journals: []
+                    };
+                }
+                
+                // 添加照片
+                const urls = this.parseImageUrls(m.image_urls);
+                urls.forEach(url => {
+                    cityMoments[key].photos.push({
+                        url,
+                        date: m.date,
+                        caption: m.content
+                    });
+                });
+                
+                // 添加日志
+                if (m.content) {
+                    cityMoments[key].journals.push({
+                        title: `${m.city}的记忆`,
+                        content: m.content,
+                        date: m.date
+                    });
+                }
+            });
+            
+            // 更新 dataManager 中的城市数据
+            Object.values(cityMoments).forEach(cm => {
+                // 查找匹配的城市
+                let existingCity = this.dataManager.cities.find(c => 
+                    c.name === cm.city || c.nameEn === cm.city
+                );
+                
+                if (existingCity) {
+                    // 更新现有城市
+                    existingCity.photos = [...(existingCity.photos || []), ...cm.photos];
+                    existingCity.journals = [...(existingCity.journals || []), ...cm.journals];
+                } else {
+                    // 创建新城市（需要坐标）
+                    const coords = this.getCityCoords(cm.city, cm.country);
+                    if (coords) {
+                        const newCity = {
+                            id: `cloud_${cm.city}`,
+                            name: cm.city,
+                            nameEn: cm.city,
+                            country: cm.country,
+                            lat: coords[0],
+                            lng: coords[1],
+                            color: this.getRandomCityColor(),
+                            photos: cm.photos,
+                            journals: cm.journals
+                        };
+                        this.dataManager.cities.push(newCity);
+                    }
+                }
+            });
+            
+            // 更新地球标记
+            this.globe?.updateCities(this.dataManager.cities);
+            
+        } catch (error) {
+            console.error('Failed to load cloud moments:', error);
+        }
+    }
+    
+    parseImageUrls(imageUrls) {
+        if (!imageUrls) return [];
+        if (Array.isArray(imageUrls)) return imageUrls;
+        try {
+            const parsed = JSON.parse(imageUrls);
+            return Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+            return imageUrls.split(',').map(s => s.trim()).filter(Boolean);
+        }
+    }
+    
+    getCityCoords(cityName, country) {
+        // 中国城市
+        const chinaCities = {
+            '北京': [39.9, 116.4], '上海': [31.2, 121.5], '天津': [39.1, 117.2],
+            '重庆': [29.6, 106.5], '香港': [22.3, 114.2], '澳门': [22.2, 113.5],
+            '台北': [25.0, 121.5], '广州': [23.1, 113.3], '深圳': [22.5, 114.1],
+            '杭州': [30.3, 120.2], '南京': [32.1, 118.8], '苏州': [31.3, 120.6],
+            '成都': [30.7, 104.1], '武汉': [30.6, 114.3], '西安': [34.3, 108.9],
+            '长沙': [28.2, 113.0], '郑州': [34.8, 113.7], '青岛': [36.1, 120.4],
+            '大连': [38.9, 121.6], '厦门': [24.5, 118.1], '福州': [26.1, 119.3]
+        };
+        
+        // 美国城市
+        const usCities = {
+            'San Francisco': [37.8, -122.4], 'Los Angeles': [34.1, -118.2],
+            'New York': [40.7, -74.0], 'Chicago': [41.9, -87.6],
+            'Las Vegas': [36.2, -115.1], 'Seattle': [47.6, -122.3]
+        };
+        
+        if (chinaCities[cityName]) return chinaCities[cityName];
+        if (usCities[cityName]) return usCities[cityName];
+        
+        return null;
+    }
+    
+    getRandomCityColor() {
+        const colors = ['#E8B4B8', '#A8D5E5', '#B8D4A8', '#D4A8D5', '#E5C8A8'];
+        return colors[Math.floor(Math.random() * colors.length)];
     }
     
     async initCloud() {
@@ -170,7 +291,14 @@ class App {
         this.globe = new Globe(container, this.dataManager.cities);
         
         this.globe.onCityHover = (city, event) => this.showCityPreview(city, event);
-        this.globe.onCityClick = (city) => { window.location.href = `city.html?id=${city.id}`; };
+        this.globe.onCityClick = (city) => { 
+            // 使用城市名称和国家作为参数
+            const params = new URLSearchParams({
+                city: city.name,
+                country: city.country || ''
+            });
+            window.location.href = `city.html?${params.toString()}`; 
+        };
     }
     
     initHomeControl() {
