@@ -22,25 +22,34 @@
 /* 左侧信息面板 */
 .music-sidebar {
     position: sticky;
-    top: 120px;
+    top: 100px;
     height: fit-content;
+    max-height: calc(100vh - 120px);
     padding: var(--space-lg);
-    background: var(--color-bg-card);
+    background: rgba(var(--color-bg-card-rgb, 255, 255, 255), 0.8);
+    backdrop-filter: blur(20px);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+[data-theme="dark"] .music-sidebar {
+    background: rgba(30, 30, 30, 0.8);
 }
 
 .sidebar-now-playing {
     text-align: center;
-    margin-bottom: var(--space-xl);
     padding-bottom: var(--space-lg);
     border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
 }
 
 .sidebar-cover {
-    width: 200px;
-    height: 200px;
-    margin: 0 auto var(--space-lg);
+    width: 180px;
+    height: 180px;
+    margin: 0 auto var(--space-md);
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--color-bg-elevated);
@@ -64,16 +73,16 @@
 
 .sidebar-title {
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 400;
     margin-bottom: var(--space-xs);
     color: var(--color-text);
 }
 
 .sidebar-artist {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: var(--color-text-light);
-    margin-bottom: var(--space-sm);
+    margin-bottom: var(--space-xs);
 }
 
 .sidebar-meta {
@@ -84,51 +93,69 @@
     color: var(--color-text-muted);
 }
 
-.sidebar-meta span:not(:empty)::before {
-    content: '';
-}
-
 /* Thoughts 区域 */
 .sidebar-thoughts {
-    position: relative;
+    padding: var(--space-lg) 0;
+    border-bottom: 1px solid var(--color-border);
+    flex: 1;
+    min-height: 120px;
+}
+
+.thoughts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
 }
 
 .thoughts-label {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+}
+
+.thoughts-meta {
+    display: flex;
+    gap: var(--space-sm);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
     margin-bottom: var(--space-sm);
 }
 
+.thoughts-author {
+    font-weight: 500;
+    color: var(--color-primary);
+}
+
 .thoughts-content {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     line-height: 1.7;
-    color: var(--color-text-light);
-    font-style: italic;
-    min-height: 60px;
+    color: var(--color-text);
+    white-space: pre-wrap;
 }
 
 .thoughts-content:empty::after {
     content: '这首歌还没有留言...';
     color: var(--color-text-muted);
+    font-style: italic;
 }
 
 .thoughts-edit-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 4px;
-    margin-top: var(--space-sm);
-    padding: var(--space-xs) var(--space-sm);
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
     background: transparent;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     color: var(--color-text-muted);
-    font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -137,6 +164,108 @@
     background: var(--color-bg-elevated);
     color: var(--color-text);
     border-color: var(--color-text-muted);
+}
+
+/* Comments 区域 */
+.sidebar-comments {
+    padding-top: var(--space-lg);
+    flex-shrink: 0;
+}
+
+.comments-header {
+    margin-bottom: var(--space-sm);
+}
+
+.comments-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.comments-meta {
+    display: flex;
+    gap: var(--space-sm);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+}
+
+.comments-author {
+    font-weight: 500;
+    color: var(--color-secondary, #6B8E9B);
+}
+
+.comments-content {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-text-light);
+    margin-bottom: var(--space-md);
+    white-space: pre-wrap;
+}
+
+.comments-content:empty::after {
+    content: '还没有评论...';
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.comments-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.comments-input {
+    width: 100%;
+    min-height: 60px;
+    padding: var(--space-sm);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: var(--color-text);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.comments-input:focus {
+    border-color: var(--color-primary);
+}
+
+.comments-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.comments-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    align-self: flex-end;
+    padding: var(--space-xs) var(--space-md);
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.comments-submit-btn:hover {
+    background: var(--color-primary-hover);
+}
+
+.comments-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* 搜索栏 */

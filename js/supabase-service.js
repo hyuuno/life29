@@ -347,6 +347,52 @@ class SupabaseService {
             return false;
         }
     }
+    
+    // ==========================================
+    // Songs 操作
+    // ==========================================
+    
+    async updateSongThoughts(songId, thoughts, author) {
+        if (!this.isConnected()) return false;
+        
+        try {
+            const { error } = await this.client
+                .from('songs')
+                .update({
+                    thoughts: thoughts,
+                    thoughts_author: author,
+                    thoughts_time: new Date().toISOString()
+                })
+                .eq('id', songId);
+            
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error('Failed to update song thoughts:', e);
+            return false;
+        }
+    }
+    
+    async updateSongFeedback(songId, feedback, author) {
+        if (!this.isConnected()) return false;
+        
+        try {
+            const { error } = await this.client
+                .from('songs')
+                .update({
+                    feedback: feedback,
+                    feedback_author: author,
+                    feedback_time: new Date().toISOString()
+                })
+                .eq('id', songId);
+            
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error('Failed to update song feedback:', e);
+            throw e;
+        }
+    }
 }
 
 // 全局实例

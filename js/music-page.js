@@ -484,6 +484,19 @@ class MusicPage {
         document.getElementById('editThoughtsBtn')?.addEventListener('click', () => {
             this.editThoughts();
         });
+        
+        // 提交评论
+        document.getElementById('submitCommentBtn')?.addEventListener('click', () => {
+            this.submitComment();
+        });
+        
+        // 回车提交评论
+        document.getElementById('commentsInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.submitComment();
+            }
+        });
     }
     
     editThoughts() {
@@ -493,30 +506,85 @@ class MusicPage {
         const newThoughts = prompt('编辑你对这首歌的想法:', currentThoughts);
         
         if (newThoughts !== null) {
+            const currentUser = localStorage.getItem('life29-user') || 'wiwi';
+            
             this.currentSong.thoughts = newThoughts;
+            this.currentSong.thoughts_author = currentUser;
+            this.currentSong.thoughts_time = new Date().toISOString();
             
             // 更新 UI
-            const sidebarThoughts = document.getElementById('sidebarThoughts');
-            if (sidebarThoughts) {
-                sidebarThoughts.textContent = newThoughts;
-            }
+            this.updatePlayerUI();
             
             // 更新网格中的显示
             this.renderGrid();
             
             // 保存到云端
-            this.saveThoughtsToCloud(this.currentIndex, newThoughts);
+            this.saveThoughtsToCloud(this.currentIndex, newThoughts, currentUser);
         }
     }
     
-    async saveThoughtsToCloud(songIndex, thoughts) {
+    async submitComment() {
+        if (!this.currentSong) return;
+        
+        const commentsInput = document.getElementById('commentsInput');
+        const comment = commentsInput?.value.trim();
+        
+        if (!comment) return;
+        
+        const currentUser = localStorage.getItem('life29-user') || 'yuyu';
+        const submitBtn = document.getElementById('submitCommentBtn');
+        
+        // 禁用按钮
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '发送中...';
+        }
+        
+        try {
+            this.currentSong.feedback = comment;
+            this.currentSong.feedback_author = currentUser;
+            this.currentSong.feedback_time = new Date().toISOString();
+            
+            // 更新 UI
+            this.updatePlayerUI();
+            
+            // 保存到云端
+            await this.saveFeedbackToCloud(this.currentIndex, comment, currentUser);
+            
+            // 清空输入框
+            if (commentsInput) commentsInput.value = '';
+            
+        } catch (e) {
+            console.error('Failed to submit comment:', e);
+            alert('评论提交失败');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> 发送';
+            }
+        }
+    }
+    
+    async saveThoughtsToCloud(songIndex, thoughts, author) {
         const song = this.songs[songIndex];
         if (!song || !window.supabaseService?.isConnected()) return;
         
         try {
-            await window.supabaseService.updateSongThoughts(song.id, thoughts);
+            await window.supabaseService.updateSongThoughts(song.id, thoughts, author);
         } catch (e) {
             console.warn('Failed to save thoughts:', e);
+        }
+    }
+    
+    async saveFeedbackToCloud(songIndex, feedback, author) {
+        const song = this.songs[songIndex];
+        if (!song || !window.supabaseService?.isConnected()) return;
+        
+        try {
+            await window.supabaseService.updateSongFeedback(song.id, feedback, author);
+        } catch (e) {
+            console.warn('Failed to save feedback:', e);
+            throw e;
         }
     }
     
@@ -732,6 +800,12 @@ class MusicPage {
         const sidebarAlbum = document.getElementById('sidebarAlbum');
         const sidebarLanguage = document.getElementById('sidebarLanguage');
         const sidebarThoughts = document.getElementById('sidebarThoughts');
+        const thoughtsAuthor = document.getElementById('thoughtsAuthor');
+        const thoughtsTime = document.getElementById('thoughtsTime');
+        const sidebarComments = document.getElementById('sidebarComments');
+        const commentsAuthor = document.getElementById('commentsAuthor');
+        const commentsTime = document.getElementById('commentsTime');
+        const commentsInput = document.getElementById('commentsInput');
         
         if (this.currentSong) {
             const coverUrl = this.currentSong.cover ? 
@@ -754,10 +828,33 @@ class MusicPage {
             if (sidebarArtist) sidebarArtist.textContent = this.currentSong.artist;
             if (sidebarAlbum) sidebarAlbum.textContent = this.currentSong.album || '';
             if (sidebarLanguage) sidebarLanguage.textContent = this.currentSong.language || '';
+            
+            // Thoughts
             if (sidebarThoughts) {
                 sidebarThoughts.textContent = this.currentSong.thoughts || '';
-                // 记录当前歌曲索引用于编辑
                 sidebarThoughts.dataset.songIndex = this.currentIndex;
+            }
+            if (thoughtsAuthor) {
+                thoughtsAuthor.textContent = this.currentSong.thoughts_author || '';
+            }
+            if (thoughtsTime) {
+                thoughtsTime.textContent = this.currentSong.thoughts_time ? 
+                    this.formatTime(this.currentSong.thoughts_time) : '';
+            }
+            
+            // Comments/Feedback
+            if (sidebarComments) {
+                sidebarComments.textContent = this.currentSong.feedback || '';
+            }
+            if (commentsAuthor) {
+                commentsAuthor.textContent = this.currentSong.feedback_author || '';
+            }
+            if (commentsTime) {
+                commentsTime.textContent = this.currentSong.feedback_time ?
+                    this.formatTime(this.currentSong.feedback_time) : '';
+            }
+            if (commentsInput) {
+                commentsInput.value = '';
             }
         } else {
             coverEl.innerHTML = '';
@@ -773,7 +870,26 @@ class MusicPage {
             if (sidebarAlbum) sidebarAlbum.textContent = '';
             if (sidebarLanguage) sidebarLanguage.textContent = '';
             if (sidebarThoughts) sidebarThoughts.textContent = '';
+            if (thoughtsAuthor) thoughtsAuthor.textContent = '';
+            if (thoughtsTime) thoughtsTime.textContent = '';
+            if (sidebarComments) sidebarComments.textContent = '';
+            if (commentsAuthor) commentsAuthor.textContent = '';
+            if (commentsTime) commentsTime.textContent = '';
         }
+    }
+    
+    formatTime(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = now - date;
+        
+        if (diff < 60000) return '刚刚';
+        if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+        if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`;
+        
+        return `${date.getMonth() + 1}/${date.getDate()}`;
     }
     
     updatePlayingState() {

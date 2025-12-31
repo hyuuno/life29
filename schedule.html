@@ -99,6 +99,9 @@
             margin-bottom: 16px;
         }
         .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 6px 14px;
             background: var(--color-bg-card);
             border: 1px solid var(--color-border);
@@ -109,6 +112,19 @@
             transition: all 0.2s;
         }
         .toolbar-btn:hover { background: var(--color-bg); color: var(--color-text); }
+        .toolbar-btn.primary {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+        .toolbar-btn.primary:hover {
+            background: var(--color-primary-hover);
+            border-color: var(--color-primary-hover);
+        }
+        .toolbar-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
         .tables-container {
             display: grid;
@@ -272,6 +288,36 @@
         [data-theme="dark"] .bg-yellow { background: #3a3828; }
         [data-theme="dark"] .bg-teal { background: #2a3a38; }
         [data-theme="dark"] .bg-gray { background: #2a2a2a; }
+        
+        /* Toast 通知 */
+        .schedule-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            padding: 10px 20px;
+            background: var(--color-bg-card);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-size: 0.875rem;
+            color: var(--color-text);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .schedule-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .schedule-toast.success { border-left: 3px solid #4caf50; }
+        .schedule-toast.error { border-left: 3px solid #f44336; }
+        
+        /* 旋转动画 */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
@@ -324,7 +370,14 @@
         
         <div class="toolbar">
             <button class="toolbar-btn" id="todayBtn">回到今天</button>
-            <button class="toolbar-btn" id="clearAllBtn">清空本周</button>
+            <button class="toolbar-btn" id="syncBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                重新同步
+            </button>
+            <button class="toolbar-btn primary" id="uploadBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                上传云端
+            </button>
         </div>
         
         <div class="tables-container">
@@ -709,15 +762,78 @@
             });
         }
         
-        document.getElementById('clearAllBtn').addEventListener('click', async () => {
-            if (confirm('确定清空本周所有内容?')) {
-                localStorage.removeItem(getWeekKey());
-                if (isCloudMode) {
-                    await window.supabaseService.deleteSchedule(getWeekKey());
-                }
-                loadData();
+        document.getElementById('syncBtn').addEventListener('click', async () => {
+            if (!isCloudMode) {
+                alert('云端未连接，无法同步');
+                return;
+            }
+            
+            const btn = document.getElementById('syncBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 同步中...';
+            
+            try {
+                await loadData();
+                showToast('同步成功', 'success');
+            } catch (e) {
+                showToast('同步失败: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 重新同步';
             }
         });
+        
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            if (!isCloudMode) {
+                alert('云端未连接，无法上传');
+                return;
+            }
+            
+            const btn = document.getElementById('uploadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传中...';
+            
+            try {
+                // 收集当前数据
+                const data = { wiwi: {}, yuyu: {} };
+                document.querySelectorAll('.schedule-cell').forEach(cell => {
+                    const person = cell.dataset.person;
+                    const key = `${cell.dataset.row}-${cell.dataset.day}`;
+                    const content = cell.querySelector('.cell-content').value;
+                    const colorClass = [...cell.classList].find(c => c.startsWith('bg-'));
+                    
+                    if (content || colorClass) {
+                        data[person][key] = { content, color: colorClass || '' };
+                    }
+                });
+                
+                // 上传到云端（会自动覆盖旧数据）
+                await window.supabaseService.saveSchedule(getWeekKey(), data.wiwi, data.yuyu);
+                
+                // 同步到本地
+                localStorage.setItem(getWeekKey(), JSON.stringify(data));
+                
+                showToast('上传成功', 'success');
+            } catch (e) {
+                showToast('上传失败: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传云端';
+            }
+        });
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `schedule-toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
         
         // Init
         initSupabase();
