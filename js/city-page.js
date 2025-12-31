@@ -684,32 +684,49 @@ class CityPage {
             new Date(img.date).getFullYear().toString() === this.currentGalleryYear
         );
         
-        const totalPages = Math.ceil(yearImages.length / this.photosPerPage);
-        const start = (this.currentGalleryPage - 1) * this.photosPerPage;
-        const pageImages = yearImages.slice(start, start + this.photosPerPage);
+        // 按月份分组
+        const monthGroups = {};
+        yearImages.forEach(img => {
+            const month = new Date(img.date).getMonth() + 1;
+            if (!monthGroups[month]) monthGroups[month] = [];
+            monthGroups[month].push(img);
+        });
         
-        grid.innerHTML = pageImages.map((img, i) => `
-            <div class="photo-card" data-index="${start + i}">
-                <img src="${this.getThumbnail(img.url, 300)}" alt="">
-                <div class="photo-card-overlay">
-                    <span class="photo-date">${this.formatDate(img.date)}</span>
+        // 按月份降序排序
+        const months = Object.keys(monthGroups).sort((a, b) => b - a);
+        
+        // 渲染带月份标签的网格
+        grid.innerHTML = months.map(month => {
+            const images = monthGroups[month];
+            return `
+                <div class="month-section">
+                    <h3 class="month-title">${month}月 <span class="month-count">${images.length}张</span></h3>
+                    <div class="month-photos">
+                        ${images.map((img, i) => `
+                            <div class="photo-card" data-url="${img.url}" data-month="${month}" data-index="${i}">
+                                <img src="${this.getThumbnail(img.url, 300)}" alt="">
+                                <div class="photo-card-overlay">
+                                    <span class="photo-date">${this.formatDate(img.date)}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
         // 绑定点击打开查看器
         grid.querySelectorAll('.photo-card').forEach(card => {
             card.addEventListener('click', () => {
+                const month = card.dataset.month;
                 const index = parseInt(card.dataset.index);
-                this.openImageViewer(yearImages, index);
+                const monthImages = monthGroups[month];
+                this.openImageViewer(monthImages, index);
             });
         });
         
-        // 渲染分页
-        this.renderPagination(pagination, this.currentGalleryPage, totalPages, (page) => {
-            this.currentGalleryPage = page;
-            this.renderYearPhotos();
-        });
+        // 隐藏分页（改为月份分组后不需要分页）
+        pagination.style.display = 'none';
     }
     
     // ==========================================
@@ -739,7 +756,17 @@ class CityPage {
             const images = this.parseImageUrls(m.image_urls);
             const displayImages = images.slice(0, 9);
             const hasMore = images.length > 9;
-            const gridClass = `grid-${Math.min(displayImages.length, 9)}`;
+            const imageCount = displayImages.length;
+            
+            // 根据图片数量决定布局
+            let imageGridClass = '';
+            let imageSize = 120; // 基础尺寸
+            if (imageCount === 1) imageGridClass = 'img-1';
+            else if (imageCount === 2) imageGridClass = 'img-2';
+            else if (imageCount === 3) imageGridClass = 'img-3';
+            else if (imageCount === 4) imageGridClass = 'img-4';
+            else if (imageCount <= 6) imageGridClass = 'img-6';
+            else imageGridClass = 'img-9';
             
             return `
                 <div class="moment-card" data-id="${m.id}">
@@ -750,15 +777,19 @@ class CityPage {
                         </span>
                         <span class="moment-card-date">${this.formatDate(m.date)}</span>
                     </div>
-                    <div class="moment-card-content">${m.content || ''}</div>
-                    ${displayImages.length > 0 ? `
-                        <div class="moment-card-images ${gridClass}">
-                            ${displayImages.map(url => `
-                                <img src="${this.getThumbnail(url, 300)}" alt="">
-                            `).join('')}
+                    <div class="moment-card-body">
+                        <div class="moment-card-left">
+                            <div class="moment-card-content">${m.content || ''}</div>
+                            ${hasMore ? `<div class="moment-card-more">还有 ${images.length - 9} 张照片</div>` : ''}
                         </div>
-                        ${hasMore ? `<div class="moment-card-more">还有 ${images.length - 9} 张照片，点击查看全部</div>` : ''}
-                    ` : ''}
+                        ${displayImages.length > 0 ? `
+                            <div class="moment-card-right ${imageGridClass}">
+                                ${displayImages.map(url => `
+                                    <img src="${this.getThumbnail(url, 200)}" alt="">
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             `;
         }).join('');
@@ -816,21 +847,27 @@ class CityPage {
         const container = document.getElementById('timelineItems');
         const emptyState = document.getElementById('timelineEmpty');
         
-        // 合并所有内容并按时间排序
-        const items = [];
+        // 获取过去一年的数据
+        const today = new Date();
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
         
-        // 添加 moments
+        // 创建日期到活动的映射
+        const activityMap = {};
+        
+        // 统计每天的活动
         this.moments.forEach(m => {
-            const images = this.parseImageUrls(m.image_urls);
-            items.push({
-                type: 'moment',
-                date: m.date,
-                data: m,
-                thumb: images[0] || null
-            });
+            const date = new Date(m.date);
+            const dateKey = date.toISOString().split('T')[0];
+            const user = m.user_name || 'wiwi';
+            
+            if (!activityMap[dateKey]) {
+                activityMap[dateKey] = { wiwi: 0, yuyu: 0 };
+            }
+            activityMap[dateKey][user === 'yuyu' ? 'yuyu' : 'wiwi']++;
         });
         
-        if (items.length === 0) {
+        if (this.moments.length === 0) {
             container.parentElement.style.display = 'none';
             emptyState.style.display = 'block';
             return;
@@ -839,50 +876,76 @@ class CityPage {
         container.parentElement.style.display = 'block';
         emptyState.style.display = 'none';
         
-        // 按日期降序排序
-        items.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // 生成贡献图
+        const weeks = [];
+        let currentDate = new Date(oneYearAgo);
+        currentDate.setDate(currentDate.getDate() - currentDate.getDay()); // 从周日开始
         
-        // 按年份分组并插入年份标记
-        let currentYear = null;
-        const itemsWithYears = [];
-        
-        items.forEach(item => {
-            const year = new Date(item.date).getFullYear();
-            if (year !== currentYear) {
-                itemsWithYears.push({ type: 'year-marker', year });
-                currentYear = year;
+        while (currentDate <= today) {
+            const week = [];
+            for (let i = 0; i < 7; i++) {
+                const dateKey = currentDate.toISOString().split('T')[0];
+                const activity = activityMap[dateKey] || { wiwi: 0, yuyu: 0 };
+                week.push({
+                    date: dateKey,
+                    wiwi: activity.wiwi,
+                    yuyu: activity.yuyu,
+                    isToday: dateKey === today.toISOString().split('T')[0],
+                    isFuture: currentDate > today
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
             }
-            itemsWithYears.push(item);
+            weeks.push(week);
+        }
+        
+        // 月份标签
+        const monthLabels = [];
+        let lastMonth = -1;
+        weeks.forEach((week, i) => {
+            const month = new Date(week[0].date).getMonth();
+            if (month !== lastMonth) {
+                monthLabels.push({ index: i, name: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month] });
+                lastMonth = month;
+            }
         });
         
-        container.innerHTML = itemsWithYears.map(item => {
-            if (item.type === 'year-marker') {
-                return `
-                    <div class="timeline-year-marker">
-                        <span>${item.year}</span>
-                    </div>
-                `;
-            }
-            
-            return `
-                <div class="timeline-item ${item.type}" data-id="${item.data?.id || ''}">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-date">${this.formatDate(item.date)}</div>
-                        ${item.thumb ? `<img class="timeline-thumb" src="${this.getThumbnail(item.thumb, 200)}" alt="">` : ''}
-                        <div class="timeline-text">${item.data?.content || ''}</div>
-                    </div>
+        container.innerHTML = `
+            <div class="activity-graph">
+                <div class="activity-months">
+                    ${monthLabels.map(m => `<span style="grid-column: ${m.index + 2}">${m.name}</span>`).join('')}
                 </div>
-            `;
-        }).join('');
-        
-        // 绑定点击事件
-        container.querySelectorAll('.timeline-item.moment').forEach(el => {
-            el.addEventListener('click', () => {
-                const moment = this.moments.find(m => m.id == el.dataset.id);
-                if (moment) this.openMomentDetail(moment);
-            });
-        });
+                <div class="activity-days">
+                    <span>Mon</span>
+                    <span>Wed</span>
+                    <span>Fri</span>
+                </div>
+                <div class="activity-grid">
+                    ${weeks.map(week => `
+                        <div class="activity-week">
+                            ${week.map(day => {
+                                const level = day.isFuture ? 'future' : 
+                                    (day.wiwi + day.yuyu === 0 ? 'empty' :
+                                    day.wiwi + day.yuyu <= 2 ? 'low' :
+                                    day.wiwi + day.yuyu <= 4 ? 'medium' : 'high');
+                                const userClass = day.wiwi > day.yuyu ? 'wiwi' : 
+                                    (day.yuyu > day.wiwi ? 'yuyu' : 
+                                    (day.wiwi > 0 ? 'both' : ''));
+                                return `<div class="activity-day ${level} ${userClass} ${day.isToday ? 'today' : ''}" 
+                                    data-date="${day.date}" 
+                                    data-wiwi="${day.wiwi}" 
+                                    data-yuyu="${day.yuyu}"
+                                    title="${day.date}: wiwi ${day.wiwi}, yuyu ${day.yuyu}"></div>`;
+                            }).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="activity-legend">
+                    <span class="legend-item"><span class="legend-box wiwi"></span>wiwi</span>
+                    <span class="legend-item"><span class="legend-box yuyu"></span>yuyu</span>
+                    <span class="legend-item"><span class="legend-box both"></span>both</span>
+                </div>
+            </div>
+        `;
     }
     
     // ==========================================

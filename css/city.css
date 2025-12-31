@@ -431,6 +431,33 @@
     gap: var(--space-md);
 }
 
+/* 月份分组 */
+.month-section {
+    margin-bottom: var(--space-xl);
+}
+
+.month-title {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 400;
+    color: var(--color-text);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.month-count {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 400;
+}
+
+.month-photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-sm);
+}
+
 .photo-card {
     position: relative;
     aspect-ratio: 1;
@@ -528,82 +555,95 @@
     font-weight: 500;
 }
 
-/* 朋友圈风格：文字在上，图片在下 */
+/* 左右布局：文字左边，图片右边 */
+.moment-card-body {
+    display: flex;
+    gap: var(--space-lg);
+    align-items: flex-start;
+}
+
+.moment-card-left {
+    flex: 1;
+    min-width: 0;
+}
+
 .moment-card-content {
     color: var(--color-text);
     font-size: 0.9375rem;
     line-height: 1.7;
-    margin-bottom: var(--space-md);
     white-space: pre-wrap;
 }
 
 .moment-card-content:empty {
     display: none;
-    margin: 0;
 }
 
-/* 朋友圈九宫格图片布局 */
-.moment-card-images {
+.moment-card-more {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: var(--space-sm);
+}
+
+/* 右侧图片区域 - 固定尺寸 */
+.moment-card-right {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
     display: grid;
-    gap: 4px;
+    gap: 2px;
     border-radius: var(--radius-md);
     overflow: hidden;
-    max-width: 360px;
 }
 
-.moment-card-images img {
+.moment-card-right img {
     width: 100%;
-    aspect-ratio: 1;
+    height: 100%;
     object-fit: cover;
     cursor: pointer;
     transition: opacity 0.2s;
 }
 
-.moment-card-images img:hover {
+.moment-card-right img:hover {
     opacity: 0.9;
 }
 
 /* 1张图片 */
-.moment-card-images.grid-1 {
+.moment-card-right.img-1 {
     grid-template-columns: 1fr;
-    max-width: 240px;
 }
 
 /* 2张图片 */
-.moment-card-images.grid-2 {
+.moment-card-right.img-2 {
     grid-template-columns: repeat(2, 1fr);
-    max-width: 280px;
+}
+.moment-card-right.img-2 img {
+    height: 120px;
 }
 
 /* 3张图片 */
-.moment-card-images.grid-3 {
+.moment-card-right.img-3 {
     grid-template-columns: repeat(3, 1fr);
 }
+.moment-card-right.img-3 img {
+    height: 120px;
+}
 
-/* 4张图片 */
-.moment-card-images.grid-4 {
+/* 4张图片 - 2x2 */
+.moment-card-right.img-4 {
     grid-template-columns: repeat(2, 1fr);
-    max-width: 280px;
+    grid-template-rows: repeat(2, 1fr);
 }
 
-/* 5-6张图片 */
-.moment-card-images.grid-5,
-.moment-card-images.grid-6 {
+/* 5-6张图片 - 2x3 */
+.moment-card-right.img-6 {
     grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
 }
 
-/* 7-9张图片 */
-.moment-card-images.grid-7,
-.moment-card-images.grid-8,
-.moment-card-images.grid-9 {
+/* 7-9张图片 - 3x3 */
+.moment-card-right.img-9 {
     grid-template-columns: repeat(3, 1fr);
-}
-
-/* 更多图片提示 */
-.moment-card-more {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-top: var(--space-xs);
+    grid-template-rows: repeat(3, 1fr);
 }
 
 /* Moment 详情模态框 */
@@ -833,125 +873,117 @@
 }
 
 /* ============================================
-   Timeline - 时间线
+   Activity - GitHub 贡献图风格
    ============================================ */
 
 .timeline-container {
     position: relative;
-    padding: var(--space-xl) 0;
-}
-
-.timeline-line {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(
-        180deg,
-        transparent 0%,
-        var(--color-border) 5%,
-        var(--color-border) 95%,
-        transparent 100%
-    );
-    transform: translateX(-50%);
+    padding: var(--space-lg) 0;
 }
 
 .timeline-items {
-    position: relative;
+    width: 100%;
 }
 
-.timeline-item {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: var(--space-xl);
-    position: relative;
+/* Activity 贡献图 */
+.activity-graph {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: var(--space-md);
 }
 
-.timeline-item:nth-child(odd) {
-    flex-direction: row;
-    padding-right: calc(50% + var(--space-xl));
+.activity-months {
+    display: grid;
+    grid-template-columns: 30px repeat(53, 12px);
+    gap: 2px;
+    margin-bottom: 4px;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
 }
 
-.timeline-item:nth-child(even) {
-    flex-direction: row-reverse;
-    padding-left: calc(50% + var(--space-xl));
-}
-
-.timeline-dot {
+.activity-days {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+}
+
+.activity-grid {
+    display: flex;
+    gap: 2px;
+    margin-left: 30px;
+}
+
+.activity-week {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.activity-day {
     width: 12px;
     height: 12px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    border: 3px solid var(--color-bg);
-    box-shadow: 0 0 0 2px var(--color-primary);
+    border-radius: 2px;
+    background: var(--color-bg-elevated);
+    transition: all 0.15s;
+}
+
+.activity-day:hover {
+    transform: scale(1.3);
     z-index: 1;
 }
 
-.timeline-item.photo .timeline-dot {
-    background: #A8D5E5;
-    box-shadow: 0 0 0 2px #A8D5E5;
+.activity-day.today {
+    box-shadow: 0 0 0 1px var(--color-text-muted);
 }
 
-.timeline-item.moment .timeline-dot {
-    background: #E8B4B8;
-    box-shadow: 0 0 0 2px #E8B4B8;
+.activity-day.future {
+    background: transparent;
 }
 
-.timeline-content {
-    background: var(--color-bg-card);
-    padding: var(--space-md);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    max-width: 100%;
-    cursor: pointer;
-    transition: all 0.3s;
-}
+/* wiwi 绿色 */
+.activity-day.wiwi.low { background: rgba(134, 239, 172, 0.4); }
+.activity-day.wiwi.medium { background: rgba(134, 239, 172, 0.7); }
+.activity-day.wiwi.high { background: rgb(134, 239, 172); }
 
-.timeline-content:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
+/* yuyu 蓝色 */
+.activity-day.yuyu.low { background: rgba(147, 197, 253, 0.4); }
+.activity-day.yuyu.medium { background: rgba(147, 197, 253, 0.7); }
+.activity-day.yuyu.high { background: rgb(147, 197, 253); }
 
-.timeline-date {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-xs);
-}
+/* 两人都有 紫色 */
+.activity-day.both.low { background: rgba(196, 181, 253, 0.4); }
+.activity-day.both.medium { background: rgba(196, 181, 253, 0.7); }
+.activity-day.both.high { background: rgb(196, 181, 253); }
 
-.timeline-thumb {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-sm);
-}
-
-.timeline-text {
-    font-size: 0.8125rem;
-    color: var(--color-text-light);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.timeline-year-marker {
-    text-align: center;
-    margin: var(--space-2xl) 0;
-    position: relative;
-}
-
-.timeline-year-marker span {
-    background: var(--color-bg);
-    padding: var(--space-sm) var(--space-lg);
-    font-family: var(--font-display);
-    font-size: 1.25rem;
+.activity-legend {
+    display: flex;
+    gap: var(--space-lg);
+    margin-top: var(--space-md);
+    margin-left: 30px;
+    font-size: 0.7rem;
     color: var(--color-text-muted);
 }
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.legend-box.wiwi { background: rgba(134, 239, 172, 0.7); }
+.legend-box.yuyu { background: rgba(147, 197, 253, 0.7); }
+.legend-box.both { background: rgba(196, 181, 253, 0.7); }
 
 /* ============================================
    分页

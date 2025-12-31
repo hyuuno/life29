@@ -13,18 +13,17 @@
 /* 两栏布局 */
 .music-layout {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 300px 1fr;
     gap: var(--space-xl);
     width: 100%;
     margin-top: var(--space-lg);
+    align-items: start;
 }
 
 /* 左侧信息面板 */
 .music-sidebar {
     position: sticky;
     top: 100px;
-    height: fit-content;
-    max-height: calc(100vh - 120px);
     padding: var(--space-lg);
     background: rgba(var(--color-bg-card-rgb, 255, 255, 255), 0.8);
     backdrop-filter: blur(20px);
@@ -32,6 +31,9 @@
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
+    /* 高度与 4x4 album grid 对齐 */
+    min-height: 600px;
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
 }
 
@@ -339,65 +341,11 @@
     margin-bottom: var(--space-lg);
 }
 
-.player-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    min-width: 200px;
-}
-
-.now-playing-cover {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-md);
-    background: var(--color-bg-elevated);
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.now-playing-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.now-playing-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.now-playing-title {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 400;
-    color: var(--color-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.now-playing-artist {
-    font-size: 0.8125rem;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.player-center {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-sm);
-}
-
 .player-controls {
     display: flex;
     align-items: center;
     gap: var(--space-md);
+    flex-shrink: 0;
 }
 
 .control-btn {
@@ -443,9 +391,8 @@
     display: block;
 }
 
-.progress-bar {
-    width: 100%;
-    max-width: 400px;
+.progress-section {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: var(--space-sm);

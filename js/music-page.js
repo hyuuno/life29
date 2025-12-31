@@ -789,6 +789,7 @@ class MusicPage {
     }
     
     updatePlayerUI() {
+        // 播放栏元素（现已移除，但保留兼容性检查）
         const coverEl = document.getElementById('nowPlayingCover');
         const titleEl = document.getElementById('nowPlayingTitle');
         const artistEl = document.getElementById('nowPlayingArtist');
@@ -813,10 +814,10 @@ class MusicPage {
             const largeCoverUrl = this.currentSong.cover ?
                 (window.cloudinaryService?.getThumbnailUrl(this.currentSong.cover, 400) || this.currentSong.cover) : '';
             
-            // 更新播放栏
-            coverEl.innerHTML = coverUrl ? `<img src="${coverUrl}" alt="">` : '';
-            titleEl.textContent = this.currentSong.title;
-            artistEl.textContent = this.currentSong.artist;
+            // 更新播放栏（如果存在）
+            if (coverEl) coverEl.innerHTML = coverUrl ? `<img src="${coverUrl}" alt="">` : '';
+            if (titleEl) titleEl.textContent = this.currentSong.title;
+            if (artistEl) artistEl.textContent = this.currentSong.artist;
             
             // 更新左侧面板
             if (sidebarCover) {
@@ -857,9 +858,10 @@ class MusicPage {
                 commentsInput.value = '';
             }
         } else {
-            coverEl.innerHTML = '';
-            titleEl.textContent = '未播放';
-            artistEl.textContent = '-';
+            // 更新播放栏（如果存在）
+            if (coverEl) coverEl.innerHTML = '';
+            if (titleEl) titleEl.textContent = '未播放';
+            if (artistEl) artistEl.textContent = '-';
             
             // 重置左侧面板
             if (sidebarCover) {

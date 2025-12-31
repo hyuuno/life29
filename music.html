@@ -52,33 +52,24 @@
 
         <!-- 播放器控制栏 -->
         <div class="player-bar">
-            <div class="player-left">
-                <div class="now-playing-cover" id="nowPlayingCover"></div>
-                <div class="now-playing-info">
-                    <span class="now-playing-title" id="nowPlayingTitle">未播放</span>
-                    <span class="now-playing-artist" id="nowPlayingArtist">-</span>
-                </div>
+            <div class="player-controls">
+                <button class="control-btn" id="prevBtn" title="上一首">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="control-btn play-btn" id="playPauseBtn" title="播放/暂停">
+                    <svg class="icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <svg class="icon-pause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                </button>
+                <button class="control-btn" id="nextBtn" title="下一首">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
             </div>
-            <div class="player-center">
-                <div class="player-controls">
-                    <button class="control-btn" id="prevBtn" title="上一首">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-                    </button>
-                    <button class="control-btn play-btn" id="playPauseBtn" title="播放/暂停">
-                        <svg class="icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        <svg class="icon-pause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                    </button>
-                    <button class="control-btn" id="nextBtn" title="下一首">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-                    </button>
+            <div class="progress-section">
+                <span class="time-current" id="timeCurrent">0:00</span>
+                <div class="progress-track" id="progressTrack">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <div class="progress-bar">
-                    <span class="time-current" id="timeCurrent">0:00</span>
-                    <div class="progress-track" id="progressTrack">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <span class="time-remaining" id="timeRemaining">-0:00</span>
-                </div>
+                <span class="time-remaining" id="timeRemaining">-0:00</span>
             </div>
             <div class="player-right">
                 <button class="control-btn" id="shuffleBtn" title="随机播放">

@@ -97,6 +97,8 @@
             display: flex;
             gap: 10px;
             margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
         }
         .toolbar-btn {
             display: inline-flex;
@@ -126,46 +128,68 @@
             cursor: not-allowed;
         }
         
-        .tables-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
+        .user-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
         }
-        @media (max-width: 1200px) {
-            .tables-container { grid-template-columns: 1fr; }
+        .user-btn {
+            padding: 4px 10px;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--color-text-light);
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .person-section {
+        .user-btn:hover { background: var(--color-bg); }
+        .user-btn.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+        
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 12px;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+        .legend-color.wiwi { background: rgba(134, 239, 172, 0.4); }
+        .legend-color.yuyu { background: rgba(147, 197, 253, 0.4); }
+        .timezone-label { margin-left: auto; }
+        
+        .table-container {
             background: var(--color-bg-card);
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 2px 16px rgba(0,0,0,0.05);
         }
-        .person-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: var(--color-bg);
-            border-bottom: 1px solid var(--color-border);
-        }
-        .person-name {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--color-text);
-        }
-        .person-tz {
-            font-size: 0.75rem;
-            color: var(--color-text-muted);
-        }
         .table-wrapper {
             overflow-x: auto;
-            max-height: 70vh;
+            max-height: 75vh;
             overflow-y: auto;
         }
         .schedule-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 700px;
+            min-width: 900px;
         }
         .schedule-table th, .schedule-table td {
             border: 1px solid var(--color-border);
@@ -174,31 +198,80 @@
             vertical-align: top;
         }
         .schedule-table th {
-            padding: 10px 8px;
+            padding: 8px 4px;
             font-weight: 400;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--color-text-light);
             background: var(--color-bg);
             position: sticky;
             top: 0;
             z-index: 10;
         }
-        .schedule-table th.time-col { width: 60px; }
-        .schedule-table th .day-name { font-size: 0.8rem; color: var(--color-text); margin-bottom: 2px; }
-        .schedule-table th .day-date { font-size: 0.7rem; color: var(--color-text-muted); }
+        .schedule-table th.time-col { width: 50px; }
+        .schedule-table th.day-col {
+            border-left: 2px solid var(--color-border);
+        }
+        .schedule-table th .day-name { font-size: 0.75rem; color: var(--color-text); margin-bottom: 2px; }
+        .schedule-table th .day-date { font-size: 0.65rem; color: var(--color-text-muted); }
+        .schedule-table th .person-labels {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-top: 4px;
+        }
+        .schedule-table th .person-label {
+            font-size: 0.6rem;
+            padding: 1px 4px;
+            border-radius: 2px;
+        }
+        .schedule-table th .person-label.wiwi { background: rgba(134, 239, 172, 0.3); }
+        .schedule-table th .person-label.yuyu { background: rgba(147, 197, 253, 0.3); }
+        
         .time-cell {
             padding: 6px 4px;
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: var(--color-text-muted);
             background: var(--color-bg);
+            border-right: 2px solid var(--color-border);
         }
+        
+        /* 日期分隔列 */
+        .day-group {
+            border-left: 2px solid var(--color-border);
+        }
+        
         .schedule-cell {
-            min-height: 28px;
+            min-height: 26px;
+            min-width: 50px;
             cursor: pointer;
             transition: background 0.15s;
             position: relative;
         }
         .schedule-cell:hover { background: rgba(0,0,0,0.02); }
+        
+        /* wiwi 和 yuyu 的不同背景色 */
+        .schedule-cell.cell-wiwi {
+            background: rgba(134, 239, 172, 0.08);
+        }
+        .schedule-cell.cell-yuyu {
+            background: rgba(147, 197, 253, 0.08);
+        }
+        .schedule-cell.cell-wiwi:hover {
+            background: rgba(134, 239, 172, 0.15);
+        }
+        .schedule-cell.cell-yuyu:hover {
+            background: rgba(147, 197, 253, 0.15);
+        }
+        
+        /* 只读状态 */
+        .schedule-cell.readonly {
+            opacity: 0.7;
+            cursor: default;
+        }
+        .schedule-cell.readonly .cell-content {
+            pointer-events: none;
+            color: var(--color-text-muted);
+        }
         
         /* Excel 聚焦效果 - 高亮行列 */
         .schedule-table tr.row-highlight td {
@@ -378,26 +451,22 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 上传云端
             </button>
+            <div class="user-selector">
+                <span>当前用户:</span>
+                <button class="user-btn active" data-user="wiwi">👦 wiwi</button>
+                <button class="user-btn" data-user="yuyu">👧 yuyu</button>
+            </div>
         </div>
         
-        <div class="tables-container">
-            <div class="person-section">
-                <div class="person-header">
-                    <span class="person-name">👦 wiwi</span>
-                    <span class="person-tz" id="wiwiTz">北京时间 (UTC+8)</span>
-                </div>
-                <div class="table-wrapper">
-                    <table class="schedule-table" id="tableWiwi"></table>
-                </div>
-            </div>
-            <div class="person-section">
-                <div class="person-header">
-                    <span class="person-name">👧 yuyu</span>
-                    <span class="person-tz" id="yuyuTz">北京时间 (UTC+8)</span>
-                </div>
-                <div class="table-wrapper">
-                    <table class="schedule-table" id="tableYuyu"></table>
-                </div>
+        <div class="legend">
+            <span class="legend-item"><span class="legend-color wiwi"></span>wiwi</span>
+            <span class="legend-item"><span class="legend-color yuyu"></span>yuyu</span>
+            <span class="timezone-label" id="timezoneLabel">北京时间 (UTC+8)</span>
+        </div>
+        
+        <div class="table-container">
+            <div class="table-wrapper">
+                <table class="schedule-table" id="scheduleTable"></table>
             </div>
         </div>
     </main>
@@ -429,6 +498,7 @@
         let currentMonth = new Date().getMonth();
         let currentWeekInMonth = 0;
         let timezone = 'bj'; // 'sf' or 'bj' - 统一时区
+        let currentUser = localStorage.getItem('life29-user') || 'wiwi'; // 当前用户
         
         const HOUR_DIFF = 16; // 北京比旧金山快16小时
         
@@ -501,25 +571,32 @@
             return date;
         }
         
-        function buildTable(tableId, person) {
-            const table = document.getElementById(tableId);
+        function buildCombinedTable() {
+            const table = document.getElementById('scheduleTable');
             const dates = getWeekDates();
             const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
             
+            // 表头：时间 | 周一(wiwi yuyu) | 周二(wiwi yuyu) | ...
             let html = '<thead><tr><th class="time-col"></th>';
             dates.forEach((d, i) => {
                 const displayDate = adjustDateForTimezone(d);
-                html += `<th><div class="day-name">${dayNames[i]}</div><div class="day-date">${displayDate.getMonth()+1}/${displayDate.getDate()}</div></th>`;
+                html += `<th colspan="2" class="day-col">
+                    <div class="day-name">${dayNames[i]}</div>
+                    <div class="day-date">${displayDate.getMonth()+1}/${displayDate.getDate()}</div>
+                    <div class="person-labels">
+                        <span class="person-label wiwi">W</span>
+                        <span class="person-label yuyu">Y</span>
+                    </div>
+                </th>`;
             });
             html += '</tr></thead><tbody>';
             
-            // Time slots from 3AM to 2AM next day
+            // 时间段：3AM - 2AM
             const hours = [];
             for (let h = 3; h <= 23; h++) hours.push(h);
             for (let h = 0; h <= 2; h++) hours.push(h);
             
             hours.forEach((h, rowIdx) => {
-                // 根据时区调整时间显示
                 let displayHour = h;
                 if (timezone === 'sf') {
                     displayHour = (h - HOUR_DIFF + 24) % 24;
@@ -528,8 +605,17 @@
                 
                 html += `<tr><td class="time-cell">${timeStr}</td>`;
                 for (let day = 0; day < 7; day++) {
-                    html += `<td class="schedule-cell" data-person="${person}" data-row="${rowIdx}" data-day="${day}">
-                        <textarea class="cell-content" placeholder="+"></textarea>
+                    // wiwi 单元格
+                    const isWiwiReadonly = currentUser !== 'wiwi';
+                    html += `<td class="schedule-cell cell-wiwi day-group ${isWiwiReadonly ? 'readonly' : ''}" 
+                        data-person="wiwi" data-row="${rowIdx}" data-day="${day}">
+                        <textarea class="cell-content" placeholder="+" ${isWiwiReadonly ? 'readonly' : ''}></textarea>
+                    </td>`;
+                    // yuyu 单元格
+                    const isYuyuReadonly = currentUser !== 'yuyu';
+                    html += `<td class="schedule-cell cell-yuyu ${isYuyuReadonly ? 'readonly' : ''}" 
+                        data-person="yuyu" data-row="${rowIdx}" data-day="${day}">
+                        <textarea class="cell-content" placeholder="+" ${isYuyuReadonly ? 'readonly' : ''}></textarea>
                     </td>`;
                 }
                 html += '</tr>';
@@ -538,45 +624,30 @@
             html += '</tbody>';
             table.innerHTML = html;
             
+            // 绑定事件
             table.querySelectorAll('.schedule-cell').forEach(cell => {
-                cell.addEventListener('contextmenu', handleRightClick);
-                cell.querySelector('.cell-content').addEventListener('input', saveData);
+                if (!cell.classList.contains('readonly')) {
+                    cell.addEventListener('contextmenu', handleRightClick);
+                    cell.querySelector('.cell-content').addEventListener('input', saveData);
+                }
                 
                 // Excel 聚焦效果
                 cell.addEventListener('mouseenter', () => {
                     const row = cell.closest('tr');
-                    const dayIndex = parseInt(cell.dataset.day);
-                    
-                    // 高亮当前行
                     row.classList.add('row-highlight');
                     cell.classList.add('cell-focus');
-                    
-                    // 高亮当前列（包括表头和所有行）
-                    const tableEl = cell.closest('table');
-                    tableEl.querySelectorAll(`td[data-day="${dayIndex}"], th:nth-child(${dayIndex + 2})`).forEach(el => {
-                        el.classList.add('col-highlight');
-                    });
                 });
                 
                 cell.addEventListener('mouseleave', () => {
                     const row = cell.closest('tr');
-                    const dayIndex = parseInt(cell.dataset.day);
-                    
-                    // 移除高亮
                     row.classList.remove('row-highlight');
                     cell.classList.remove('cell-focus');
-                    
-                    const tableEl = cell.closest('table');
-                    tableEl.querySelectorAll('.col-highlight').forEach(el => {
-                        el.classList.remove('col-highlight');
-                    });
                 });
             });
         }
         
         function renderTables() {
-            buildTable('tableWiwi', 'wiwi');
-            buildTable('tableYuyu', 'yuyu');
+            buildCombinedTable();
             updateWeekLabel();
             updateTimezoneDisplay();
             loadData();
@@ -592,9 +663,19 @@
         
         function updateTimezoneDisplay() {
             const tzText = timezone === 'bj' ? '北京时间 (UTC+8)' : '旧金山时间 (UTC-8)';
-            document.getElementById('wiwiTz').textContent = tzText;
-            document.getElementById('yuyuTz').textContent = tzText;
+            document.getElementById('timezoneLabel').textContent = tzText;
         }
+        
+        // 用户切换
+        document.querySelectorAll('.user-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentUser = btn.dataset.user;
+                localStorage.setItem('life29-user', currentUser);
+                renderTables();
+            });
+        })
         
         // Timezone toggle - 统一切换
         document.getElementById('tzSF').addEventListener('click', () => {
@@ -835,12 +916,23 @@
             }, 2000);
         }
         
-        // Init
-        initSupabase();
-        updateWeekOptions();
-        renderTables();
+        // Init - 等待外部脚本加载完成
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化用户按钮状态
+            document.querySelectorAll('.user-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.user === currentUser);
+            });
+            
+            updateWeekOptions();
+            renderTables();
+        });
+        
+        // 等待 supabase 脚本加载后初始化
+        window.addEventListener('load', () => {
+            setTimeout(initSupabase, 100);
+        });
     </script>
-    <!-- Supabase SDK -->
+    <!-- Supabase SDK - 必须在使用前加载 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-service.js"></script>
