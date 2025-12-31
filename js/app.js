@@ -195,16 +195,35 @@ class App {
         
         document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
         
-        // 背景颜色选择器
-        document.querySelectorAll('.bg-color-btn').forEach(btn => {
-            if (btn.dataset.bg === savedBg) btn.classList.add('active');
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.bg-color-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const bg = btn.dataset.bg;
+        // 背景颜色选择器下拉菜单
+        const colorPickerBtn = document.getElementById('colorPickerBtn');
+        const colorPickerMenu = document.getElementById('colorPickerMenu');
+        
+        // 设置初始激活状态
+        document.querySelectorAll('.color-option').forEach(option => {
+            if (option.dataset.bg === savedBg) option.classList.add('active');
+        });
+        
+        colorPickerBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            colorPickerMenu?.classList.toggle('show');
+        });
+        
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                const bg = option.dataset.bg;
                 document.documentElement.setAttribute('data-bg', bg);
                 localStorage.setItem('life29-bg', bg);
+                colorPickerMenu?.classList.remove('show');
             });
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.color-picker-dropdown')) {
+                colorPickerMenu?.classList.remove('show');
+            }
         });
     }
     
@@ -690,9 +709,88 @@ class App {
     
     updateStats() {
         const stats = this.dataManager.getStats();
-        this.animateNumber('totalCities', stats.cities);
-        this.animateNumber('totalPhotos', stats.photos);
-        this.animateNumber('totalJournals', stats.journals);
+        
+        // 更新总计数字
+        const totalCitiesEl = document.getElementById('totalCities');
+        const totalPhotosEl = document.getElementById('totalPhotos');
+        const totalJournalsEl = document.getElementById('totalJournals');
+        
+        if (totalCitiesEl) totalCitiesEl.textContent = stats.cities;
+        if (totalPhotosEl) totalPhotosEl.textContent = stats.photos;
+        if (totalJournalsEl) totalJournalsEl.textContent = stats.journals;
+        
+        // 初始化排行榜
+        this.currentRankingSort = 'journals';
+        this.renderCityRanking();
+        
+        // 绑定排行榜切换事件
+        document.querySelectorAll('.ranking-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.ranking-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.currentRankingSort = tab.dataset.sort;
+                this.renderCityRanking();
+            });
+        });
+    }
+    
+    renderCityRanking() {
+        const container = document.getElementById('cityRanking');
+        if (!container) return;
+        
+        // 获取有内容的城市并排序
+        const citiesWithContent = this.dataManager.cities
+            .filter(city => (city.photos?.length > 0) || (city.journals?.length > 0))
+            .map(city => ({
+                ...city,
+                photoCount: city.photos?.length || 0,
+                journalCount: city.journals?.length || 0
+            }))
+            .sort((a, b) => {
+                if (this.currentRankingSort === 'photos') {
+                    return b.photoCount - a.photoCount;
+                }
+                return b.journalCount - a.journalCount;
+            });
+        
+        if (citiesWithContent.length === 0) {
+            container.innerHTML = `
+                <div class="ranking-empty">
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted); text-align: center; padding: var(--space-lg) 0;">
+                        还没有足迹记录
+                    </p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = citiesWithContent.map((city, index) => {
+            const count = this.currentRankingSort === 'photos' ? city.photoCount : city.journalCount;
+            const unit = this.currentRankingSort === 'photos' ? '张' : '篇';
+            const positionClass = index < 3 ? `top-${index + 1}` : '';
+            
+            return `
+                <div class="ranking-item" data-id="${city.id}">
+                    <div class="ranking-position ${positionClass}">${index + 1}</div>
+                    <div class="ranking-info">
+                        <div class="ranking-city">${city.name}</div>
+                        <div class="ranking-country">${city.country}</div>
+                    </div>
+                    <div class="ranking-count">${count}${unit}</div>
+                </div>
+            `;
+        }).join('');
+        
+        // 绑定点击事件
+        container.querySelectorAll('.ranking-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const city = this.dataManager.getCity(item.dataset.id);
+                if (city) {
+                    // 打开城市页面
+                    window.location.href = `city.html?id=${city.id}`;
+                }
+            });
+        });
     }
     
     animateNumber(elementId, target) {

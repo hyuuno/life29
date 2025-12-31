@@ -874,18 +874,20 @@ class CityPage {
         // 生成贡献图 - 按列（周）组织
         const weeks = [];
         let currentDate = new Date(oneYearAgo);
-        // 调整到该周的周日
-        currentDate.setDate(currentDate.getDate() - currentDate.getDay());
+        // 调整到该周的周一（而不是周日）
+        const dayOfWeek = currentDate.getDay();
+        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 调整到周一
+        currentDate.setDate(currentDate.getDate() + diff);
         
         while (currentDate <= today) {
             const week = [];
-            for (let i = 0; i < 7; i++) { // 周日(0)到周六(6)
+            for (let i = 0; i < 7; i++) { // 周一(0)到周日(6)
                 const dateKey = currentDate.toISOString().split('T')[0];
                 const activity = activityMap[dateKey] || { wiwi: 0, yuyu: 0 };
                 const total = activity.wiwi + activity.yuyu;
                 week.push({
                     date: dateKey,
-                    dayOfWeek: currentDate.getDay(),
+                    dayOfWeek: i,
                     wiwi: activity.wiwi,
                     yuyu: activity.yuyu,
                     total: total,
@@ -897,39 +899,44 @@ class CityPage {
             weeks.push(week);
         }
         
-        // 月份标签位置
+        // 月份标签位置 - 只在月初显示
         const monthLabels = [];
         let lastMonth = -1;
         weeks.forEach((week, i) => {
-            const firstDayMonth = new Date(week[0].date).getMonth();
-            if (firstDayMonth !== lastMonth) {
-                monthLabels.push({ 
-                    weekIndex: i, 
-                    name: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][firstDayMonth] 
-                });
-                lastMonth = firstDayMonth;
-            }
+            // 检查这周是否包含月初
+            week.forEach(day => {
+                const d = new Date(day.date);
+                const month = d.getMonth();
+                const dayOfMonth = d.getDate();
+                if (dayOfMonth <= 7 && month !== lastMonth) {
+                    monthLabels.push({ 
+                        weekIndex: i, 
+                        name: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month] 
+                    });
+                    lastMonth = month;
+                }
+            });
         });
         
-        // 生成月份标签 HTML
-        let monthsHtml = '';
-        monthLabels.forEach((m, idx) => {
-            const nextMonth = monthLabels[idx + 1];
-            const colSpan = nextMonth ? nextMonth.weekIndex - m.weekIndex : weeks.length - m.weekIndex;
-            monthsHtml += `<span class="month-label" style="width: ${colSpan * 14}px">${m.name}</span>`;
-        });
+        // 生成月份标签 HTML - 使用绝对定位避免重叠
+        const cellSize = 14; // 格子大小
+        const gap = 4; // 间隙（与 CSS 保持一致）
+        let monthsHtml = monthLabels.map(m => {
+            const left = m.weekIndex * (cellSize + gap);
+            return `<span class="month-label" style="left: ${left}px">${m.name}</span>`;
+        }).join('');
         
         container.innerHTML = `
             <div class="activity-graph">
                 <div class="activity-container">
                     <div class="activity-row-labels">
-                        <span></span>
                         <span>Mon</span>
-                        <span></span>
+                        <span>Tue</span>
                         <span>Wed</span>
-                        <span></span>
+                        <span>Thu</span>
                         <span>Fri</span>
-                        <span></span>
+                        <span>Sat</span>
+                        <span>Sun</span>
                     </div>
                     <div class="activity-main">
                         <div class="activity-months">${monthsHtml}</div>

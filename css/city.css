@@ -895,69 +895,77 @@
 
 .activity-container {
     display: flex;
-    gap: 4px;
+    gap: 8px;
+    min-width: fit-content;
 }
 
 .activity-row-labels {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    font-size: 0.7rem;
+    gap: 4px;
+    font-size: 0.75rem;
     color: var(--color-text-muted);
-    padding-top: 22px;
-    width: 32px;
+    padding-top: 24px;
+    width: 36px;
     flex-shrink: 0;
 }
 
 .activity-row-labels span {
-    height: 11px;
-    line-height: 11px;
+    height: 14px;
+    line-height: 14px;
 }
 
 .activity-main {
     flex: 1;
     min-width: 0;
+    position: relative;
 }
 
 .activity-months {
-    display: flex;
+    position: relative;
+    height: 20px;
     margin-bottom: 4px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: var(--color-text-muted);
-    height: 18px;
 }
 
 .month-label {
-    flex-shrink: 0;
+    position: absolute;
+    top: 0;
+    white-space: nowrap;
 }
 
 .activity-grid {
     display: flex;
-    gap: 3px;
+    gap: 4px;
 }
 
 .activity-week {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
 }
 
 .activity-day {
-    width: 11px;
-    height: 11px;
-    border-radius: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
     background: #ebedf0;
     outline: 1px solid rgba(27, 31, 35, 0.06);
     outline-offset: -1px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.activity-day:hover {
+    transform: scale(1.2);
+    outline: 1px solid var(--color-text-muted);
+    z-index: 1;
 }
 
 [data-theme="dark"] .activity-day {
     background: #161b22;
     outline-color: rgba(255, 255, 255, 0.05);
-}
-
-.activity-day:hover {
-    outline: 1px solid var(--color-text-muted);
 }
 
 .activity-day.today {
@@ -1028,9 +1036,9 @@
 }
 
 .legend-box {
-    width: 11px;
-    height: 11px;
-    border-radius: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
 }
 
 .legend-box.wiwi { background: #40c463; }
@@ -1044,15 +1052,15 @@
 .activity-scale {
     display: flex;
     align-items: center;
-    gap: 3px;
-    font-size: 0.7rem;
+    gap: 4px;
+    font-size: 0.75rem;
     color: var(--color-text-muted);
 }
 
 .scale-box {
-    width: 11px;
-    height: 11px;
-    border-radius: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
 }
 
 .scale-box.empty { background: #ebedf0; }
