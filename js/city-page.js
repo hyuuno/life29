@@ -1,6 +1,7 @@
 /**
  * Life29 - City Page
  * 城市详情页：Gallery / Moments / Timeline
+ * 包含互动背景和添加 Moment 功能
  */
 
 class CityPage {
@@ -18,14 +19,15 @@ class CityPage {
         this.currentGalleryPage = 1;
         this.currentMomentsPage = 1;
         
-        // 封面轮播
-        this.coverImages = [];
-        this.coverIndex = 0;
-        this.coverInterval = null;
-        
         // 图片查看器
         this.viewerImages = [];
         this.viewerIndex = 0;
+        
+        // 上传相关
+        this.uploadFiles = [];
+        
+        // 背景颜色
+        this.bgColor = this.getRandomColor();
         
         this.init();
     }
@@ -35,16 +37,192 @@ class CityPage {
         this.setupScrollHeader();
         this.setupTabs();
         this.setupUserDropdown();
+        this.initCanvas();
         
         await this.initCloud();
         await this.loadCityData();
         
-        this.renderCover();
         this.renderGallery();
         this.renderMoments();
         this.renderTimeline();
         
         this.bindEvents();
+        this.setupAddMoment();
+    }
+    
+    // ==========================================
+    // 随机颜色背景 + 互动效果
+    // ==========================================
+    
+    getRandomColor() {
+        const colors = [
+            { h: 350, s: 60, l: 70 }, // 粉红
+            { h: 200, s: 60, l: 70 }, // 天蓝
+            { h: 160, s: 50, l: 65 }, // 薄荷绿
+            { h: 270, s: 50, l: 70 }, // 淡紫
+            { h: 30, s: 70, l: 70 },  // 橙色
+            { h: 45, s: 60, l: 70 },  // 金色
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
+    initCanvas() {
+        const canvas = document.getElementById('coverCanvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+        
+        // 鼠标位置
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        let targetX = mouseX;
+        let targetY = mouseY;
+        
+        // 波浪参数
+        const waves = [];
+        const waveCount = 5;
+        
+        for (let i = 0; i < waveCount; i++) {
+            waves.push({
+                y: height * (0.3 + i * 0.15),
+                amplitude: 20 + i * 10,
+                frequency: 0.01 + i * 0.005,
+                speed: 0.02 + i * 0.01,
+                phase: Math.random() * Math.PI * 2,
+                opacity: 0.1 + i * 0.05
+            });
+        }
+        
+        // 线条参数
+        const lines = [];
+        const lineCount = 8;
+        
+        for (let i = 0; i < lineCount; i++) {
+            lines.push({
+                startX: Math.random() * width,
+                startY: Math.random() * height,
+                length: 100 + Math.random() * 200,
+                angle: Math.random() * Math.PI * 2,
+                speed: 0.5 + Math.random() * 1,
+                width: 2 + Math.random() * 4,
+                opacity: 0
+            });
+        }
+        
+        const { h, s, l } = this.bgColor;
+        
+        const draw = () => {
+            // 平滑跟随鼠标
+            targetX += (mouseX - targetX) * 0.05;
+            targetY += (mouseY - targetY) * 0.05;
+            
+            // 背景渐变
+            const gradient = ctx.createRadialGradient(
+                targetX, targetY, 0,
+                targetX, targetY, Math.max(width, height)
+            );
+            gradient.addColorStop(0, `hsl(${h}, ${s}%, ${l + 10}%)`);
+            gradient.addColorStop(0.5, `hsl(${h}, ${s}%, ${l}%)`);
+            gradient.addColorStop(1, `hsl(${h + 20}, ${s - 10}%, ${l - 15}%)`);
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            // 绘制波浪
+            waves.forEach(wave => {
+                wave.phase += wave.speed;
+                
+                ctx.beginPath();
+                ctx.moveTo(0, wave.y);
+                
+                for (let x = 0; x <= width; x += 5) {
+                    const distFromMouse = Math.abs(x - targetX) / width;
+                    const mouseInfluence = Math.max(0, 1 - distFromMouse * 2);
+                    const extraAmp = mouseInfluence * 30;
+                    
+                    const y = wave.y + 
+                        Math.sin(x * wave.frequency + wave.phase) * (wave.amplitude + extraAmp) +
+                        Math.sin(x * wave.frequency * 0.5 + wave.phase * 0.7) * wave.amplitude * 0.5;
+                    
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.lineTo(width, height);
+                ctx.lineTo(0, height);
+                ctx.closePath();
+                
+                ctx.fillStyle = `hsla(${h}, ${s}%, ${l + 20}%, ${wave.opacity})`;
+                ctx.fill();
+            });
+            
+            // 绘制粗线条（鼠标悬停时显示）
+            const mouseInCanvas = mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height;
+            
+            lines.forEach(line => {
+                // 计算与鼠标的距离
+                const dx = line.startX + line.length / 2 * Math.cos(line.angle) - targetX;
+                const dy = line.startY + line.length / 2 * Math.sin(line.angle) - targetY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // 根据距离调整透明度
+                const maxDist = 300;
+                const targetOpacity = mouseInCanvas && dist < maxDist ? 
+                    (1 - dist / maxDist) * 0.4 : 0;
+                
+                line.opacity += (targetOpacity - line.opacity) * 0.1;
+                
+                if (line.opacity > 0.01) {
+                    // 线条随鼠标移动
+                    const angleToMouse = Math.atan2(targetY - line.startY, targetX - line.startX);
+                    line.angle += (angleToMouse - line.angle) * 0.02;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(line.startX, line.startY);
+                    ctx.lineTo(
+                        line.startX + line.length * Math.cos(line.angle),
+                        line.startY + line.length * Math.sin(line.angle)
+                    );
+                    ctx.strokeStyle = `hsla(0, 0%, 100%, ${line.opacity})`;
+                    ctx.lineWidth = line.width;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+                
+                // 缓慢移动
+                line.startX += Math.cos(line.angle + Math.PI / 2) * line.speed * 0.1;
+                line.startY += Math.sin(line.angle + Math.PI / 2) * line.speed * 0.1;
+                
+                // 边界检测
+                if (line.startX < -100) line.startX = width + 100;
+                if (line.startX > width + 100) line.startX = -100;
+                if (line.startY < -100) line.startY = height + 100;
+                if (line.startY > height + 100) line.startY = -100;
+            });
+            
+            requestAnimationFrame(draw);
+        };
+        
+        // 监听鼠标
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            mouseX = width / 2;
+            mouseY = height / 2;
+        });
+        
+        // 监听窗口大小
+        window.addEventListener('resize', () => {
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        });
+        
+        draw();
     }
     
     setupTheme() {
@@ -108,6 +286,11 @@ class CityPage {
                 this.currentUser = item.dataset.user;
                 localStorage.setItem('life29-user', this.currentUser);
                 menu?.classList.remove('show');
+                
+                // 更新激活状态
+                menu?.querySelectorAll('.dropdown-item').forEach(i => {
+                    i.classList.toggle('active', i.dataset.user === this.currentUser);
+                });
             });
         });
         
@@ -121,9 +304,7 @@ class CityPage {
         if (window.supabaseService) {
             await window.supabaseService.init();
         }
-        if (window.cloudinaryService) {
-            window.cloudinaryService.init();
-        }
+        // cloudinaryService 不需要 init
     }
     
     async loadCityData() {
@@ -132,9 +313,10 @@ class CityPage {
             return;
         }
         
+        const cityName = decodeURIComponent(this.cityId);
+        
         // 从云端加载 moments
         if (window.supabaseService?.isConnected()) {
-            const cityName = decodeURIComponent(this.cityId);
             this.moments = await window.supabaseService.getMoments({ city: cityName });
             
             // 提取城市信息
@@ -152,6 +334,12 @@ class CityPage {
                     nameEn: cityName
                 };
             }
+        } else {
+            this.cityData = {
+                name: cityName,
+                country: '',
+                nameEn: cityName
+            };
         }
         
         // 收集所有图片
@@ -173,12 +361,13 @@ class CityPage {
         this.allImages.sort((a, b) => new Date(b.date) - new Date(a.date));
         this.moments.sort((a, b) => new Date(b.date) - new Date(a.date));
         
-        // 更新页面标题
+        // 更新页面
         document.title = `${this.cityData.name} · Life29`;
         document.getElementById('cityName').textContent = this.cityData.name;
         document.getElementById('cityCountry').textContent = this.cityData.country;
         document.getElementById('photoCount').textContent = this.allImages.length;
         document.getElementById('momentCount').textContent = this.moments.length;
+        document.getElementById('addMomentCity').textContent = `📍 ${this.cityData.name}`;
     }
     
     parseImageUrls(imageUrls) {
@@ -193,70 +382,167 @@ class CityPage {
     }
     
     // ==========================================
-    // 封面轮播
+    // 添加 Moment 功能
     // ==========================================
     
-    renderCover() {
-        const slideshow = document.getElementById('coverSlideshow');
-        const indicators = document.getElementById('coverIndicators');
+    setupAddMoment() {
+        const addBtn = document.getElementById('addMomentBtn');
+        const modal = document.getElementById('addMomentModal');
+        const closeBtn = document.getElementById('closeAddMomentModal');
+        const cancelBtn = document.getElementById('cancelAddMoment');
+        const form = document.getElementById('addMomentForm');
+        const dateInput = document.getElementById('momentDate');
+        const uploadArea = document.getElementById('imageUploadArea');
+        const fileInput = document.getElementById('momentImages');
         
-        // 随机选择最多5张图片
-        this.coverImages = [...this.allImages]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 5);
+        // 设置默认日期为今天
+        dateInput.value = new Date().toISOString().split('T')[0];
         
-        if (this.coverImages.length === 0) {
-            // 使用默认渐变背景
-            slideshow.innerHTML = '<div class="cover-slide active" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);"></div>';
+        addBtn?.addEventListener('click', () => {
+            modal?.classList.remove('hidden');
+        });
+        
+        closeBtn?.addEventListener('click', () => {
+            modal?.classList.add('hidden');
+            this.resetUploadForm();
+        });
+        
+        cancelBtn?.addEventListener('click', () => {
+            modal?.classList.add('hidden');
+            this.resetUploadForm();
+        });
+        
+        modal?.querySelector('.modal-backdrop')?.addEventListener('click', () => {
+            modal?.classList.add('hidden');
+            this.resetUploadForm();
+        });
+        
+        // 图片上传
+        uploadArea?.addEventListener('click', () => {
+            fileInput?.click();
+        });
+        
+        uploadArea?.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea?.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea?.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            this.addUploadFiles(files);
+        });
+        
+        fileInput?.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            this.addUploadFiles(files);
+        });
+        
+        // 表单提交
+        form?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitMoment();
+        });
+    }
+    
+    addUploadFiles(files) {
+        this.uploadFiles = [...this.uploadFiles, ...files].slice(0, 9); // 最多9张
+        this.renderImagePreview();
+    }
+    
+    renderImagePreview() {
+        const preview = document.getElementById('imagePreview');
+        if (!preview) return;
+        
+        preview.innerHTML = this.uploadFiles.map((file, i) => `
+            <div class="image-preview-item" data-index="${i}">
+                <img src="${URL.createObjectURL(file)}" alt="">
+                <button type="button" class="remove-image">×</button>
+            </div>
+        `).join('');
+        
+        preview.querySelectorAll('.remove-image').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.closest('.image-preview-item').dataset.index);
+                this.uploadFiles.splice(index, 1);
+                this.renderImagePreview();
+            });
+        });
+    }
+    
+    resetUploadForm() {
+        this.uploadFiles = [];
+        document.getElementById('imagePreview').innerHTML = '';
+        document.getElementById('momentContent').value = '';
+        document.getElementById('momentDate').value = new Date().toISOString().split('T')[0];
+    }
+    
+    async submitMoment() {
+        const submitBtn = document.getElementById('submitMoment');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        const date = document.getElementById('momentDate').value;
+        const content = document.getElementById('momentContent').value;
+        
+        if (!date) {
+            alert('请选择日期');
             return;
         }
         
-        // 创建幻灯片
-        slideshow.innerHTML = this.coverImages.map((img, i) => `
-            <div class="cover-slide ${i === 0 ? 'active' : ''}" 
-                 style="background-image: url('${this.getThumbnail(img.url, 1200)}');"></div>
-        `).join('');
+        // 显示加载状态
+        submitBtn.disabled = true;
+        btnText?.classList.add('hidden');
+        btnLoading?.classList.remove('hidden');
         
-        // 创建指示器
-        indicators.innerHTML = this.coverImages.map((_, i) => `
-            <div class="cover-indicator ${i === 0 ? 'active' : ''}" data-index="${i}"></div>
-        `).join('');
-        
-        // 绑定指示器点击
-        indicators.querySelectorAll('.cover-indicator').forEach(ind => {
-            ind.addEventListener('click', () => {
-                this.goToCoverSlide(parseInt(ind.dataset.index));
-            });
-        });
-        
-        // 自动轮播
-        if (this.coverImages.length > 1) {
-            this.coverInterval = setInterval(() => this.nextCoverSlide(), 5000);
+        try {
+            // 上传图片到 Cloudinary
+            const imageUrls = [];
+            
+            if (this.uploadFiles.length > 0 && window.cloudinaryService) {
+                for (const file of this.uploadFiles) {
+                    const result = await window.cloudinaryService.upload(file, 'moments');
+                    if (result?.url) {
+                        imageUrls.push(result.url);
+                    }
+                }
+            }
+            
+            // 保存到 Supabase
+            if (window.supabaseService?.isConnected()) {
+                await window.supabaseService.addMoment({
+                    userName: this.currentUser,
+                    content: content,
+                    imageUrls: JSON.stringify(imageUrls),
+                    country: this.cityData.country,
+                    city: this.cityData.name,
+                    date: date
+                });
+            }
+            
+            // 关闭模态框并刷新
+            document.getElementById('addMomentModal')?.classList.add('hidden');
+            this.resetUploadForm();
+            
+            // 重新加载数据
+            await this.loadCityData();
+            this.renderGallery();
+            this.renderMoments();
+            this.renderTimeline();
+            
+        } catch (error) {
+            console.error('Failed to add moment:', error);
+            alert('保存失败，请重试');
+        } finally {
+            submitBtn.disabled = false;
+            btnText?.classList.remove('hidden');
+            btnLoading?.classList.add('hidden');
         }
-    }
-    
-    nextCoverSlide() {
-        this.coverIndex = (this.coverIndex + 1) % this.coverImages.length;
-        this.updateCoverSlide();
-    }
-    
-    goToCoverSlide(index) {
-        this.coverIndex = index;
-        this.updateCoverSlide();
-        
-        // 重置定时器
-        if (this.coverInterval) {
-            clearInterval(this.coverInterval);
-            this.coverInterval = setInterval(() => this.nextCoverSlide(), 5000);
-        }
-    }
-    
-    updateCoverSlide() {
-        const slides = document.querySelectorAll('.cover-slide');
-        const indicators = document.querySelectorAll('.cover-indicator');
-        
-        slides.forEach((s, i) => s.classList.toggle('active', i === this.coverIndex));
-        indicators.forEach((ind, i) => ind.classList.toggle('active', i === this.coverIndex));
     }
     
     // ==========================================
@@ -272,6 +558,9 @@ class CityPage {
             emptyState.style.display = 'block';
             return;
         }
+        
+        yearsContainer.style.display = 'grid';
+        emptyState.style.display = 'none';
         
         // 按年份分组
         const yearGroups = {};
@@ -376,6 +665,9 @@ class CityPage {
             return;
         }
         
+        list.style.display = 'flex';
+        emptyState.style.display = 'none';
+        
         const totalPages = Math.ceil(this.moments.length / this.momentsPerPage);
         const start = (this.currentMomentsPage - 1) * this.momentsPerPage;
         const pageMoments = this.moments.slice(start, start + this.momentsPerPage);
@@ -408,7 +700,7 @@ class CityPage {
         // 绑定点击打开详情
         list.querySelectorAll('.moment-card').forEach(card => {
             card.addEventListener('click', () => {
-                const moment = this.moments.find(m => m.id === card.dataset.id);
+                const moment = this.moments.find(m => m.id == card.dataset.id);
                 if (moment) this.openMomentDetail(moment);
             });
         });
@@ -478,6 +770,9 @@ class CityPage {
             return;
         }
         
+        container.parentElement.style.display = 'block';
+        emptyState.style.display = 'none';
+        
         // 按日期降序排序
         items.sort((a, b) => new Date(b.date) - new Date(a.date));
         
@@ -518,7 +813,7 @@ class CityPage {
         // 绑定点击事件
         container.querySelectorAll('.timeline-item.moment').forEach(el => {
             el.addEventListener('click', () => {
-                const moment = this.moments.find(m => m.id === el.dataset.id);
+                const moment = this.moments.find(m => m.id == el.dataset.id);
                 if (moment) this.openMomentDetail(moment);
             });
         });
@@ -678,6 +973,13 @@ class CityPage {
             
             if (!document.getElementById('momentModal').classList.contains('hidden')) {
                 if (e.key === 'Escape') this.closeMomentDetail();
+            }
+            
+            if (!document.getElementById('addMomentModal').classList.contains('hidden')) {
+                if (e.key === 'Escape') {
+                    document.getElementById('addMomentModal').classList.add('hidden');
+                    this.resetUploadForm();
+                }
             }
         });
     }

@@ -62,7 +62,7 @@
 }
 
 /* ============================================
-   封面区域
+   封面区域 - 互动背景
    ============================================ */
 
 .city-cover {
@@ -74,23 +74,12 @@
     overflow: hidden;
 }
 
-.cover-slideshow {
+.cover-canvas {
     position: absolute;
     inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: -2;
-}
-
-.cover-slide {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
-    transition: opacity 1.5s ease;
-}
-
-.cover-slide.active {
-    opacity: 1;
 }
 
 .cover-overlay {
@@ -100,15 +89,18 @@
     background: linear-gradient(
         180deg,
         rgba(0,0,0,0.1) 0%,
-        rgba(0,0,0,0.3) 50%,
-        rgba(0,0,0,0.7) 100%
+        rgba(0,0,0,0.2) 50%,
+        rgba(0,0,0,0.5) 100%
     );
+    pointer-events: none;
 }
 
 .cover-content {
     padding: var(--space-2xl);
     color: white;
     width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 .city-name {
@@ -142,26 +134,33 @@
     opacity: 0.5;
 }
 
-.cover-indicators {
+/* 添加 Moment 按钮 */
+.add-moment-btn {
     position: absolute;
-    bottom: var(--space-lg);
-    right: var(--space-2xl);
-    display: flex;
-    gap: 6px;
-}
-
-.cover-indicator {
-    width: 6px;
-    height: 6px;
+    bottom: var(--space-xl);
+    right: var(--space-xl);
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.4);
+    border: none;
+    background: white;
+    color: var(--color-text);
     cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s;
+    z-index: 10;
 }
 
-.cover-indicator.active {
-    background: white;
-    transform: scale(1.3);
+.add-moment-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(0,0,0,0.4);
+}
+
+.add-moment-btn:active {
+    transform: scale(0.95);
 }
 
 /* ============================================
@@ -529,6 +528,178 @@
 }
 
 /* ============================================
+   添加 Moment 模态框
+   ============================================ */
+
+.add-moment-modal {
+    max-width: 500px;
+}
+
+.add-moment-modal .modal-header {
+    margin-bottom: var(--space-lg);
+}
+
+.add-moment-modal .modal-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: var(--space-xs);
+}
+
+.add-moment-modal .modal-header p {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+.add-moment-form .form-group {
+    margin-bottom: var(--space-lg);
+}
+
+.add-moment-form label {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--color-text-light);
+    margin-bottom: var(--space-xs);
+}
+
+.add-moment-form input[type="date"],
+.add-moment-form textarea {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.3s;
+}
+
+.add-moment-form input[type="date"]:focus,
+.add-moment-form textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.add-moment-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.image-upload-area {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-xl);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.image-upload-area:hover {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.05);
+}
+
+.image-upload-area.dragover {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.1);
+}
+
+.image-upload-area svg {
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+}
+
+.image-upload-area span {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+.image-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+}
+
+.image-preview-item {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview-item .remove-image {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+}
+
+.btn-secondary,
+.btn-primary {
+    padding: var(--space-sm) var(--space-xl);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-secondary {
+    background: var(--color-bg-elevated);
+    color: var(--color-text-light);
+}
+
+.btn-secondary:hover {
+    background: var(--color-border);
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+/* ============================================
    Timeline - 时间线
    ============================================ */
 
@@ -814,82 +985,6 @@
 }
 
 /* ============================================
-   确认对话框
-   ============================================ */
-
-.confirm-dialog-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s;
-}
-
-.confirm-dialog-overlay.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-.confirm-dialog {
-    background: var(--color-bg-card);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
-    max-width: 320px;
-    width: 90%;
-    transform: scale(0.9);
-    transition: transform 0.3s;
-}
-
-.confirm-dialog-overlay.show .confirm-dialog {
-    transform: scale(1);
-}
-
-.confirm-message {
-    font-size: 1rem;
-    color: var(--color-text);
-    margin-bottom: var(--space-lg);
-    text-align: center;
-}
-
-.confirm-actions {
-    display: flex;
-    gap: var(--space-sm);
-}
-
-.confirm-btn {
-    flex: 1;
-    padding: var(--space-sm) var(--space-md);
-    border: none;
-    border-radius: var(--radius-md);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.confirm-btn.cancel {
-    background: var(--color-bg-elevated);
-    color: var(--color-text-light);
-}
-
-.confirm-btn.cancel:hover {
-    background: var(--color-border);
-}
-
-.confirm-btn.confirm {
-    background: #dc3545;
-    color: white;
-}
-
-.confirm-btn.confirm:hover {
-    background: #c82333;
-}
-
-/* ============================================
    响应式
    ============================================ */
 
@@ -905,6 +1000,13 @@
     
     .city-name {
         font-size: 2rem;
+    }
+    
+    .add-moment-btn {
+        width: 48px;
+        height: 48px;
+        bottom: var(--space-lg);
+        right: var(--space-lg);
     }
     
     .tabs-container {
