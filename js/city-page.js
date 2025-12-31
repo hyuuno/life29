@@ -737,25 +737,28 @@ class CityPage {
         
         list.innerHTML = pageMoments.map(m => {
             const images = this.parseImageUrls(m.image_urls);
-            const imageClass = images.length === 1 ? 'single' : (images.length > 1 ? 'multiple' : '');
+            const displayImages = images.slice(0, 9);
+            const hasMore = images.length > 9;
+            const gridClass = `grid-${Math.min(displayImages.length, 9)}`;
             
             return `
                 <div class="moment-card" data-id="${m.id}">
                     <div class="moment-card-header">
-                        <span class="moment-card-date">${this.formatDate(m.date)}</span>
                         <span class="moment-card-user">
                             <span class="moment-card-user-avatar">${(m.user_name || 'U')[0].toUpperCase()}</span>
                             ${m.user_name || '匿名'}
                         </span>
+                        <span class="moment-card-date">${this.formatDate(m.date)}</span>
                     </div>
-                    ${images.length > 0 ? `
-                        <div class="moment-card-images ${imageClass}">
-                            ${images.slice(0, 3).map(url => `
+                    <div class="moment-card-content">${m.content || ''}</div>
+                    ${displayImages.length > 0 ? `
+                        <div class="moment-card-images ${gridClass}">
+                            ${displayImages.map(url => `
                                 <img src="${this.getThumbnail(url, 300)}" alt="">
                             `).join('')}
                         </div>
+                        ${hasMore ? `<div class="moment-card-more">还有 ${images.length - 9} 张照片，点击查看全部</div>` : ''}
                     ` : ''}
-                    <div class="moment-card-content">${m.content || ''}</div>
                 </div>
             `;
         }).join('');

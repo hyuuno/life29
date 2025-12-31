@@ -180,8 +180,32 @@
             min-height: 28px;
             cursor: pointer;
             transition: background 0.15s;
+            position: relative;
         }
         .schedule-cell:hover { background: rgba(0,0,0,0.02); }
+        
+        /* Excel 聚焦效果 - 高亮行列 */
+        .schedule-table tr.row-highlight td {
+            background: rgba(var(--color-primary-rgb, 180, 140, 200), 0.06);
+        }
+        .schedule-table td.col-highlight {
+            background: rgba(var(--color-primary-rgb, 180, 140, 200), 0.06);
+        }
+        .schedule-table tr.row-highlight td.col-highlight {
+            background: rgba(var(--color-primary-rgb, 180, 140, 200), 0.12);
+        }
+        .schedule-table th.col-highlight {
+            background: rgba(var(--color-primary-rgb, 180, 140, 200), 0.1);
+        }
+        .schedule-table tr.row-highlight .time-cell {
+            background: rgba(var(--color-primary-rgb, 180, 140, 200), 0.1);
+        }
+        
+        /* 聚焦的单元格本身 */
+        .schedule-cell.cell-focus {
+            box-shadow: inset 0 0 0 2px rgba(var(--color-primary-rgb, 180, 140, 200), 0.4);
+            z-index: 1;
+        }
         .cell-content {
             display: block;
             width: 100%;
@@ -464,6 +488,36 @@
             table.querySelectorAll('.schedule-cell').forEach(cell => {
                 cell.addEventListener('contextmenu', handleRightClick);
                 cell.querySelector('.cell-content').addEventListener('input', saveData);
+                
+                // Excel 聚焦效果
+                cell.addEventListener('mouseenter', () => {
+                    const row = cell.closest('tr');
+                    const dayIndex = parseInt(cell.dataset.day);
+                    
+                    // 高亮当前行
+                    row.classList.add('row-highlight');
+                    cell.classList.add('cell-focus');
+                    
+                    // 高亮当前列（包括表头和所有行）
+                    const tableEl = cell.closest('table');
+                    tableEl.querySelectorAll(`td[data-day="${dayIndex}"], th:nth-child(${dayIndex + 2})`).forEach(el => {
+                        el.classList.add('col-highlight');
+                    });
+                });
+                
+                cell.addEventListener('mouseleave', () => {
+                    const row = cell.closest('tr');
+                    const dayIndex = parseInt(cell.dataset.day);
+                    
+                    // 移除高亮
+                    row.classList.remove('row-highlight');
+                    cell.classList.remove('cell-focus');
+                    
+                    const tableEl = cell.closest('table');
+                    tableEl.querySelectorAll('.col-highlight').forEach(el => {
+                        el.classList.remove('col-highlight');
+                    });
+                });
             });
         }
         

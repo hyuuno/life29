@@ -121,9 +121,47 @@
             <div class="glow-orb glow-orb-3"></div>
         </div>
 
-        <!-- 4x4 专辑网格 -->
-        <div class="album-grid" id="albumGrid">
-            <!-- 动态生成 -->
+        <!-- 左侧信息面板 + 右侧专辑网格 -->
+        <div class="music-layout">
+            <!-- 左侧：当前歌曲信息和 thoughts -->
+            <aside class="music-sidebar" id="musicSidebar">
+                <div class="sidebar-now-playing">
+                    <div class="sidebar-cover" id="sidebarCover">
+                        <div class="sidebar-cover-placeholder">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="sidebar-title" id="sidebarTitle">选择一首歌</h2>
+                    <p class="sidebar-artist" id="sidebarArtist">-</p>
+                    <div class="sidebar-meta" id="sidebarMeta">
+                        <span class="sidebar-album" id="sidebarAlbum"></span>
+                        <span class="sidebar-language" id="sidebarLanguage"></span>
+                    </div>
+                </div>
+                <div class="sidebar-thoughts">
+                    <h3 class="thoughts-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Thoughts
+                    </h3>
+                    <p class="thoughts-content" id="sidebarThoughts">这首歌还没有留言...</p>
+                    <button class="thoughts-edit-btn" id="editThoughtsBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        编辑
+                    </button>
+                </div>
+            </aside>
+
+            <!-- 右侧：4x4 专辑网格 -->
+            <div class="album-grid" id="albumGrid">
+                <!-- 动态生成 -->
+            </div>
         </div>
     </main>
 

@@ -6,8 +6,137 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
+}
+
+/* 两栏布局 */
+.music-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: var(--space-xl);
+    width: 100%;
+    margin-top: var(--space-lg);
+}
+
+/* 左侧信息面板 */
+.music-sidebar {
+    position: sticky;
+    top: 120px;
+    height: fit-content;
+    padding: var(--space-lg);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.sidebar-now-playing {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar-cover {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto var(--space-lg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-bg-elevated);
+    box-shadow: var(--shadow-md);
+}
+
+.sidebar-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+}
+
+.sidebar-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    margin-bottom: var(--space-xs);
+    color: var(--color-text);
+}
+
+.sidebar-artist {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    margin-bottom: var(--space-sm);
+}
+
+.sidebar-meta {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.sidebar-meta span:not(:empty)::before {
+    content: '';
+}
+
+/* Thoughts 区域 */
+.sidebar-thoughts {
+    position: relative;
+}
+
+.thoughts-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+}
+
+.thoughts-content {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--color-text-light);
+    font-style: italic;
+    min-height: 60px;
+}
+
+.thoughts-content:empty::after {
+    content: '这首歌还没有留言...';
+    color: var(--color-text-muted);
+}
+
+.thoughts-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.thoughts-edit-btn:hover {
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
 }
 
 /* 搜索栏 */
@@ -343,7 +472,6 @@
     grid-template-columns: repeat(4, 1fr);
     gap: var(--space-md);
     width: 100%;
-    max-width: 680px;
 }
 
 .album-item {
@@ -670,9 +798,28 @@
 }
 
 /* 响应式 */
+@media (max-width: 1024px) {
+    .music-layout {
+        grid-template-columns: 240px 1fr;
+    }
+    
+    .sidebar-cover {
+        width: 160px;
+        height: 160px;
+    }
+}
+
 @media (max-width: 768px) {
     .music-main {
         padding: 80px var(--space-md) var(--space-md);
+    }
+    
+    .music-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .music-sidebar {
+        display: none;
     }
     
     .player-bar {
@@ -920,4 +1067,19 @@ body.glow-mode .bg-mode-toggle {
 
 body.glow-mode .noise-overlay {
     opacity: 0.02;
+}
+
+body.glow-mode .music-sidebar {
+    background: rgba(20, 20, 20, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.glow-mode .sidebar-cover {
+    box-shadow: 0 0 40px rgba(var(--glow-color-rgb, 180, 140, 200), 0.3);
+}
+
+body.glow-mode .sidebar-thoughts {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: var(--space-lg);
 }

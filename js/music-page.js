@@ -479,6 +479,45 @@ class MusicPage {
                 this.hideCoverPreview();
             }
         });
+        
+        // 编辑 thoughts
+        document.getElementById('editThoughtsBtn')?.addEventListener('click', () => {
+            this.editThoughts();
+        });
+    }
+    
+    editThoughts() {
+        if (!this.currentSong) return;
+        
+        const currentThoughts = this.currentSong.thoughts || '';
+        const newThoughts = prompt('编辑你对这首歌的想法:', currentThoughts);
+        
+        if (newThoughts !== null) {
+            this.currentSong.thoughts = newThoughts;
+            
+            // 更新 UI
+            const sidebarThoughts = document.getElementById('sidebarThoughts');
+            if (sidebarThoughts) {
+                sidebarThoughts.textContent = newThoughts;
+            }
+            
+            // 更新网格中的显示
+            this.renderGrid();
+            
+            // 保存到云端
+            this.saveThoughtsToCloud(this.currentIndex, newThoughts);
+        }
+    }
+    
+    async saveThoughtsToCloud(songIndex, thoughts) {
+        const song = this.songs[songIndex];
+        if (!song || !window.supabaseService?.isConnected()) return;
+        
+        try {
+            await window.supabaseService.updateSongThoughts(song.id, thoughts);
+        } catch (e) {
+            console.warn('Failed to save thoughts:', e);
+        }
     }
     
     setMusicFile(file) {
@@ -686,16 +725,54 @@ class MusicPage {
         const titleEl = document.getElementById('nowPlayingTitle');
         const artistEl = document.getElementById('nowPlayingArtist');
         
+        // 左侧信息面板元素
+        const sidebarCover = document.getElementById('sidebarCover');
+        const sidebarTitle = document.getElementById('sidebarTitle');
+        const sidebarArtist = document.getElementById('sidebarArtist');
+        const sidebarAlbum = document.getElementById('sidebarAlbum');
+        const sidebarLanguage = document.getElementById('sidebarLanguage');
+        const sidebarThoughts = document.getElementById('sidebarThoughts');
+        
         if (this.currentSong) {
             const coverUrl = this.currentSong.cover ? 
                 (window.cloudinaryService?.getThumbnailUrl(this.currentSong.cover, 100) || this.currentSong.cover) : '';
+            const largeCoverUrl = this.currentSong.cover ?
+                (window.cloudinaryService?.getThumbnailUrl(this.currentSong.cover, 400) || this.currentSong.cover) : '';
+            
+            // 更新播放栏
             coverEl.innerHTML = coverUrl ? `<img src="${coverUrl}" alt="">` : '';
             titleEl.textContent = this.currentSong.title;
             artistEl.textContent = this.currentSong.artist;
+            
+            // 更新左侧面板
+            if (sidebarCover) {
+                sidebarCover.innerHTML = largeCoverUrl ? 
+                    `<img src="${largeCoverUrl}" alt="${this.currentSong.title}">` : 
+                    `<div class="sidebar-cover-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
+            }
+            if (sidebarTitle) sidebarTitle.textContent = this.currentSong.title;
+            if (sidebarArtist) sidebarArtist.textContent = this.currentSong.artist;
+            if (sidebarAlbum) sidebarAlbum.textContent = this.currentSong.album || '';
+            if (sidebarLanguage) sidebarLanguage.textContent = this.currentSong.language || '';
+            if (sidebarThoughts) {
+                sidebarThoughts.textContent = this.currentSong.thoughts || '';
+                // 记录当前歌曲索引用于编辑
+                sidebarThoughts.dataset.songIndex = this.currentIndex;
+            }
         } else {
             coverEl.innerHTML = '';
             titleEl.textContent = '未播放';
             artistEl.textContent = '-';
+            
+            // 重置左侧面板
+            if (sidebarCover) {
+                sidebarCover.innerHTML = `<div class="sidebar-cover-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
+            }
+            if (sidebarTitle) sidebarTitle.textContent = '选择一首歌';
+            if (sidebarArtist) sidebarArtist.textContent = '-';
+            if (sidebarAlbum) sidebarAlbum.textContent = '';
+            if (sidebarLanguage) sidebarLanguage.textContent = '';
+            if (sidebarThoughts) sidebarThoughts.textContent = '';
         }
     }
     
