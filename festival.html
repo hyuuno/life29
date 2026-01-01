@@ -7,13 +7,9 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎆%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Noto Serif SC', serif;
@@ -63,20 +59,15 @@
             font-size: 1.75rem;
             font-weight: 300;
             color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
         .logo-number {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1rem;
             color: #ffb7c5;
             margin-left: 2px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
         
-        .nav {
-            display: flex;
-            gap: 8px;
-        }
+        .nav { display: flex; gap: 8px; }
         .nav-link {
             font-size: 0.875rem;
             color: rgba(255,255,255,0.8);
@@ -85,14 +76,8 @@
             border-radius: 20px;
             transition: all 0.3s;
         }
-        .nav-link:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.1);
-        }
-        .nav-link.active {
-            color: #fff;
-            background: rgba(255,255,255,0.15);
-        }
+        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .nav-link.active { color: #fff; background: rgba(255,255,255,0.15); }
         
         .greeting {
             position: fixed;
@@ -111,7 +96,6 @@
             color: #fff;
             text-shadow: 0 4px 30px rgba(255,180,200,0.5);
             line-height: 1;
-            opacity: 0.9;
             animation: glow 3s ease-in-out infinite;
         }
         
@@ -119,10 +103,8 @@
             font-size: 2rem;
             font-weight: 300;
             color: #fff;
-            text-shadow: 0 2px 20px rgba(0,0,0,0.5);
             margin-top: 10px;
             letter-spacing: 0.3em;
-            opacity: 0.9;
         }
         
         .greeting-sub {
@@ -148,7 +130,6 @@
             z-index: 50;
         }
         
-        /* 庆祝按钮 */
         .celebrate-btn {
             position: fixed;
             bottom: 100px;
@@ -161,32 +142,20 @@
             cursor: pointer;
             z-index: 100;
             transition: all 0.3s;
-            overflow: hidden;
         }
         .celebrate-btn:hover {
             border-color: rgba(255,255,255,0.6);
             transform: translateX(-50%) scale(1.05);
             box-shadow: 0 0 30px rgba(255,150,200,0.3);
         }
-        .celebrate-btn:active {
-            transform: translateX(-50%) scale(0.98);
-        }
+        .celebrate-btn:active { transform: translateX(-50%) scale(0.98); }
         
         .celebrate-text {
             font-family: 'Noto Serif SC', serif;
             font-size: 1rem;
             font-weight: 400;
             letter-spacing: 0.1em;
-            background: linear-gradient(
-                90deg,
-                #ff6b6b,
-                #feca57,
-                #48dbfb,
-                #ff9ff3,
-                #54a0ff,
-                #5f27cd,
-                #ff6b6b
-            );
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #5f27cd, #ff6b6b);
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -216,12 +185,8 @@
             z-index: 100;
             transition: all 0.3s;
         }
-        .sound-toggle:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        .sound-toggle.muted svg {
-            opacity: 0.4;
-        }
+        .sound-toggle:hover { background: rgba(255,255,255,0.2); }
+        .sound-toggle.muted svg { opacity: 0.4; }
     </style>
 </head>
 <body>
@@ -263,6 +228,11 @@
         </svg>
     </button>
 
+    <!-- 音频 -->
+    <audio id="bgm" loop preload="auto">
+        <source src="audio/bgm.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
         const canvas = document.getElementById('fireworksCanvas');
         const ctx = canvas.getContext('2d');
@@ -274,139 +244,143 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         
-        // 圆形粒子
-        class Particle {
-            constructor(x, y, color, velocity, size) {
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                this.velocity = velocity;
-                this.size = size;
-                this.alpha = 1;
-                this.decay = Math.random() * 0.008 + 0.004;
-                this.gravity = 0.02;
-                this.friction = 0.985;
+        // ============ 音频系统 ============
+        let soundEnabled = true;
+        let audioInitialized = false;
+        const bgm = document.getElementById('bgm');
+        bgm.volume = 0.3;
+        
+        // 预加载音效
+        const launchSounds = [];
+        const explosionSounds = [];
+        const SOUND_POOL_SIZE = 8;
+        
+        function initAudio() {
+            if (audioInitialized) return;
+            audioInitialized = true;
+            
+            // 创建音效池
+            for (let i = 0; i < SOUND_POOL_SIZE; i++) {
+                const launch = new Audio('audio/launch.mp3');
+                launch.volume = 0.5; // 放大发射音量
+                launchSounds.push(launch);
+                
+                const explosion = new Audio('audio/explosion.mp3');
+                explosion.volume = 0.6;
+                explosionSounds.push(explosion);
             }
             
-            update() {
-                this.velocity.x *= this.friction;
-                this.velocity.y *= this.friction;
-                this.velocity.y += this.gravity;
-                this.x += this.velocity.x;
-                this.y += this.velocity.y;
-                this.alpha -= this.decay;
-            }
-            
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.alpha;
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = this.size * 2;
-                ctx.shadowColor = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
+            // 播放背景音乐
+            bgm.play().catch(e => console.log('BGM autoplay blocked'));
         }
         
-        // 线条烟花粒子
-        class LineParticle {
-            constructor(x, y, color, angle, speed, length) {
+        let launchSoundIndex = 0;
+        let explosionSoundIndex = 0;
+        
+        function playLaunchSound() {
+            if (!soundEnabled || !audioInitialized) return;
+            const sound = launchSounds[launchSoundIndex];
+            sound.currentTime = 0;
+            sound.play().catch(() => {});
+            launchSoundIndex = (launchSoundIndex + 1) % SOUND_POOL_SIZE;
+        }
+        
+        function playExplosionSound() {
+            if (!soundEnabled || !audioInitialized) return;
+            const sound = explosionSounds[explosionSoundIndex];
+            sound.currentTime = 0;
+            sound.play().catch(() => {});
+            explosionSoundIndex = (explosionSoundIndex + 1) % SOUND_POOL_SIZE;
+        }
+        
+        // ============ 粒子系统（优化版）============
+        const MAX_PARTICLES = 2000;
+        let particles = [];
+        let rockets = [];
+        
+        // 简化的粒子类
+        class Particle {
+            constructor(x, y, color, vx, vy, size, isLine = false) {
                 this.x = x;
                 this.y = y;
                 this.color = color;
-                this.angle = angle;
-                this.speed = speed;
-                this.length = length;
+                this.vx = vx;
+                this.vy = vy;
+                this.size = size;
                 this.alpha = 1;
-                this.decay = Math.random() * 0.01 + 0.005;
-                this.gravity = 0.015;
-                this.friction = 0.98;
-                this.vx = Math.cos(angle) * speed;
-                this.vy = Math.sin(angle) * speed;
-                this.trail = [];
-                this.maxTrail = 8;
+                this.decay = 0.008 + Math.random() * 0.008;
+                this.isLine = isLine;
+                if (isLine) {
+                    this.prevX = x;
+                    this.prevY = y;
+                }
             }
             
             update() {
-                // 保存轨迹
-                this.trail.push({ x: this.x, y: this.y });
-                if (this.trail.length > this.maxTrail) {
-                    this.trail.shift();
+                if (this.isLine) {
+                    this.prevX = this.x;
+                    this.prevY = this.y;
                 }
-                
-                this.vx *= this.friction;
-                this.vy *= this.friction;
-                this.vy += this.gravity;
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                this.vy += 0.015;
                 this.x += this.vx;
                 this.y += this.vy;
                 this.alpha -= this.decay;
             }
             
             draw() {
-                if (this.trail.length < 2) return;
-                
-                ctx.save();
+                if (this.alpha <= 0) return;
                 ctx.globalAlpha = this.alpha;
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = 2;
-                ctx.lineCap = 'round';
-                ctx.shadowBlur = 5;
-                ctx.shadowColor = this.color;
                 
-                ctx.beginPath();
-                ctx.moveTo(this.trail[0].x, this.trail[0].y);
-                for (let i = 1; i < this.trail.length; i++) {
-                    ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                if (this.isLine) {
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = this.size;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(this.prevX, this.prevY);
+                    ctx.lineTo(this.x, this.y);
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
                 }
-                ctx.lineTo(this.x, this.y);
-                ctx.stroke();
-                
-                // 头部亮点
-                ctx.fillStyle = '#fff';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.restore();
             }
         }
         
-        // 火箭
+        // 火箭类
         class Rocket {
-            constructor(startX, startY, targetX, targetY, colorScheme) {
+            constructor(startX, startY, targetX, targetY, scale) {
                 this.x = startX;
                 this.y = startY;
                 this.targetX = targetX;
                 this.targetY = targetY;
-                this.colorScheme = colorScheme;
+                this.scale = scale; // 0.5 - 1.5
                 
                 const angle = Math.atan2(targetY - startY, targetX - startX);
-                const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
-                const speed = Math.min(distance * 0.012, 7);
+                const distance = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
+                const speed = Math.min(distance * 0.012, 8);
                 
                 this.vx = Math.cos(angle) * speed;
                 this.vy = Math.sin(angle) * speed;
-                this.trail = [];
                 this.distanceTraveled = 0;
                 this.targetDistance = distance;
                 this.exploded = false;
+                this.trail = [];
+                
+                // 随机颜色方案
+                this.colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
             }
             
             update() {
-                this.trail.push({ x: this.x, y: this.y, alpha: 1 });
-                if (this.trail.length > 25) {
-                    this.trail.shift();
-                }
-                
-                this.trail.forEach(p => p.alpha *= 0.92);
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > 15) this.trail.shift();
                 
                 this.x += this.vx;
                 this.y += this.vy;
-                this.x += (Math.random() - 0.5) * 0.3;
-                
-                this.distanceTraveled += Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                this.distanceTraveled += Math.sqrt(this.vx ** 2 + this.vy ** 2);
                 
                 if (this.distanceTraveled >= this.targetDistance * 0.95) {
                     this.exploded = true;
@@ -414,31 +388,27 @@
             }
             
             draw() {
-                // 轨迹
-                ctx.save();
-                ctx.lineCap = 'round';
-                for (let i = 1; i < this.trail.length; i++) {
-                    const p = this.trail[i];
-                    const prev = this.trail[i - 1];
-                    ctx.globalAlpha = p.alpha * 0.6;
+                // 简化轨迹绘制
+                if (this.trail.length > 1) {
                     ctx.strokeStyle = '#FFA500';
-                    ctx.lineWidth = 2 + (i / this.trail.length) * 2;
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.globalAlpha = 0.6;
                     ctx.beginPath();
-                    ctx.moveTo(prev.x, prev.y);
-                    ctx.lineTo(p.x, p.y);
+                    ctx.moveTo(this.trail[0].x, this.trail[0].y);
+                    for (let i = 1; i < this.trail.length; i++) {
+                        ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                    }
+                    ctx.lineTo(this.x, this.y);
                     ctx.stroke();
                 }
-                ctx.restore();
                 
                 // 头部
-                ctx.save();
+                ctx.globalAlpha = 1;
                 ctx.fillStyle = '#fff';
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#FFF';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.restore();
             }
         }
         
@@ -451,198 +421,106 @@
             ['#9B59B6', '#8E44AD', '#DDA0DD', '#DA70D6'],
             ['#2ECC71', '#27AE60', '#90EE90', '#00FA9A'],
             ['#FFFFFF', '#F5F5F5', '#E0E0E0', '#C0C0C0'],
-            ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF']
+            ['#FF6B6B', '#FECA57', '#48DBFB', '#FF9FF3', '#54A0FF'] // 彩虹
         ];
         
-        let rockets = [];
-        let particles = [];
-        let lineParticles = [];
-        
         // 创建爆炸
-        function createExplosion(x, y, colorScheme, isGrand = false) {
+        function createExplosion(x, y, colorScheme, scale) {
             const colors = colorScheme;
-            const multiplier = isGrand ? 1.5 : 1;
-            const useLines = Math.random() > 0.4; // 60% 概率是线条烟花
+            const useLines = Math.random() > 0.4;
             
-            if (useLines) {
-                // 线条烟花
-                const lineCount = Math.floor((60 + Math.random() * 40) * multiplier);
-                for (let i = 0; i < lineCount; i++) {
-                    const angle = (Math.PI * 2 / lineCount) * i + Math.random() * 0.1;
-                    const speed = (Math.random() * 2 + 1.5) * multiplier;
-                    const color = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    lineParticles.push(new LineParticle(
-                        x, y, color, angle, speed, 20
-                    ));
-                }
-            } else {
-                // 圆形粒子烟花
-                const particleCount = Math.floor((80 + Math.random() * 40) * multiplier);
-                for (let i = 0; i < particleCount; i++) {
-                    const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.1;
-                    const speed = (Math.random() * 2.5 + 1) * multiplier;
-                    const color = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    particles.push(new Particle(
-                        x, y, color,
-                        { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
-                        Math.random() * 2 + 1
-                    ));
-                }
+            // 根据 scale 调整粒子数量（限制最大数量防止卡顿）
+            const baseCount = useLines ? 40 : 50;
+            const count = Math.min(Math.floor(baseCount * scale), 80);
+            
+            // 控制总粒子数
+            if (particles.length > MAX_PARTICLES) {
+                particles.splice(0, particles.length - MAX_PARTICLES + count);
             }
             
-            // 中心亮点
-            for (let i = 0; i < 20 * multiplier; i++) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 / count) * i + Math.random() * 0.2;
+                const speed = (1.5 + Math.random() * 2) * scale;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = (1 + Math.random() * 1.5) * scale;
+                
+                particles.push(new Particle(
+                    x, y, color,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed,
+                    size,
+                    useLines
+                ));
+            }
+            
+            // 中心亮点（小型）
+            const sparkCount = Math.floor(10 * scale);
+            for (let i = 0; i < sparkCount; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 1.5 + 0.5;
+                const speed = Math.random() * 1 + 0.3;
                 particles.push(new Particle(
                     x, y, '#FFFFFF',
-                    { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
-                    Math.random() + 0.5
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed,
+                    0.5 + Math.random() * 0.5,
+                    false
                 ));
             }
             
             playExplosionSound();
         }
         
+        // 获取随机发射起点
+        function getRandomLaunchPoint(targetX) {
+            const type = Math.random();
+            const y = canvas.height + 20;
+            
+            if (type < 0.3) {
+                // 左下角区域
+                return { x: Math.random() * canvas.width * 0.2, y };
+            } else if (type < 0.6) {
+                // 右下角区域
+                return { x: canvas.width * 0.8 + Math.random() * canvas.width * 0.2, y };
+            } else {
+                // 底部中间区域（靠近目标x位置）
+                return { x: targetX + (Math.random() - 0.5) * 100, y };
+            }
+        }
+        
         // 发射烟花
-        function launchFirework(targetX, targetY, isGrand = false) {
-            const startX = targetX + (Math.random() - 0.5) * 60;
-            const startY = canvas.height + 30;
-            const colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
+        function launchFirework(targetX, targetY, customScale = null) {
+            const scale = customScale || (0.5 + Math.random() * 1); // 0.5 - 1.5
+            const start = getRandomLaunchPoint(targetX);
             
-            const rocket = new Rocket(startX, startY, targetX, targetY, colorScheme);
-            rocket.isGrand = isGrand;
-            rockets.push(rocket);
-            
+            rockets.push(new Rocket(start.x, start.y, targetX, targetY, scale));
             playLaunchSound();
         }
         
         // 庆祝大爆发
         function celebrateExplosion() {
-            const count = 15 + Math.floor(Math.random() * 10);
+            const count = 12 + Math.floor(Math.random() * 8);
             
             for (let i = 0; i < count; i++) {
                 setTimeout(() => {
-                    const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
-                    const y = Math.random() * canvas.height * 0.5 + canvas.height * 0.1;
-                    launchFirework(x, y, true);
-                }, i * 150 + Math.random() * 100);
+                    const x = Math.random() * canvas.width * 0.7 + canvas.width * 0.15;
+                    const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.15;
+                    const scale = 0.8 + Math.random() * 0.7; // 庆祝时偏大
+                    launchFirework(x, y, scale);
+                }, i * 200 + Math.random() * 150);
             }
         }
         
-        // ============ 音效系统 ============
-        let soundEnabled = true;
-        let audioContext = null;
-        let audioInitialized = false;
-        
-        // 初始化音频（需要用户交互）
-        function initAudio() {
-            if (audioInitialized) return;
-            
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                audioInitialized = true;
-            } catch (e) {
-                console.log('Audio not supported');
-            }
-        }
-        
-        // 发射音效
-        function playLaunchSound() {
-            if (!soundEnabled || !audioInitialized || !audioContext) return;
-            
-            try {
-                const duration = 0.6;
-                const bufferSize = audioContext.sampleRate * duration;
-                const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-                const output = noiseBuffer.getChannelData(0);
-                
-                for (let i = 0; i < bufferSize; i++) {
-                    const t = i / bufferSize;
-                    output[i] = (Math.random() * 2 - 1) * Math.exp(-t * 2) * 0.3;
-                }
-                
-                const noise = audioContext.createBufferSource();
-                noise.buffer = noiseBuffer;
-                
-                const highpass = audioContext.createBiquadFilter();
-                highpass.type = 'highpass';
-                highpass.frequency.value = 2000;
-                
-                const gainNode = audioContext.createGain();
-                gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-                
-                noise.connect(highpass);
-                highpass.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                noise.start();
-                noise.stop(audioContext.currentTime + duration);
-            } catch (e) {}
-        }
-        
-        // 爆炸音效
-        function playExplosionSound() {
-            if (!soundEnabled || !audioInitialized || !audioContext) return;
-            
-            try {
-                // 低频砰声
-                const osc = audioContext.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(120, audioContext.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + 0.15);
-                
-                const oscGain = audioContext.createGain();
-                oscGain.gain.setValueAtTime(0.2, audioContext.currentTime);
-                oscGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                
-                osc.connect(oscGain);
-                oscGain.connect(audioContext.destination);
-                osc.start();
-                osc.stop(audioContext.currentTime + 0.2);
-                
-                // 爆破噪声
-                const duration = 0.3;
-                const bufferSize = audioContext.sampleRate * duration;
-                const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-                const output = noiseBuffer.getChannelData(0);
-                
-                for (let i = 0; i < bufferSize; i++) {
-                    const t = i / bufferSize;
-                    output[i] = (Math.random() * 2 - 1) * Math.exp(-t * 6);
-                }
-                
-                const noise = audioContext.createBufferSource();
-                noise.buffer = noiseBuffer;
-                
-                const bandpass = audioContext.createBiquadFilter();
-                bandpass.type = 'bandpass';
-                bandpass.frequency.value = 800;
-                bandpass.Q.value = 0.5;
-                
-                const noiseGain = audioContext.createGain();
-                noiseGain.gain.value = 0.1;
-                
-                noise.connect(bandpass);
-                bandpass.connect(noiseGain);
-                noiseGain.connect(audioContext.destination);
-                
-                noise.start();
-                noise.stop(audioContext.currentTime + duration);
-            } catch (e) {}
-        }
-        
-        // 事件监听
+        // ============ 事件监听 ============
         document.getElementById('soundToggle').addEventListener('click', () => {
             initAudio();
             soundEnabled = !soundEnabled;
             document.getElementById('soundToggle').classList.toggle('muted', !soundEnabled);
+            
+            if (soundEnabled) {
+                bgm.play().catch(() => {});
+            } else {
+                bgm.pause();
+            }
         });
         
         document.getElementById('celebrateBtn').addEventListener('click', () => {
@@ -662,68 +540,62 @@
             launchFirework(touch.clientX, touch.clientY);
         });
         
-        // 自动烟花（不播放声音，直到用户交互）
-        let autoInterval = setInterval(() => {
-            if (Math.random() < 0.2) {
-                const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
-                const y = Math.random() * canvas.height * 0.45 + canvas.height * 0.1;
-                
-                const startX = x + (Math.random() - 0.5) * 60;
-                const startY = canvas.height + 30;
-                const colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
-                
-                const rocket = new Rocket(startX, startY, x, y, colorScheme);
-                rocket.autoLaunch = true;
-                rockets.push(rocket);
+        // 自动烟花
+        setInterval(() => {
+            if (Math.random() < 0.25 && rockets.length < 10) {
+                const x = Math.random() * canvas.width * 0.7 + canvas.width * 0.15;
+                const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.15;
+                const start = getRandomLaunchPoint(x);
+                const scale = 0.5 + Math.random() * 1;
+                rockets.push(new Rocket(start.x, start.y, x, y, scale));
             }
-        }, 2500);
+        }, 2000);
         
         // 开场烟花
         setTimeout(() => {
             const x = canvas.width * 0.3;
             const y = canvas.height * 0.35;
-            const rocket = new Rocket(x, canvas.height + 30, x, y, colorSchemes[0]);
-            rocket.autoLaunch = true;
-            rockets.push(rocket);
-        }, 800);
+            const start = getRandomLaunchPoint(x);
+            rockets.push(new Rocket(start.x, start.y, x, y, 1));
+        }, 600);
         
         setTimeout(() => {
             const x = canvas.width * 0.7;
             const y = canvas.height * 0.3;
-            const rocket = new Rocket(x, canvas.height + 30, x, y, colorSchemes[2]);
-            rocket.autoLaunch = true;
-            rockets.push(rocket);
-        }, 1600);
+            const start = getRandomLaunchPoint(x);
+            rockets.push(new Rocket(start.x, start.y, x, y, 1.2));
+        }, 1400);
         
-        // 动画
+        // ============ 动画循环 ============
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 火箭
-            rockets = rockets.filter(rocket => {
+            // 更新和绘制火箭
+            for (let i = rockets.length - 1; i >= 0; i--) {
+                const rocket = rockets[i];
                 rocket.update();
                 rocket.draw();
                 
                 if (rocket.exploded) {
-                    createExplosion(rocket.x, rocket.y, rocket.colorScheme, rocket.isGrand);
-                    return false;
+                    createExplosion(rocket.x, rocket.y, rocket.colorScheme, rocket.scale);
+                    rockets.splice(i, 1);
                 }
-                return true;
-            });
+            }
             
-            // 圆形粒子
-            particles = particles.filter(p => {
+            // 更新和绘制粒子（批量绘制优化）
+            ctx.save();
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
                 p.update();
-                p.draw();
-                return p.alpha > 0.01;
-            });
-            
-            // 线条粒子
-            lineParticles = lineParticles.filter(p => {
-                p.update();
-                p.draw();
-                return p.alpha > 0.01;
-            });
+                
+                if (p.alpha <= 0.01) {
+                    particles.splice(i, 1);
+                } else {
+                    p.draw();
+                }
+            }
+            ctx.restore();
+            ctx.globalAlpha = 1;
             
             requestAnimationFrame(animate);
         }
