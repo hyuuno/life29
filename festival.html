@@ -79,7 +79,6 @@
         .nav-link:hover { color: #fff; background: rgba(255,255,255,0.1); }
         .nav-link.active { color: #fff; background: rgba(255,255,255,0.15); }
         
-        /* 设置按钮 */
         .settings-btn {
             width: 36px;
             height: 36px;
@@ -99,7 +98,6 @@
             color: #fff;
         }
         
-        /* 设置面板 */
         .settings-panel {
             position: fixed;
             top: 70px;
@@ -124,9 +122,7 @@
             letter-spacing: 0.1em;
         }
         
-        .setting-group {
-            margin-bottom: 16px;
-        }
+        .setting-group { margin-bottom: 16px; }
         .setting-group:last-child { margin-bottom: 0; }
         
         .setting-label {
@@ -153,7 +149,6 @@
         }
         .setting-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
             width: 14px;
             height: 14px;
             border-radius: 50%;
@@ -173,9 +168,7 @@
             display: flex;
             gap: 12px;
         }
-        .setting-row .setting-group {
-            flex: 1;
-        }
+        .setting-row .setting-group { flex: 1; }
         
         .greeting {
             position: fixed;
@@ -314,7 +307,6 @@
         </nav>
     </header>
     
-    <!-- 设置面板 -->
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-title">烟花设置</div>
         
@@ -465,7 +457,6 @@
             explosionVolume: 0.6
         };
         
-        // 设置面板控制
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsPanel = document.getElementById('settingsPanel');
         
@@ -480,7 +471,6 @@
             }
         });
         
-        // 滑块事件
         function setupSlider(id, valueId, settingKey, suffix = '', multiplier = 1) {
             const slider = document.getElementById(id);
             const valueEl = document.getElementById(valueId);
@@ -490,7 +480,6 @@
                 settings[settingKey] = val * multiplier;
                 valueEl.textContent = val + suffix;
                 
-                // 更新音量
                 if (settingKey === 'bgmVolume') bgm.volume = settings.bgmVolume;
                 if (settingKey === 'launchVolume') updateLaunchVolume();
                 if (settingKey === 'explosionVolume') updateExplosionVolume();
@@ -562,6 +551,25 @@
         // ============ 粒子系统 ============
         let particles = [];
         let rockets = [];
+        let trailSparks = []; // 轨迹火花
+        
+        // 火焰颜色
+        const flameColors = [
+            { r: 255, g: 200, b: 50 },   // 亮黄
+            { r: 255, g: 150, b: 0 },    // 橙色
+            { r: 255, g: 100, b: 0 },    // 深橙
+            { r: 255, g: 80, b: 30 },    // 红橙
+            { r: 255, g: 220, b: 180 },  // 淡黄白
+            { r: 255, g: 255, b: 200 },  // 亮白黄
+        ];
+        
+        function getFlameColor(intensity) {
+            // intensity: 0-1, 1 = 最亮
+            const idx = Math.floor((1 - intensity) * (flameColors.length - 1));
+            const c = flameColors[Math.min(idx, flameColors.length - 1)];
+            const brightness = 0.5 + intensity * 0.5;
+            return `rgb(${Math.floor(c.r * brightness)}, ${Math.floor(c.g * brightness)}, ${Math.floor(c.b * brightness)})`;
+        }
         
         class Particle {
             constructor(x, y, color, vx, vy, size, isLine = false) {
@@ -614,7 +622,39 @@
             }
         }
         
-        // 火箭类 - 抛物线轨迹
+        // 轨迹火花类
+        class TrailSpark {
+            constructor(x, y, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx + (Math.random() - 0.5) * 2;
+                this.vy = vy + (Math.random() - 0.5) * 2;
+                this.alpha = 0.8 + Math.random() * 0.2;
+                this.size = 1 + Math.random() * 2;
+                this.decay = 0.02 + Math.random() * 0.03;
+                this.intensity = Math.random(); // 火花强度
+            }
+            
+            update() {
+                this.vy += 0.08; // 重力
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+                this.vx *= 0.95;
+                this.vy *= 0.95;
+            }
+            
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.globalAlpha = this.alpha * this.intensity;
+                ctx.fillStyle = getFlameColor(this.intensity);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // 火箭类 - 优化抛物线
         class Rocket {
             constructor(startX, startY, targetX, targetY, scale) {
                 this.x = startX;
@@ -625,21 +665,29 @@
                 this.startX = startX;
                 this.startY = startY;
                 
-                // 计算抛物线参数
                 const dx = targetX - startX;
                 const dy = targetY - startY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
-                // 随机弧度系数
-                this.arcFactor = 0.3 + Math.random() * 0.5;
+                // 减小弧度系数，确保不会飞出屏幕
+                // 弧度与水平距离成正比，但有上限
+                const horizontalDist = Math.abs(dx);
+                this.arcHeight = Math.min(horizontalDist * 0.15, 80); // 最大弧高80像素
                 
-                // 飞行时间（帧数）
-                this.totalFrames = Math.floor(distance / 5) + 30;
+                // 飞行时间
+                this.totalFrames = Math.floor(distance / 6) + 40;
                 this.currentFrame = 0;
                 
+                // 轨迹点
                 this.trail = [];
+                this.maxTrail = 30; // 更长的轨迹
+                
                 this.exploded = false;
                 this.colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
+                
+                // 上一帧位置（用于计算速度方向）
+                this.prevX = startX;
+                this.prevY = startY;
             }
             
             update() {
@@ -651,44 +699,98 @@
                     return;
                 }
                 
-                // 保存上一个位置用于轨迹
-                const prevX = this.x;
-                const prevY = this.y;
+                this.prevX = this.x;
+                this.prevY = this.y;
                 
-                // 抛物线插值
-                // x: 线性插值
+                // 简单的抛物线：x线性，y带弧度
                 this.x = this.startX + (this.targetX - this.startX) * t;
                 
-                // y: 抛物线（先上后下的弧线）
+                // y: 线性插值 + 抛物线弧度（向上凸起）
                 const linearY = this.startY + (this.targetY - this.startY) * t;
-                const arcHeight = Math.abs(this.targetX - this.startX) * this.arcFactor;
-                const parabola = -4 * arcHeight * t * (t - 1); // 抛物线：0 -> peak -> 0
-                this.y = linearY - parabola;
+                // 抛物线: 在 t=0.5 时达到最高点
+                const arc = this.arcHeight * 4 * t * (1 - t);
+                this.y = linearY - arc;
                 
-                // 记录轨迹
-                this.trail.push({ x: prevX, y: prevY });
-                if (this.trail.length > 20) this.trail.shift();
+                // 确保不会飞出屏幕顶部
+                this.y = Math.max(this.y, 20);
+                
+                // 保存轨迹点（带强度信息）
+                this.trail.push({ 
+                    x: this.prevX, 
+                    y: this.prevY,
+                    intensity: 0.3 + Math.random() * 0.7 // 随机强度
+                });
+                if (this.trail.length > this.maxTrail) {
+                    this.trail.shift();
+                }
+                
+                // 生成轨迹火花
+                const vx = this.x - this.prevX;
+                const vy = this.y - this.prevY;
+                
+                // 随机生成火花
+                if (Math.random() < 0.6) {
+                    trailSparks.push(new TrailSpark(
+                        this.x - vx * 0.5,
+                        this.y - vy * 0.5,
+                        -vx * 0.3,
+                        -vy * 0.3 + 1
+                    ));
+                }
             }
             
             draw() {
+                // 绘制渐变轨迹
                 if (this.trail.length > 1) {
-                    ctx.strokeStyle = '#FFA500';
-                    ctx.lineWidth = 2;
-                    ctx.lineCap = 'round';
-                    ctx.globalAlpha = 0.6;
-                    ctx.beginPath();
-                    ctx.moveTo(this.trail[0].x, this.trail[0].y);
                     for (let i = 1; i < this.trail.length; i++) {
-                        ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                        const p = this.trail[i];
+                        const prev = this.trail[i - 1];
+                        const progress = i / this.trail.length; // 0-1，越后面越亮
+                        const intensity = p.intensity * progress;
+                        
+                        ctx.globalAlpha = intensity * 0.8;
+                        ctx.strokeStyle = getFlameColor(intensity);
+                        ctx.lineWidth = 1 + progress * 3; // 尾部细，头部粗
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(prev.x, prev.y);
+                        ctx.lineTo(p.x, p.y);
+                        ctx.stroke();
                     }
+                    
+                    // 连接到当前位置
+                    const last = this.trail[this.trail.length - 1];
+                    ctx.globalAlpha = 0.9;
+                    ctx.strokeStyle = getFlameColor(1);
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(last.x, last.y);
                     ctx.lineTo(this.x, this.y);
                     ctx.stroke();
                 }
                 
+                // 火箭头部光晕
+                ctx.globalAlpha = 0.4;
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 15);
+                gradient.addColorStop(0, 'rgba(255, 200, 100, 1)');
+                gradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.5)');
+                gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 火箭头部亮点
                 ctx.globalAlpha = 1;
                 ctx.fillStyle = '#fff';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 内核
+                ctx.fillStyle = '#FFE4B5';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -711,7 +813,6 @@
             const baseCount = useLines ? 40 : 50;
             const count = Math.min(Math.floor(baseCount * scale), 100);
             
-            // 清理多余粒子
             if (particles.length > settings.maxParticles) {
                 particles.splice(0, particles.length - settings.maxParticles + count);
             }
@@ -731,7 +832,6 @@
                 ));
             }
             
-            // 中心亮点
             const sparkCount = Math.floor(12 * scale);
             for (let i = 0; i < sparkCount; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -748,9 +848,8 @@
             playExplosionSound();
         }
         
-        // 从左下角发射
         function getLaunchPoint() {
-            const x = Math.random() * canvas.width * 0.2; // 左边 20% 区域
+            const x = Math.random() * canvas.width * 0.15 + 10;
             const y = canvas.height + 20;
             return { x, y };
         }
@@ -834,6 +933,24 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // 轨迹火花
+            for (let i = trailSparks.length - 1; i >= 0; i--) {
+                const spark = trailSparks[i];
+                spark.update();
+                
+                if (spark.alpha <= 0) {
+                    trailSparks.splice(i, 1);
+                } else {
+                    spark.draw();
+                }
+            }
+            
+            // 限制火花数量
+            if (trailSparks.length > 500) {
+                trailSparks.splice(0, trailSparks.length - 400);
+            }
+            
+            // 火箭
             for (let i = rockets.length - 1; i >= 0; i--) {
                 const rocket = rockets[i];
                 rocket.update();
@@ -845,6 +962,7 @@
                 }
             }
             
+            // 粒子
             ctx.save();
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
