@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>元旦快乐 · Life29</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎆%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -37,7 +38,7 @@
             background-image: url('images/festival-bg.jpg');
             background-size: cover;
             background-position: center;
-            filter: brightness(0.7);
+            filter: brightness(0.6);
         }
         
         #fireworksCanvas {
@@ -58,7 +59,7 @@
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
         }
         
         .logo {
@@ -163,7 +164,6 @@
             50% { opacity: 1; }
         }
         
-        /* 音效开关 */
         .sound-toggle {
             position: fixed;
             bottom: 40px;
@@ -204,12 +204,13 @@
             <a href="index.html" class="nav-link">地球</a>
             <a href="schedule.html" class="nav-link">做咩</a>
             <a href="music.html" class="nav-link">Music</a>
+            <a href="relax.html" class="nav-link">Relax</a>
             <a href="festival.html" class="nav-link active">节日</a>
         </nav>
     </header>
     
     <div class="greeting">
-        <div class="greeting-year">2025</div>
+        <div class="greeting-year">2026</div>
         <div class="greeting-text">元旦快乐</div>
         <div class="greeting-sub">Happy New Year</div>
     </div>
@@ -228,7 +229,6 @@
         const canvas = document.getElementById('fireworksCanvas');
         const ctx = canvas.getContext('2d');
         
-        // 设置画布大小
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -244,17 +244,18 @@
                 this.color = color;
                 this.velocity = velocity;
                 this.size = size;
-                this.type = type; // 'circle', 'star', 'heart', 'spark'
+                this.type = type;
                 this.alpha = 1;
-                this.decay = Math.random() * 0.015 + 0.01;
-                this.gravity = 0.05;
-                this.friction = 0.98;
+                this.decay = Math.random() * 0.008 + 0.005; // 更慢的衰减
+                this.gravity = 0.025; // 更小的重力
+                this.friction = 0.985; // 更慢的减速
                 this.trail = [];
-                this.maxTrail = type === 'spark' ? 8 : 4;
+                this.maxTrail = type === 'spark' ? 10 : 6;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.05;
             }
             
             update() {
-                // 记录轨迹
                 this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
                 if (this.trail.length > this.maxTrail) {
                     this.trail.shift();
@@ -266,17 +267,18 @@
                 this.x += this.velocity.x;
                 this.y += this.velocity.y;
                 this.alpha -= this.decay;
+                this.rotation += this.rotationSpeed;
             }
             
             draw() {
                 // 绘制轨迹
                 this.trail.forEach((point, index) => {
-                    const trailAlpha = (index / this.trail.length) * this.alpha * 0.5;
+                    const trailAlpha = (index / this.trail.length) * this.alpha * 0.4;
                     ctx.save();
                     ctx.globalAlpha = trailAlpha;
                     ctx.fillStyle = this.color;
                     ctx.beginPath();
-                    ctx.arc(point.x, point.y, this.size * 0.5, 0, Math.PI * 2);
+                    ctx.arc(point.x, point.y, this.size * 0.4, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
                 });
@@ -284,20 +286,33 @@
                 ctx.save();
                 ctx.globalAlpha = this.alpha;
                 ctx.fillStyle = this.color;
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
                 
                 switch (this.type) {
                     case 'star':
-                        this.drawStar(this.x, this.y, 5, this.size, this.size * 0.5);
+                        this.drawStar(0, 0, 5, this.size, this.size * 0.5);
                         break;
                     case 'heart':
-                        this.drawHeart(this.x, this.y, this.size);
+                        this.drawHeart(0, 0, this.size * 0.6);
                         break;
                     case 'spark':
-                        this.drawSpark(this.x, this.y, this.size);
+                        ctx.beginPath();
+                        ctx.moveTo(-this.size, 0);
+                        ctx.lineTo(this.size, 0);
+                        ctx.moveTo(0, -this.size);
+                        ctx.lineTo(0, this.size);
+                        ctx.strokeStyle = this.color;
+                        ctx.lineWidth = this.size * 0.3;
+                        ctx.stroke();
                         break;
                     default:
                         ctx.beginPath();
-                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        // 添加光晕
+                        ctx.shadowBlur = this.size * 3;
+                        ctx.shadowColor = this.color;
                         ctx.fill();
                 }
                 
@@ -337,31 +352,20 @@
                 ctx.bezierCurveTo(x + size, y, x, y, x, y + size * 0.3);
                 ctx.fill();
             }
-            
-            drawSpark(x, y, size) {
-                ctx.beginPath();
-                ctx.moveTo(x - size, y);
-                ctx.lineTo(x + size, y);
-                ctx.moveTo(x, y - size);
-                ctx.lineTo(x, y + size);
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = size * 0.3;
-                ctx.stroke();
-            }
         }
         
         // 烟花火箭类
         class Rocket {
-            constructor(startX, startY, targetX, targetY, color) {
+            constructor(startX, startY, targetX, targetY, colorScheme) {
                 this.x = startX;
                 this.y = startY;
                 this.targetX = targetX;
                 this.targetY = targetY;
-                this.color = color;
+                this.colorScheme = colorScheme;
                 
                 const angle = Math.atan2(targetY - startY, targetX - startX);
                 const distance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetY - startY, 2));
-                const speed = Math.min(distance * 0.03, 15);
+                const speed = Math.min(distance * 0.015, 8); // 更慢的上升速度
                 
                 this.velocity = {
                     x: Math.cos(angle) * speed,
@@ -372,233 +376,357 @@
                 this.distanceTraveled = 0;
                 this.targetDistance = distance;
                 this.exploded = false;
+                this.sparkTimer = 0;
             }
             
             update() {
-                this.trail.push({ x: this.x, y: this.y });
-                if (this.trail.length > 15) {
+                this.trail.push({ x: this.x, y: this.y, alpha: 1 });
+                if (this.trail.length > 20) {
                     this.trail.shift();
                 }
                 
+                // 轨迹淡出
+                this.trail.forEach(point => {
+                    point.alpha *= 0.95;
+                });
+                
                 this.x += this.velocity.x;
                 this.y += this.velocity.y;
+                
+                // 微弱的抖动
+                this.x += (Math.random() - 0.5) * 0.5;
                 
                 this.distanceTraveled += Math.sqrt(
                     Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2)
                 );
                 
-                // 到达目标位置
                 if (this.distanceTraveled >= this.targetDistance * 0.95) {
                     this.exploded = true;
                 }
+                
+                this.sparkTimer++;
             }
             
             draw() {
                 // 绘制轨迹
-                ctx.beginPath();
                 this.trail.forEach((point, index) => {
-                    const alpha = index / this.trail.length;
-                    ctx.strokeStyle = `rgba(255, 200, 150, ${alpha * 0.8})`;
-                    ctx.lineWidth = 2;
-                    if (index === 0) {
-                        ctx.moveTo(point.x, point.y);
-                    } else {
-                        ctx.lineTo(point.x, point.y);
-                    }
+                    const alpha = point.alpha * 0.6;
+                    const size = 2 + (index / this.trail.length) * 2;
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = '#FFA500';
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = '#FF6600';
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
                 });
-                ctx.stroke();
                 
                 // 绘制火箭头
                 ctx.save();
                 ctx.fillStyle = '#fff';
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#FFF';
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
+                
+                // 火花效果
+                if (this.sparkTimer % 3 === 0) {
+                    for (let i = 0; i < 2; i++) {
+                        sparks.push({
+                            x: this.x + (Math.random() - 0.5) * 4,
+                            y: this.y + Math.random() * 5,
+                            vx: (Math.random() - 0.5) * 1,
+                            vy: Math.random() * 2,
+                            alpha: 1,
+                            size: Math.random() * 2 + 1
+                        });
+                    }
+                }
             }
         }
         
-        // 烟花颜色方案
+        // 颜色方案
         const colorSchemes = [
-            // 金色系
-            ['#FFD700', '#FFA500', '#FF8C00', '#FFEC8B', '#FFE4B5'],
-            // 红色系
-            ['#FF6B6B', '#FF4757', '#FF3838', '#FF6348', '#FF7675'],
-            // 粉色系
-            ['#FF69B4', '#FF1493', '#FFB6C1', '#FFC0CB', '#FF82AB'],
-            // 蓝色系
-            ['#00CED1', '#00BFFF', '#1E90FF', '#87CEEB', '#ADD8E6'],
-            // 紫色系
-            ['#9B59B6', '#8E44AD', '#DDA0DD', '#DA70D6', '#BA55D3'],
-            // 绿色系
-            ['#2ECC71', '#27AE60', '#90EE90', '#98FB98', '#00FA9A'],
-            // 彩虹
-            ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'],
-            // 白金
-            ['#FFFFFF', '#F5F5F5', '#FFFAFA', '#F0FFFF', '#F8F8FF']
+            ['#FFD700', '#FFA500', '#FF8C00', '#FFEC8B', '#FFE4B5'], // 金色
+            ['#FF6B6B', '#FF4757', '#FF3838', '#FF6348', '#FF7675'], // 红色
+            ['#FF69B4', '#FF1493', '#FFB6C1', '#FFC0CB', '#FF82AB'], // 粉色
+            ['#00CED1', '#00BFFF', '#1E90FF', '#87CEEB', '#ADD8E6'], // 蓝色
+            ['#9B59B6', '#8E44AD', '#DDA0DD', '#DA70D6', '#BA55D3'], // 紫色
+            ['#2ECC71', '#27AE60', '#90EE90', '#98FB98', '#00FA9A'], // 绿色
+            ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'], // 彩虹
+            ['#FFFFFF', '#F5F5F5', '#FFFAFA', '#E0E0E0', '#C0C0C0']  // 银白
         ];
         
-        // 烟花形状
-        const shapes = ['circle', 'star', 'heart', 'spark', 'circle', 'circle'];
+        const shapes = ['circle', 'star', 'heart', 'spark', 'circle', 'circle', 'circle'];
         
         let rockets = [];
         let particles = [];
-        let autoFireworkInterval = null;
+        let sparks = [];
         
-        // 创建烟花爆炸
+        // 创建爆炸
         function createExplosion(x, y, colorScheme) {
-            const colors = colorScheme || colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
-            const particleCount = 80 + Math.floor(Math.random() * 60);
+            const colors = colorScheme;
+            const particleCount = 100 + Math.floor(Math.random() * 50);
             const shape = shapes[Math.floor(Math.random() * shapes.length)];
             
-            // 主爆炸
+            // 主爆炸 - 球形展开
             for (let i = 0; i < particleCount; i++) {
-                const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.2;
-                const speed = Math.random() * 6 + 2;
+                const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.1;
+                const speed = Math.random() * 3 + 1.5; // 更慢的速度
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 
                 particles.push(new Particle(
                     x, y,
                     color,
                     { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
-                    Math.random() * 2 + 1,
+                    Math.random() * 2.5 + 1,
                     shape
                 ));
             }
             
-            // 内圈小粒子
-            for (let i = 0; i < 30; i++) {
+            // 内圈亮点
+            for (let i = 0; i < 40; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 3 + 1;
-                const color = colors[Math.floor(Math.random() * colors.length)];
+                const speed = Math.random() * 2 + 0.5;
                 
                 particles.push(new Particle(
                     x, y,
-                    color,
+                    '#FFFFFF',
                     { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
                     Math.random() * 1.5 + 0.5,
-                    'spark'
+                    'circle'
                 ));
             }
             
-            // 闪光效果
-            createFlash(x, y, colors[0]);
-        }
-        
-        // 创建闪光
-        function createFlash(x, y, color) {
-            ctx.save();
-            const gradient = ctx.createRadialGradient(x, y, 0, x, y, 100);
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(0.5, `${color}44`);
-            gradient.addColorStop(1, 'transparent');
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(x, y, 100, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+            // 播放爆炸音效
+            playExplosionSound();
         }
         
         // 发射烟花
         function launchFirework(targetX, targetY) {
-            const startX = targetX + (Math.random() - 0.5) * 100;
+            const startX = targetX + (Math.random() - 0.5) * 80;
             const startY = canvas.height + 50;
             const colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
             
-            rockets.push(new Rocket(startX, startY, targetX, targetY, colorScheme[0]));
+            rockets.push(new Rocket(startX, startY, targetX, targetY, colorScheme));
             
-            // 播放音效
-            playSound();
+            // 播放发射音效
+            playLaunchSound();
         }
         
-        // 音效
+        // 音效系统
         let soundEnabled = true;
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioContext = null;
         
-        function playSound() {
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+        
+        // 发射音效 - 嘶嘶声
+        function playLaunchSound() {
             if (!soundEnabled) return;
             
             try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
+                const ctx = getAudioContext();
+                const duration = 0.8;
+                
+                // 噪声生成器
+                const bufferSize = ctx.sampleRate * duration;
+                const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = ctx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                
+                // 高通滤波器 - 产生嘶嘶声
+                const highpass = ctx.createBiquadFilter();
+                highpass.type = 'highpass';
+                highpass.frequency.value = 3000;
+                
+                // 音量包络
+                const gainNode = ctx.createGain();
+                gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+                
+                noise.connect(highpass);
+                highpass.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                noise.start(ctx.currentTime);
+                noise.stop(ctx.currentTime + duration);
+            } catch (e) {}
+        }
+        
+        // 爆炸音效 - 砰的爆破声
+        function playExplosionSound() {
+            if (!soundEnabled) return;
+            
+            try {
+                const ctx = getAudioContext();
+                
+                // 低频爆破声
+                const oscillator = ctx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(150, ctx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.2);
+                
+                const gainNode = ctx.createGain();
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
                 
                 oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
+                gainNode.connect(ctx.destination);
                 
-                oscillator.frequency.setValueAtTime(400 + Math.random() * 200, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.3);
                 
-                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                // 噪声爆破
+                const duration = 0.4;
+                const bufferSize = ctx.sampleRate * duration;
+                const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
                 
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.3);
-            } catch (e) {
-                console.log('Audio not supported');
-            }
+                for (let i = 0; i < bufferSize; i++) {
+                    const t = i / bufferSize;
+                    output[i] = (Math.random() * 2 - 1) * Math.exp(-t * 8);
+                }
+                
+                const noise = ctx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                
+                const noiseGain = ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.15, ctx.currentTime);
+                
+                // 带通滤波
+                const bandpass = ctx.createBiquadFilter();
+                bandpass.type = 'bandpass';
+                bandpass.frequency.value = 500;
+                bandpass.Q.value = 0.5;
+                
+                noise.connect(bandpass);
+                bandpass.connect(noiseGain);
+                noiseGain.connect(ctx.destination);
+                
+                noise.start(ctx.currentTime);
+                noise.stop(ctx.currentTime + duration);
+                
+                // 高频碎裂声
+                setTimeout(() => {
+                    if (!soundEnabled) return;
+                    const crackle = ctx.createBufferSource();
+                    const crackleBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+                    const crackleData = crackleBuffer.getChannelData(0);
+                    
+                    for (let i = 0; i < crackleData.length; i++) {
+                        if (Math.random() < 0.1) {
+                            crackleData[i] = (Math.random() * 2 - 1) * Math.exp(-i / crackleData.length * 3);
+                        }
+                    }
+                    
+                    crackle.buffer = crackleBuffer;
+                    const crackleGain = ctx.createGain();
+                    crackleGain.gain.value = 0.08;
+                    
+                    crackle.connect(crackleGain);
+                    crackleGain.connect(ctx.destination);
+                    crackle.start();
+                }, 100);
+                
+            } catch (e) {}
         }
         
         // 音效开关
         document.getElementById('soundToggle').addEventListener('click', () => {
             soundEnabled = !soundEnabled;
             document.getElementById('soundToggle').classList.toggle('muted', !soundEnabled);
+            
+            // 初始化音频上下文
+            if (soundEnabled && !audioContext) {
+                getAudioContext();
+            }
         });
         
-        // 点击发射烟花
+        // 点击发射
         canvas.addEventListener('click', (e) => {
+            // 初始化音频上下文（需要用户交互）
+            if (!audioContext) {
+                getAudioContext();
+            }
             launchFirework(e.clientX, e.clientY);
         });
         
-        // 触摸支持
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            if (!audioContext) {
+                getAudioContext();
+            }
             const touch = e.touches[0];
             launchFirework(touch.clientX, touch.clientY);
         });
         
         // 自动烟花
-        function startAutoFireworks() {
-            autoFireworkInterval = setInterval(() => {
-                if (Math.random() < 0.3) {
-                    const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
-                    const y = Math.random() * canvas.height * 0.5 + canvas.height * 0.1;
-                    launchFirework(x, y);
-                }
-            }, 2000);
-        }
+        setInterval(() => {
+            if (Math.random() < 0.25) {
+                const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+                const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.15;
+                launchFirework(x, y);
+            }
+        }, 3000);
         
-        // 开始时发射几个烟花
-        setTimeout(() => {
-            launchFirework(canvas.width * 0.3, canvas.height * 0.3);
-        }, 500);
-        setTimeout(() => {
-            launchFirework(canvas.width * 0.7, canvas.height * 0.4);
-        }, 1200);
-        setTimeout(() => {
-            launchFirework(canvas.width * 0.5, canvas.height * 0.25);
-        }, 2000);
+        // 开场烟花
+        setTimeout(() => launchFirework(canvas.width * 0.3, canvas.height * 0.35), 800);
+        setTimeout(() => launchFirework(canvas.width * 0.7, canvas.height * 0.3), 1500);
+        setTimeout(() => launchFirework(canvas.width * 0.5, canvas.height * 0.25), 2500);
         
         // 动画循环
         function animate() {
-            // 半透明黑色覆盖，产生拖尾效果
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // 完全清除画布（无残留）
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 更新和绘制火箭
+            // 更新火花
+            sparks = sparks.filter(spark => {
+                spark.x += spark.vx;
+                spark.y += spark.vy;
+                spark.vy += 0.1;
+                spark.alpha -= 0.03;
+                
+                if (spark.alpha > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = spark.alpha;
+                    ctx.fillStyle = '#FFA500';
+                    ctx.beginPath();
+                    ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                    return true;
+                }
+                return false;
+            });
+            
+            // 更新火箭
             rockets = rockets.filter(rocket => {
                 rocket.update();
                 rocket.draw();
                 
                 if (rocket.exploded) {
-                    createExplosion(rocket.x, rocket.y);
+                    createExplosion(rocket.x, rocket.y, rocket.colorScheme);
                     return false;
                 }
                 return true;
             });
             
-            // 更新和绘制粒子
+            // 更新粒子
             particles = particles.filter(particle => {
                 particle.update();
                 particle.draw();
@@ -609,7 +737,6 @@
         }
         
         animate();
-        startAutoFireworks();
     </script>
 </body>
 </html>
