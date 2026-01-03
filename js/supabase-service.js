@@ -143,6 +143,37 @@ class SupabaseService {
         }
     }
     
+    /**
+     * 使用多个城市名称查询 moments（支持中英文双向匹配）
+     * @param {string[]} cityNames - 城市名称数组（可能包含中文和英文）
+     * @param {string} country - 国家名称（可选）
+     * @returns {Promise<Array>} moments 数组
+     */
+    async getMomentsByCityNames(cityNames, country = null) {
+        if (!this.isConnected()) return [];
+        if (!cityNames || cityNames.length === 0) return [];
+        
+        try {
+            let query = this.client
+                .from('moments')
+                .select('*')
+                .in('city', cityNames)
+                .order('date', { ascending: false });
+            
+            if (country) {
+                query = query.eq('country', country);
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error('Failed to fetch moments by city names:', e);
+            return [];
+        }
+    }
+    
     async addMoment(momentData) {
         if (!this.isConnected()) {
             console.warn('Supabase not connected');

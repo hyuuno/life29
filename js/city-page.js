@@ -16,6 +16,31 @@ class CityPage {
         this.allImages = [];
         this.currentUser = localStorage.getItem('life29-user') || 'wiwi';
         
+        // 城市名称映射表（中文 <-> 英文）
+        this.cityNameMap = {
+            // 美国城市
+            '旧金山': 'San Francisco', 'San Francisco': '旧金山',
+            '洛杉矶': 'Los Angeles', 'Los Angeles': '洛杉矶',
+            '纽约': 'New York', 'New York': '纽约',
+            '芝加哥': 'Chicago', 'Chicago': '芝加哥',
+            '休斯顿': 'Houston', 'Houston': '休斯顿',
+            '凤凰城': 'Phoenix', 'Phoenix': '凤凰城',
+            '费城': 'Philadelphia', 'Philadelphia': '费城',
+            '圣安东尼奥': 'San Antonio', 'San Antonio': '圣安东尼奥',
+            '圣地亚哥': 'San Diego', 'San Diego': '圣地亚哥',
+            '达拉斯': 'Dallas', 'Dallas': '达拉斯',
+            '圣何塞': 'San Jose', 'San Jose': '圣何塞',
+            '奥斯汀': 'Austin', 'Austin': '奥斯汀',
+            '西雅图': 'Seattle', 'Seattle': '西雅图',
+            '丹佛': 'Denver', 'Denver': '丹佛',
+            '波士顿': 'Boston', 'Boston': '波士顿',
+            '拉斯维加斯': 'Las Vegas', 'Las Vegas': '拉斯维加斯',
+            '波特兰': 'Portland', 'Portland': '波特兰',
+            '迈阿密': 'Miami', 'Miami': '迈阿密',
+            '亚特兰大': 'Atlanta', 'Atlanta': '亚特兰大',
+            '华盛顿': 'Washington DC', 'Washington DC': '华盛顿'
+        };
+        
         // 分页配置
         this.photosPerPage = 12;
         this.momentsPerPage = 6;
@@ -377,16 +402,25 @@ class CityPage {
         const cityName = decodeURIComponent(this.cityName);
         const countryName = decodeURIComponent(this.countryName);
         
+        // 获取可能的城市名称（中英文两种）
+        const alternateName = this.cityNameMap[cityName];
+        const cityNames = alternateName ? [cityName, alternateName] : [cityName];
+        
         // 从云端加载 moments
         if (window.supabaseService?.isConnected()) {
-            // 使用城市名称查询
-            this.moments = await window.supabaseService.getMoments({ city: cityName });
+            // 使用多个城市名称查询（支持中英文）
+            this.moments = await window.supabaseService.getMomentsByCityNames(cityNames, countryName);
+            
+            // 如果新方法不存在，回退到旧方法
+            if (this.moments === null) {
+                this.moments = await window.supabaseService.getMoments({ city: cityName });
+            }
             
             // 提取城市信息
             if (this.moments.length > 0) {
                 const first = this.moments[0];
                 this.cityData = {
-                    name: first.city,
+                    name: cityName,  // 使用URL中的名称作为显示名
                     country: first.country,
                     nameEn: first.city
                 };
