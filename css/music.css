@@ -1,5 +1,13 @@
 /* Music Page Styles */
 
+/* 覆盖全局样式，允许页面滚动 */
+html:has(.music-main),
+body:has(.music-main) {
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+}
+
 .music-main {
     min-height: 100vh;
     padding: 100px var(--space-xl) var(--space-xl);
@@ -17,13 +25,11 @@
     gap: var(--space-xl);
     width: 100%;
     margin-top: var(--space-lg);
-    align-items: start;
+    align-items: stretch; /* 让两列等高 */
 }
 
 /* 左侧信息面板 */
 .music-sidebar {
-    position: sticky;
-    top: 100px;
     padding: var(--space-lg);
     background: rgba(var(--color-bg-card-rgb, 255, 255, 255), 0.8);
     backdrop-filter: blur(20px);
@@ -31,8 +37,11 @@
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    /* 高度与 4x4 album grid 对齐 */
-    min-height: 600px;
+    /* 移除固定高度，让它自适应匹配右侧专辑网格 */
+    min-height: 0;
+    height: fit-content;
+    position: sticky;
+    top: 100px;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
 }
