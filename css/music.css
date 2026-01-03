@@ -11,6 +11,7 @@ body:has(.music-main) {
 .music-main {
     min-height: 100vh;
     padding: 100px var(--space-xl) var(--space-xl);
+    padding-top: 100px; /* 确保内容不与导航栏重叠 */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -18,18 +19,25 @@ body:has(.music-main) {
     margin: 0 auto;
 }
 
-/* 两栏布局 */
+/* 两栏布局 - 使用Flexbox让两列等高 */
 .music-layout {
-    display: grid;
-    grid-template-columns: 300px 1fr;
+    display: flex;
     gap: var(--space-xl);
     width: 100%;
     margin-top: var(--space-lg);
-    align-items: stretch; /* 让两列等高 */
+    align-items: flex-start;
 }
 
-/* 左侧信息面板 */
+/* 左侧信息面板容器 */
+.music-sidebar-wrapper {
+    width: 300px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* 左侧信息面板 - 高度与专辑网格同步 */
 .music-sidebar {
+    width: 100%;
     padding: var(--space-lg);
     background: rgba(var(--color-bg-card-rgb, 255, 255, 255), 0.8);
     backdrop-filter: blur(20px);
@@ -37,12 +45,8 @@ body:has(.music-main) {
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    /* 移除固定高度，让它自适应匹配右侧专辑网格 */
-    min-height: 0;
-    height: fit-content;
-    position: sticky;
-    top: 100px;
-    max-height: calc(100vh - 120px);
+    /* 默认高度，会被JS动态调整 */
+    min-height: 500px;
     overflow-y: auto;
 }
 
@@ -556,7 +560,8 @@ body:has(.music-main) {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--space-md);
-    width: 100%;
+    flex: 1;
+    min-width: 0;
 }
 
 .album-item {
@@ -884,8 +889,8 @@ body:has(.music-main) {
 
 /* 响应式 */
 @media (max-width: 1024px) {
-    .music-layout {
-        grid-template-columns: 240px 1fr;
+    .music-sidebar-wrapper {
+        width: 240px;
     }
     
     .sidebar-cover {
@@ -900,9 +905,10 @@ body:has(.music-main) {
     }
     
     .music-layout {
-        grid-template-columns: 1fr;
+        flex-direction: column;
     }
     
+    .music-sidebar-wrapper,
     .music-sidebar {
         display: none;
     }

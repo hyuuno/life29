@@ -147,13 +147,13 @@
         .table-container {
             background: var(--color-bg-card);
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 2px 16px rgba(0,0,0,0.05);
         }
         .table-wrapper {
             overflow-x: auto;
-            max-height: 75vh;
-            overflow-y: auto;
+            /* 移除内部滚动，让页面整体滚动 */
+            overflow-y: visible;
         }
         .schedule-table {
             width: 100%;
@@ -172,8 +172,9 @@
             font-size: 0.7rem;
             color: var(--color-text-light);
             background: var(--color-bg);
+            /* 表头固定在导航栏下方（72px是导航栏高度） */
             position: sticky;
-            top: 0;
+            top: 72px;
             z-index: 10;
         }
         .schedule-table th.time-col { width: 50px; }

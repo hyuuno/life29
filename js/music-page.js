@@ -676,6 +676,38 @@ class MusicPage {
         });
         
         this.updatePlayingState();
+        
+        // 同步sidebar高度与album grid
+        this.syncSidebarHeight();
+    }
+    
+    // 同步sidebar高度与album grid
+    syncSidebarHeight() {
+        const grid = document.getElementById('albumGrid');
+        const sidebar = document.getElementById('musicSidebar');
+        
+        if (!grid || !sidebar) return;
+        
+        // 等待grid渲染完成后获取高度
+        requestAnimationFrame(() => {
+            const gridHeight = grid.offsetHeight;
+            if (gridHeight > 0) {
+                sidebar.style.height = gridHeight + 'px';
+                sidebar.style.minHeight = gridHeight + 'px';
+            }
+        });
+        
+        // 监听窗口resize，保持同步
+        if (!this.resizeObserver) {
+            this.resizeObserver = new ResizeObserver(() => {
+                const newHeight = grid.offsetHeight;
+                if (newHeight > 0) {
+                    sidebar.style.height = newHeight + 'px';
+                    sidebar.style.minHeight = newHeight + 'px';
+                }
+            });
+            this.resizeObserver.observe(grid);
+        }
     }
     
     generatePlaceholderColors(count) {

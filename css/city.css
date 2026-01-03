@@ -269,7 +269,7 @@ body.city-page {
 
 .city-tabs {
     position: sticky;
-    top: 60px;
+    top: 72px; /* header高度 */
     z-index: 90;
     background: var(--color-bg);
     border-bottom: 1px solid var(--color-border);
