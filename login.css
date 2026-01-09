@@ -35,23 +35,36 @@ body {
 /* 视频背景容器 */
 .video-container {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .video-wrapper {
     position: relative;
-    transition: transform 0.3s ease;
+    width: 100%;
+    height: 100%;
 }
 
 .background-video {
-    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: cover;
     opacity: 0;
     transition: opacity 1s ease;
-    transform-origin: center center;
+    pointer-events: none;
 }
 
 .background-video.active {
