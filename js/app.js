@@ -288,18 +288,11 @@ class App {
         this.currentUser = null;
         localStorage.removeItem('life29-user');
         
-        const userBtn = document.getElementById('userBtn');
-        const userStatus = document.getElementById('userStatus');
-        
-        userBtn?.classList.remove('user-wiwi', 'user-yuyu');
-        
-        if (userStatus) {
-            userStatus.textContent = '未登录';
-            userStatus.classList.remove('logged-in', 'user-wiwi', 'user-yuyu');
-        }
-        
-        document.getElementById('addMomentBtn')?.classList.add('hidden');
-        document.querySelectorAll('.dropdown-item[data-user]').forEach(item => item.classList.remove('active'));
+        // 清除登录session并跳转到登录页
+        sessionStorage.removeItem('life29_logged_in');
+        sessionStorage.removeItem('life29_user');
+        sessionStorage.removeItem('life29_login_time');
+        window.location.href = 'login.html';
     }
     
     initGlobe() {
