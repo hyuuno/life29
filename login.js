@@ -4,22 +4,22 @@ const CREDENTIALS = {
     'yuyu': 'MyLittleFlower9529'
 };
 
-// 视频配置
+// 视频配置 - 使用英文文件名避免编码问题
 const VIDEO_CONFIG = [
-    { id: 'video0', name: '金门大桥' },
-    { id: 'video1', name: '乐高' },
-    { id: 'video2', name: '花' },
-    { id: 'video3', name: 'theater' },
-    { id: 'video4', name: 'minisoda' }
+    { id: 'video0', name: '金门大桥', file: 'jinmenbridge' },
+    { id: 'video1', name: '乐高', file: 'lego' },
+    { id: 'video2', name: '花', file: 'flower' },
+    { id: 'video3', name: 'theater', file: 'theater' },
+    { id: 'video4', name: 'minisoda', file: 'minisoda' }
 ];
 
 // 状态管理
 let currentVideoIndex = 0;
 let selectedUser = null;
 let currentZoom = 1;
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 2;
-const ZOOM_STEP = 0.2;
+const MIN_ZOOM = 1;  // 最小缩放为铺满屏幕
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.15;
 let isMuted = true;
 
 // 检查是否已登录
@@ -80,7 +80,7 @@ function getRandomVideoIndex(excludeIndex) {
     return availableIndices[Math.floor(Math.random() * availableIndices.length)];
 }
 
-// 更新视频尺寸和位置
+// 更新视频尺寸和位置 - 优先铺满屏幕
 function updateVideoSize() {
     const videos = document.querySelectorAll('.background-video');
     const videoContainer = document.getElementById('videoContainer');
@@ -91,17 +91,22 @@ function updateVideoSize() {
     const videoRatio = activeVideo.videoWidth / activeVideo.videoHeight;
     const windowRatio = window.innerWidth / window.innerHeight;
     
-    let width, height;
+    let baseWidth, baseHeight;
     
+    // 优先铺满屏幕 - 使用cover模式
     if (videoRatio > windowRatio) {
-        // 视频更宽，以高度为基准
-        height = window.innerHeight * currentZoom;
-        width = height * videoRatio;
+        // 视频更宽，以高度为基准铺满
+        baseHeight = window.innerHeight;
+        baseWidth = baseHeight * videoRatio;
     } else {
-        // 视频更高，以宽度为基准
-        width = window.innerWidth * currentZoom;
-        height = width / videoRatio;
+        // 视频更高，以宽度为基准铺满
+        baseWidth = window.innerWidth;
+        baseHeight = baseWidth / videoRatio;
     }
+    
+    // 应用缩放
+    const width = baseWidth * currentZoom;
+    const height = baseHeight * currentZoom;
     
     videos.forEach(video => {
         video.style.width = width + 'px';
@@ -136,6 +141,9 @@ function switchVideo(index) {
         }, 300);
     }
     
+    // 重置缩放
+    currentZoom = 1;
+    
     // 更新尺寸
     setTimeout(updateVideoSize, 100);
 }
@@ -155,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // DOM 元素
     const videos = document.querySelectorAll('.background-video');
-    const eyeToggle = document.getElementById('eyeToggle');
+    const randomToggle = document.getElementById('randomToggle');
     const doorLogo = document.getElementById('doorLogo');
     const loginOverlay = document.getElementById('loginOverlay');
     const closeLogin = document.getElementById('closeLogin');
@@ -163,8 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordContainer = document.getElementById('passwordContainer');
     const passwordInput = document.getElementById('passwordInput');
     const videoName = document.getElementById('videoName');
-    const zoomInBtn = document.getElementById('zoomIn');
-    const zoomOutBtn = document.getElementById('zoomOut');
     const soundToggle = document.getElementById('soundToggle');
     const bgmAudio = document.getElementById('bgmAudio');
 
@@ -200,35 +206,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 眼睛点击 - 随机切换视频
-    if (eyeToggle) {
-        eyeToggle.addEventListener('click', () => {
-            eyeToggle.classList.add('blinking');
-            
-            setTimeout(() => {
-                const nextIndex = getRandomVideoIndex(currentVideoIndex);
-                switchVideo(nextIndex);
-            }, 125);
-            
-            setTimeout(() => {
-                eyeToggle.classList.remove('blinking');
-            }, 250);
+    // 随机按钮点击 - 随机切换视频
+    if (randomToggle) {
+        randomToggle.addEventListener('click', () => {
+            const nextIndex = getRandomVideoIndex(currentVideoIndex);
+            switchVideo(nextIndex);
         });
-    }
-
-    // 缩放控制
-    if (zoomInBtn) {
-        zoomInBtn.addEventListener('click', () => zoomVideo(ZOOM_STEP));
-    }
-    if (zoomOutBtn) {
-        zoomOutBtn.addEventListener('click', () => zoomVideo(-ZOOM_STEP));
     }
 
     // 滚轮缩放
     document.addEventListener('wheel', (e) => {
         if (loginOverlay && loginOverlay.classList.contains('visible')) return;
         e.preventDefault();
-        zoomVideo(e.deltaY > 0 ? -ZOOM_STEP / 2 : ZOOM_STEP / 2);
+        zoomVideo(e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP);
     }, { passive: false });
 
     // 声音控制

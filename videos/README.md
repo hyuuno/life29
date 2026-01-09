@@ -1,10 +1,10 @@
 # Videos 文件夹
 
-请将以下5个视频文件放入此文件夹：
+请将以下5个视频文件放入此文件夹（使用英文文件名避免编码问题）：
 
-1. 金门大桥.mp4
-2. 乐高.mp4
-3. 花.mp4
+1. jinmenbridge.mp4 (金门大桥)
+2. lego.mp4 (乐高)
+3. flower.mp4 (花)
 4. theater.mp4
 5. minisoda.mp4
 
