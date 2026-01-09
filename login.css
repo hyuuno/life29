@@ -18,43 +18,41 @@ body {
     overflow: hidden;
     height: 100vh;
     width: 100vw;
-    background: #0a0a0a;
+    background: #d8d8d8;
+}
+
+/* 浅灰色迷雾背景 */
+.fog-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #e0e0e0 0%, #c8c8c8 50%, #d0d0d0 100%);
+    z-index: 0;
 }
 
 /* 视频背景容器 */
 .video-container {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    cursor: grab;
-}
-
-.video-container:active {
-    cursor: grabbing;
-}
-
-.video-wrapper {
-    position: absolute;
-    min-width: 100%;
-    min-height: 100%;
-    transition: transform 0.1s ease-out;
-}
-
-.background-video {
-    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    min-width: 100vw;
-    min-height: 100vh;
-    width: auto;
-    height: auto;
-    object-fit: cover;
+    z-index: 1;
+    overflow: hidden;
+    border-radius: 0;
+}
+
+.video-wrapper {
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.background-video {
+    display: block;
     opacity: 0;
     transition: opacity 1s ease;
+    transform-origin: center center;
 }
 
 .background-video.active {
@@ -64,109 +62,203 @@ body {
 /* 视频名称 - 左下角 */
 .video-name {
     position: fixed;
-    bottom: 30px;
-    left: 30px;
+    bottom: 25px;
+    left: 25px;
     font-family: 'Noto Sans SC', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 200;
-    color: rgba(255, 255, 255, 0.5);
-    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1px;
     z-index: 100;
     transition: opacity 0.5s ease;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-/* 门 Logo - 右下角 */
-.door-logo {
+/* 底部控制栏 */
+.bottom-controls {
     position: fixed;
-    bottom: 28px;
-    right: 30px;
-    width: 40px;
-    height: 56px;
-    cursor: pointer;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
     z-index: 100;
-    transition: all 0.4s ease;
+}
+
+/* 声音控制 */
+.sound-toggle {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
     opacity: 0.5;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.sound-toggle:hover {
+    opacity: 0.9;
+}
+
+.sound-toggle svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
+}
+
+.sound-toggle .sound-off {
+    display: none;
+}
+
+.sound-toggle.muted .sound-on {
+    display: none;
+}
+
+.sound-toggle.muted .sound-off {
+    display: block;
+}
+
+/* 眼睛图标 - 更小更简洁 */
+.eye-toggle {
+    width: 28px;
+    height: 16px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.eye-toggle:hover {
+    opacity: 0.9;
+}
+
+.eye-icon {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.eye-outline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 1.5px solid white;
+    border-radius: 50% / 100%;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
+}
+
+.eye-ball {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.eye-pupil {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: #222;
+    border-radius: 50%;
+}
+
+.eye-highlight {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+}
+
+.eye-lid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #d0d0d0;
+    border-radius: 50% / 100%;
+    transform: scaleY(0);
+    transform-origin: center;
+    transition: none;
+}
+
+/* 眨眼动画 */
+.eye-toggle.blinking .eye-lid {
+    animation: wink 0.25s ease-in-out;
+}
+
+@keyframes wink {
+    0% { transform: scaleY(0); }
+    45% { transform: scaleY(1); }
+    55% { transform: scaleY(1); }
+    100% { transform: scaleY(0); }
+}
+
+/* 门图标 - 参考用户图片 */
+.door-logo {
+    width: 20px;
+    height: 26px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    color: white;
 }
 
 .door-logo:hover {
     opacity: 0.9;
-    transform: scale(1.05);
 }
 
 .door-logo svg {
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
 }
 
-/* 眼睛切换视频按钮 */
-.eye-toggle {
+/* 缩放控制 */
+.zoom-controls {
     position: fixed;
-    bottom: 30px;
-    right: 90px;
-    width: 50px;
-    height: 30px;
-    cursor: pointer;
+    bottom: 70px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     z-index: 100;
-    transition: all 0.3s ease;
+}
+
+.zoom-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
     opacity: 0.5;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
 }
 
-.eye-toggle:hover {
+.zoom-btn:hover {
     opacity: 0.9;
-    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.25);
 }
 
-.eye-toggle svg {
-    width: 100%;
-    height: 100%;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
-    overflow: visible;
-}
-
-/* 眨眼动画 */
-.eye-lid-top,
-.eye-lid-bottom {
-    opacity: 0;
-    transition: none;
-}
-
-.eye-toggle.blinking .eye-lid-top {
-    animation: blinkTop 0.35s ease-in-out;
-}
-
-.eye-toggle.blinking .eye-lid-bottom {
-    animation: blinkBottom 0.35s ease-in-out;
-}
-
-@keyframes blinkTop {
-    0% { 
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    40%, 60% { 
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% { 
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-}
-
-@keyframes blinkBottom {
-    0% { 
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    40%, 60% { 
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% { 
-        opacity: 0;
-        transform: translateY(30px);
-    }
+.zoom-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* 磨砂玻璃登录界面 */
@@ -385,22 +477,39 @@ body {
     }
     
     .video-name {
-        font-size: 11px;
-        bottom: 20px;
-        left: 20px;
+        font-size: 10px;
+        bottom: 18px;
+        left: 18px;
     }
     
-    .door-logo {
-        bottom: 18px;
-        right: 20px;
-        width: 35px;
-        height: 49px;
+    .bottom-controls {
+        bottom: 15px;
+        right: 15px;
+        gap: 12px;
+    }
+    
+    .sound-toggle {
+        width: 18px;
+        height: 18px;
     }
     
     .eye-toggle {
-        bottom: 22px;
-        right: 70px;
-        width: 40px;
+        width: 24px;
+        height: 14px;
+    }
+    
+    .door-logo {
+        width: 16px;
+        height: 22px;
+    }
+    
+    .zoom-controls {
+        bottom: 55px;
+        right: 15px;
+    }
+    
+    .zoom-btn {
+        width: 24px;
         height: 24px;
     }
 }

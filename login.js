@@ -16,8 +16,11 @@ const VIDEO_CONFIG = [
 // 状态管理
 let currentVideoIndex = 0;
 let selectedUser = null;
-let isDragging = false;
-let startX, startY, offsetX = 0, offsetY = 0;
+let currentZoom = 1;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2;
+const ZOOM_STEP = 0.2;
+let isMuted = true;
 
 // 检查是否已登录
 function checkLoginStatus() {
@@ -25,7 +28,6 @@ function checkLoginStatus() {
     const currentUser = sessionStorage.getItem('life29_user');
     
     if (isLoggedIn === 'true' && currentUser) {
-        // 如果在登录页面且已登录，重定向到主页
         if (window.location.pathname.includes('login.html')) {
             window.location.href = 'index.html';
         }
@@ -78,6 +80,40 @@ function getRandomVideoIndex(excludeIndex) {
     return availableIndices[Math.floor(Math.random() * availableIndices.length)];
 }
 
+// 更新视频尺寸和位置
+function updateVideoSize() {
+    const videos = document.querySelectorAll('.background-video');
+    const videoContainer = document.getElementById('videoContainer');
+    const activeVideo = videos[currentVideoIndex];
+    
+    if (!activeVideo || !activeVideo.videoWidth) return;
+    
+    const videoRatio = activeVideo.videoWidth / activeVideo.videoHeight;
+    const windowRatio = window.innerWidth / window.innerHeight;
+    
+    let width, height;
+    
+    if (videoRatio > windowRatio) {
+        // 视频更宽，以高度为基准
+        height = window.innerHeight * currentZoom;
+        width = height * videoRatio;
+    } else {
+        // 视频更高，以宽度为基准
+        width = window.innerWidth * currentZoom;
+        height = width / videoRatio;
+    }
+    
+    videos.forEach(video => {
+        video.style.width = width + 'px';
+        video.style.height = height + 'px';
+    });
+    
+    if (videoContainer) {
+        videoContainer.style.width = width + 'px';
+        videoContainer.style.height = height + 'px';
+    }
+}
+
 // 切换视频
 function switchVideo(index) {
     const videos = document.querySelectorAll('.background-video');
@@ -100,13 +136,14 @@ function switchVideo(index) {
         }, 300);
     }
     
-    // 重置拖拽位置
-    offsetX = 0;
-    offsetY = 0;
-    const videoWrapper = document.getElementById('videoWrapper');
-    if (videoWrapper) {
-        videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-    }
+    // 更新尺寸
+    setTimeout(updateVideoSize, 100);
+}
+
+// 缩放视频
+function zoomVideo(delta) {
+    currentZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, currentZoom + delta));
+    updateVideoSize();
 }
 
 // DOM加载完成后执行
@@ -118,8 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // DOM 元素
     const videos = document.querySelectorAll('.background-video');
-    const videoContainer = document.getElementById('videoContainer');
-    const videoWrapper = document.getElementById('videoWrapper');
     const eyeToggle = document.getElementById('eyeToggle');
     const doorLogo = document.getElementById('doorLogo');
     const loginOverlay = document.getElementById('loginOverlay');
@@ -128,6 +163,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordContainer = document.getElementById('passwordContainer');
     const passwordInput = document.getElementById('passwordInput');
     const videoName = document.getElementById('videoName');
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const soundToggle = document.getElementById('soundToggle');
+    const bgmAudio = document.getElementById('bgmAudio');
 
     // 随机选择初始视频
     currentVideoIndex = Math.floor(Math.random() * VIDEO_CONFIG.length);
@@ -144,8 +183,15 @@ document.addEventListener('DOMContentLoaded', function() {
         videoName.textContent = VIDEO_CONFIG[currentVideoIndex].name;
     }
 
-    // 视频结束时随机切换到下一个
+    // 视频加载后更新尺寸
     videos.forEach((video, index) => {
+        video.addEventListener('loadedmetadata', () => {
+            if (index === currentVideoIndex) {
+                updateVideoSize();
+            }
+        });
+        
+        // 视频结束时随机切换
         video.addEventListener('ended', () => {
             if (index === currentVideoIndex) {
                 const nextIndex = getRandomVideoIndex(currentVideoIndex);
@@ -162,11 +208,41 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 const nextIndex = getRandomVideoIndex(currentVideoIndex);
                 switchVideo(nextIndex);
-            }, 175);
+            }, 125);
             
             setTimeout(() => {
                 eyeToggle.classList.remove('blinking');
-            }, 350);
+            }, 250);
+        });
+    }
+
+    // 缩放控制
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => zoomVideo(ZOOM_STEP));
+    }
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => zoomVideo(-ZOOM_STEP));
+    }
+
+    // 滚轮缩放
+    document.addEventListener('wheel', (e) => {
+        if (loginOverlay && loginOverlay.classList.contains('visible')) return;
+        e.preventDefault();
+        zoomVideo(e.deltaY > 0 ? -ZOOM_STEP / 2 : ZOOM_STEP / 2);
+    }, { passive: false });
+
+    // 声音控制
+    if (soundToggle && bgmAudio) {
+        soundToggle.addEventListener('click', () => {
+            isMuted = !isMuted;
+            soundToggle.classList.toggle('muted', isMuted);
+            
+            if (isMuted) {
+                bgmAudio.pause();
+            } else {
+                bgmAudio.volume = 0.3;
+                bgmAudio.play().catch(() => {});
+            }
         });
     }
 
@@ -250,67 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 拖拽视频背景
-    if (videoContainer) {
-        videoContainer.addEventListener('mousedown', (e) => {
-            if (loginOverlay && loginOverlay.classList.contains('visible')) return;
-            isDragging = true;
-            startX = e.clientX - offsetX;
-            startY = e.clientY - offsetY;
-        });
-
-        videoContainer.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            
-            const activeVideo = videos[currentVideoIndex];
-            const maxOffsetX = Math.max(0, (activeVideo.videoWidth - window.innerWidth) / 2);
-            const maxOffsetY = Math.max(0, (activeVideo.videoHeight - window.innerHeight) / 2);
-            
-            offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, e.clientX - startX));
-            offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, e.clientY - startY));
-            
-            if (videoWrapper) {
-                videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-            }
-        });
-
-        videoContainer.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-
-        videoContainer.addEventListener('mouseleave', () => {
-            isDragging = false;
-        });
-
-        // 触摸支持
-        videoContainer.addEventListener('touchstart', (e) => {
-            if (loginOverlay && loginOverlay.classList.contains('visible')) return;
-            isDragging = true;
-            startX = e.touches[0].clientX - offsetX;
-            startY = e.touches[0].clientY - offsetY;
-        });
-
-        videoContainer.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            
-            const activeVideo = videos[currentVideoIndex];
-            const maxOffsetX = Math.max(0, (activeVideo.videoWidth - window.innerWidth) / 2);
-            const maxOffsetY = Math.max(0, (activeVideo.videoHeight - window.innerHeight) / 2);
-            
-            offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, e.touches[0].clientX - startX));
-            offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, e.touches[0].clientY - startY));
-            
-            if (videoWrapper) {
-                videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-            }
-        });
-
-        videoContainer.addEventListener('touchend', () => {
-            isDragging = false;
-        });
-    }
-
     // ESC 键关闭登录界面
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && loginOverlay && loginOverlay.classList.contains('visible')) {
@@ -319,14 +334,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 窗口大小改变时重置
-    window.addEventListener('resize', () => {
-        offsetX = 0;
-        offsetY = 0;
-        if (videoWrapper) {
-            videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-        }
-    });
+    // 窗口大小改变时更新
+    window.addEventListener('resize', updateVideoSize);
+    
+    // 初始化尺寸
+    setTimeout(updateVideoSize, 500);
 });
 
 // 导出函数供其他页面使用

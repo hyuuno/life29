@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
+    <!-- 浅灰色迷雾背景 -->
+    <div class="fog-background"></div>
+
     <!-- 视频背景 -->
     <div class="video-container" id="videoContainer">
         <div class="video-wrapper" id="videoWrapper">
@@ -29,31 +32,66 @@
         </div>
     </div>
 
-    <!-- 视频名称显示 -->
+    <!-- 视频名称显示 - 左下角 -->
     <div class="video-name" id="videoName">金门大桥</div>
 
-    <!-- 眼睛切换视频按钮 -->
-    <div class="eye-toggle" id="eyeToggle">
-        <svg viewBox="0 0 100 60" fill="none">
-            <g class="eye-group">
-                <ellipse class="eye-outline" cx="50" cy="30" rx="45" ry="28" stroke="white" stroke-width="2" fill="none"/>
-                <ellipse class="eye-lid-top" cx="50" cy="30" rx="45" ry="28" stroke="none" fill="rgba(0,0,0,0.9)"/>
-                <ellipse class="eye-lid-bottom" cx="50" cy="30" rx="45" ry="28" stroke="none" fill="rgba(0,0,0,0.9)"/>
-                <circle class="eye-white" cx="50" cy="30" r="16" fill="white"/>
-                <circle class="eye-iris" cx="50" cy="30" r="10" fill="#555"/>
-                <circle class="eye-pupil" cx="50" cy="30" r="5" fill="#111"/>
-                <circle class="eye-highlight" cx="54" cy="26" r="3" fill="white" opacity="0.8"/>
-            </g>
-        </svg>
+    <!-- 底部控制栏 -->
+    <div class="bottom-controls">
+        <!-- 声音控制 -->
+        <div class="sound-toggle" id="soundToggle" title="BGM">
+            <svg class="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg class="sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+        </div>
+
+        <!-- 眼睛切换视频按钮 -->
+        <div class="eye-toggle" id="eyeToggle" title="换视频">
+            <div class="eye-icon">
+                <div class="eye-outline"></div>
+                <div class="eye-ball">
+                    <div class="eye-pupil"></div>
+                    <div class="eye-highlight"></div>
+                </div>
+                <div class="eye-lid"></div>
+            </div>
+        </div>
+
+        <!-- 门 Logo -->
+        <div class="door-logo" id="doorLogo" title="登录">
+            <svg viewBox="0 0 100 120" fill="none">
+                <!-- 门框 -->
+                <path d="M20 15 L20 115 M80 15 L80 115 M20 15 L80 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                <!-- 开着的门 -->
+                <path d="M25 20 L25 110 L55 100 L55 30 Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <!-- 门把手 -->
+                <ellipse cx="48" cy="68" rx="3" ry="5" fill="currentColor"/>
+            </svg>
+        </div>
     </div>
 
-    <!-- 门 Logo -->
-    <div class="door-logo" id="doorLogo">
-        <svg viewBox="0 0 50 70" fill="none">
-            <rect x="4" y="4" width="42" height="62" rx="2" stroke="white" stroke-width="2" fill="none"/>
-            <rect x="10" y="10" width="30" height="50" rx="1" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
-            <circle cx="34" cy="36" r="3" fill="white"/>
-        </svg>
+    <!-- 缩放控制 -->
+    <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomIn" title="放大">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+        </button>
+        <button class="zoom-btn" id="zoomOut" title="缩小">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+        </button>
     </div>
 
     <!-- 磨砂登录界面 -->
@@ -83,6 +121,11 @@
             <div class="error-message" id="errorMessage"></div>
         </div>
     </div>
+
+    <!-- BGM音频 -->
+    <audio id="bgmAudio" loop>
+        <source src="audio/bgm.mp3" type="audio/mpeg">
+    </audio>
 
     <script src="login.js"></script>
 </body>
