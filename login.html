@@ -3,59 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life29 - 登录</title>
+    <title>Life29</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Sans+SC:wght@200;300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    <div class="background-gradient"></div>
-    <div class="floating-hearts">
-        <div class="heart"></div>
-        <div class="heart"></div>
-        <div class="heart"></div>
-        <div class="heart"></div>
-        <div class="heart"></div>
+    <!-- 视频背景 -->
+    <div class="video-container" id="videoContainer">
+        <div class="video-wrapper" id="videoWrapper">
+            <video class="background-video active" id="video0" muted playsinline>
+                <source src="videos/金门大桥.mp4" type="video/mp4">
+            </video>
+            <video class="background-video" id="video1" muted playsinline>
+                <source src="videos/乐高.mp4" type="video/mp4">
+            </video>
+            <video class="background-video" id="video2" muted playsinline>
+                <source src="videos/花.mp4" type="video/mp4">
+            </video>
+            <video class="background-video" id="video3" muted playsinline>
+                <source src="videos/theater.mp4" type="video/mp4">
+            </video>
+            <video class="background-video" id="video4" muted playsinline>
+                <source src="videos/minisoda.mp4" type="video/mp4">
+            </video>
+        </div>
     </div>
-    
-    <div class="login-container">
-        <div class="login-card">
-            <div class="logo-section">
-                <div class="logo-circle">
-                    <svg class="heart-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/>
-                    </svg>
-                </div>
-                <h1 class="app-title">Life29</h1>
-                <p class="app-subtitle">我们的故事 · 永恒珍藏</p>
+
+    <!-- 视频名称显示 -->
+    <div class="video-name" id="videoName">金门大桥</div>
+
+    <!-- 眼睛切换视频按钮 -->
+    <div class="eye-toggle" id="eyeToggle">
+        <svg viewBox="0 0 100 60" fill="none">
+            <g class="eye-group">
+                <ellipse class="eye-outline" cx="50" cy="30" rx="45" ry="28" stroke="white" stroke-width="2" fill="none"/>
+                <ellipse class="eye-lid-top" cx="50" cy="30" rx="45" ry="28" stroke="none" fill="rgba(0,0,0,0.9)"/>
+                <ellipse class="eye-lid-bottom" cx="50" cy="30" rx="45" ry="28" stroke="none" fill="rgba(0,0,0,0.9)"/>
+                <circle class="eye-white" cx="50" cy="30" r="16" fill="white"/>
+                <circle class="eye-iris" cx="50" cy="30" r="10" fill="#555"/>
+                <circle class="eye-pupil" cx="50" cy="30" r="5" fill="#111"/>
+                <circle class="eye-highlight" cx="54" cy="26" r="3" fill="white" opacity="0.8"/>
+            </g>
+        </svg>
+    </div>
+
+    <!-- 门 Logo -->
+    <div class="door-logo" id="doorLogo">
+        <svg viewBox="0 0 50 70" fill="none">
+            <rect x="4" y="4" width="42" height="62" rx="2" stroke="white" stroke-width="2" fill="none"/>
+            <rect x="10" y="10" width="30" height="50" rx="1" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+            <circle cx="34" cy="36" r="3" fill="white"/>
+        </svg>
+    </div>
+
+    <!-- 磨砂登录界面 -->
+    <div class="login-overlay" id="loginOverlay">
+        <!-- 关闭按钮 -->
+        <div class="close-login" id="closeLogin">
+            <svg viewBox="0 0 40 40" fill="none">
+                <line x1="12" y1="12" x2="28" y2="28" stroke="white" stroke-width="1.5"/>
+                <line x1="28" y1="12" x2="12" y2="28" stroke="white" stroke-width="1.5"/>
+            </svg>
+        </div>
+
+        <div class="login-container">
+            <!-- 用户选择 -->
+            <div class="user-selection">
+                <button class="user-btn wiwi" data-user="wiwi">wiwi</button>
+                <button class="user-btn yuyu" data-user="yuyu">yuyu</button>
             </div>
 
-            <form id="loginForm" class="login-form">
-                <div class="input-group">
-                    <label for="username">选择用户</label>
-                    <select id="username" name="username" required>
-                        <option value="">请选择...</option>
-                        <option value="wiwi">🌸 Wiwi</option>
-                        <option value="yuyu">🌺 Yuyu</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="password">密码</label>
-                    <input type="password" id="password" name="password" placeholder="请输入密码" required>
-                </div>
-
-                <div id="errorMessage" class="error-message"></div>
-
-                <button type="submit" class="login-button">
-                    <span class="button-text">进入我们的世界</span>
-                    <svg class="button-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-            </form>
-
-            <div class="footer-text">
-                <p>💕 用心记录每一个美好瞬间</p>
+            <!-- 密码输入 -->
+            <div class="password-container" id="passwordContainer">
+                <input type="password" class="password-input" id="passwordInput" placeholder="">
+                <div class="password-line"></div>
             </div>
+
+            <!-- 错误提示 -->
+            <div class="error-message" id="errorMessage"></div>
         </div>
     </div>
 

@@ -4,6 +4,21 @@ const CREDENTIALS = {
     'yuyu': 'MyLittleFlower9529'
 };
 
+// 视频配置
+const VIDEO_CONFIG = [
+    { id: 'video0', name: '金门大桥' },
+    { id: 'video1', name: '乐高' },
+    { id: 'video2', name: '花' },
+    { id: 'video3', name: 'theater' },
+    { id: 'video4', name: 'minisoda' }
+];
+
+// 状态管理
+let currentVideoIndex = 0;
+let selectedUser = null;
+let isDragging = false;
+let startX, startY, offsetX = 0, offsetY = 0;
+
 // 检查是否已登录
 function checkLoginStatus() {
     const isLoggedIn = sessionStorage.getItem('life29_logged_in');
@@ -22,7 +37,6 @@ function checkLoginStatus() {
 // 登录函数
 function login(username, password) {
     if (CREDENTIALS[username] && CREDENTIALS[username] === password) {
-        // 登录成功
         sessionStorage.setItem('life29_logged_in', 'true');
         sessionStorage.setItem('life29_user', username);
         sessionStorage.setItem('life29_login_time', new Date().toISOString());
@@ -47,13 +61,52 @@ function getCurrentUser() {
 // 显示错误消息
 function showError(message) {
     const errorDiv = document.getElementById('errorMessage');
-    errorDiv.textContent = message;
-    errorDiv.classList.add('show');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.classList.add('show');
+        setTimeout(() => {
+            errorDiv.classList.remove('show');
+        }, 3000);
+    }
+}
+
+// 获取随机视频索引（排除当前视频）
+function getRandomVideoIndex(excludeIndex) {
+    const availableIndices = VIDEO_CONFIG
+        .map((_, index) => index)
+        .filter(index => index !== excludeIndex);
+    return availableIndices[Math.floor(Math.random() * availableIndices.length)];
+}
+
+// 切换视频
+function switchVideo(index) {
+    const videos = document.querySelectorAll('.background-video');
+    const videoName = document.getElementById('videoName');
     
-    // 3秒后自动隐藏
-    setTimeout(() => {
-        errorDiv.classList.remove('show');
-    }, 3000);
+    videos[currentVideoIndex].classList.remove('active');
+    currentVideoIndex = index;
+    videos[currentVideoIndex].classList.add('active');
+    
+    // 播放新视频
+    videos[currentVideoIndex].currentTime = 0;
+    videos[currentVideoIndex].play().catch(() => {});
+    
+    // 更新视频名称
+    if (videoName) {
+        videoName.style.opacity = '0';
+        setTimeout(() => {
+            videoName.textContent = VIDEO_CONFIG[currentVideoIndex].name;
+            videoName.style.opacity = '1';
+        }, 300);
+    }
+    
+    // 重置拖拽位置
+    offsetX = 0;
+    offsetY = 0;
+    const videoWrapper = document.getElementById('videoWrapper');
+    if (videoWrapper) {
+        videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+    }
 }
 
 // DOM加载完成后执行
@@ -63,72 +116,215 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    const loginForm = document.getElementById('loginForm');
-    const usernameSelect = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
+    // DOM 元素
+    const videos = document.querySelectorAll('.background-video');
+    const videoContainer = document.getElementById('videoContainer');
+    const videoWrapper = document.getElementById('videoWrapper');
+    const eyeToggle = document.getElementById('eyeToggle');
+    const doorLogo = document.getElementById('doorLogo');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const closeLogin = document.getElementById('closeLogin');
+    const userBtns = document.querySelectorAll('.user-btn');
+    const passwordContainer = document.getElementById('passwordContainer');
+    const passwordInput = document.getElementById('passwordInput');
+    const videoName = document.getElementById('videoName');
 
-    // 表单提交事件
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const username = usernameSelect.value;
-        const password = passwordInput.value;
-
-        // 验证输入
-        if (!username) {
-            showError('请选择用户 💕');
-            usernameSelect.focus();
-            return;
+    // 随机选择初始视频
+    currentVideoIndex = Math.floor(Math.random() * VIDEO_CONFIG.length);
+    videos.forEach((video, index) => {
+        video.classList.remove('active');
+        if (index === currentVideoIndex) {
+            video.classList.add('active');
+            video.play().catch(() => {});
         }
+    });
+    
+    // 设置初始视频名称
+    if (videoName) {
+        videoName.textContent = VIDEO_CONFIG[currentVideoIndex].name;
+    }
 
-        if (!password) {
-            showError('请输入密码 🔒');
-            passwordInput.focus();
-            return;
-        }
+    // 视频结束时随机切换到下一个
+    videos.forEach((video, index) => {
+        video.addEventListener('ended', () => {
+            if (index === currentVideoIndex) {
+                const nextIndex = getRandomVideoIndex(currentVideoIndex);
+                switchVideo(nextIndex);
+            }
+        });
+    });
 
-        // 验证登录
-        if (login(username, password)) {
-            // 登录成功，添加成功动画
-            const loginButton = document.querySelector('.login-button');
-            loginButton.innerHTML = '<span class="button-text">✨ 登录成功！</span>';
-            loginButton.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+    // 眼睛点击 - 随机切换视频
+    if (eyeToggle) {
+        eyeToggle.addEventListener('click', () => {
+            eyeToggle.classList.add('blinking');
             
-            // 延迟跳转，让用户看到成功消息
             setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 800);
+                const nextIndex = getRandomVideoIndex(currentVideoIndex);
+                switchVideo(nextIndex);
+            }, 175);
+            
+            setTimeout(() => {
+                eyeToggle.classList.remove('blinking');
+            }, 350);
+        });
+    }
+
+    // 门 Logo 点击 - 打开登录界面
+    if (doorLogo) {
+        doorLogo.addEventListener('click', () => {
+            loginOverlay.classList.add('visible');
+        });
+    }
+
+    // 关闭登录界面
+    if (closeLogin) {
+        closeLogin.addEventListener('click', () => {
+            loginOverlay.classList.remove('visible');
+            resetLoginForm();
+        });
+    }
+
+    // 点击背景关闭登录界面
+    if (loginOverlay) {
+        loginOverlay.addEventListener('click', (e) => {
+            if (e.target === loginOverlay) {
+                loginOverlay.classList.remove('visible');
+                resetLoginForm();
+            }
+        });
+    }
+
+    // 用户选择
+    userBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            userBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedUser = btn.dataset.user;
+            
+            passwordContainer.classList.add('visible');
+            setTimeout(() => {
+                passwordInput.focus();
+            }, 100);
+        });
+    });
+
+    // 密码输入回车登录
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performLogin();
+            }
+        });
+    }
+
+    // 重置登录表单
+    function resetLoginForm() {
+        userBtns.forEach(b => b.classList.remove('selected'));
+        if (passwordContainer) passwordContainer.classList.remove('visible');
+        if (passwordInput) passwordInput.value = '';
+        selectedUser = null;
+        const errorDiv = document.getElementById('errorMessage');
+        if (errorDiv) errorDiv.classList.remove('show');
+    }
+
+    // 执行登录
+    function performLogin() {
+        if (!selectedUser) {
+            showError('请先选择用户');
+            return;
+        }
+        
+        if (!passwordInput.value) {
+            showError('请输入密码');
+            return;
+        }
+
+        if (login(selectedUser, passwordInput.value)) {
+            // 登录成功，直接跳转
+            window.location.href = 'index.html';
         } else {
-            // 登录失败
-            showError('密码错误，请重试 😢');
+            showError('密码错误');
             passwordInput.value = '';
             passwordInput.focus();
+        }
+    }
+
+    // 拖拽视频背景
+    if (videoContainer) {
+        videoContainer.addEventListener('mousedown', (e) => {
+            if (loginOverlay && loginOverlay.classList.contains('visible')) return;
+            isDragging = true;
+            startX = e.clientX - offsetX;
+            startY = e.clientY - offsetY;
+        });
+
+        videoContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
             
-            // 添加抖动效果
-            loginForm.style.animation = 'none';
-            setTimeout(() => {
-                loginForm.style.animation = '';
-            }, 10);
+            const activeVideo = videos[currentVideoIndex];
+            const maxOffsetX = Math.max(0, (activeVideo.videoWidth - window.innerWidth) / 2);
+            const maxOffsetY = Math.max(0, (activeVideo.videoHeight - window.innerHeight) / 2);
+            
+            offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, e.clientX - startX));
+            offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, e.clientY - startY));
+            
+            if (videoWrapper) {
+                videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            }
+        });
+
+        videoContainer.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        videoContainer.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // 触摸支持
+        videoContainer.addEventListener('touchstart', (e) => {
+            if (loginOverlay && loginOverlay.classList.contains('visible')) return;
+            isDragging = true;
+            startX = e.touches[0].clientX - offsetX;
+            startY = e.touches[0].clientY - offsetY;
+        });
+
+        videoContainer.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const activeVideo = videos[currentVideoIndex];
+            const maxOffsetX = Math.max(0, (activeVideo.videoWidth - window.innerWidth) / 2);
+            const maxOffsetY = Math.max(0, (activeVideo.videoHeight - window.innerHeight) / 2);
+            
+            offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, e.touches[0].clientX - startX));
+            offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, e.touches[0].clientY - startY));
+            
+            if (videoWrapper) {
+                videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            }
+        });
+
+        videoContainer.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+    }
+
+    // ESC 键关闭登录界面
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && loginOverlay && loginOverlay.classList.contains('visible')) {
+            loginOverlay.classList.remove('visible');
+            resetLoginForm();
         }
     });
 
-    // 输入框焦点效果
-    const inputs = document.querySelectorAll('input, select');
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.style.transform = 'scale(1.02)';
-            this.parentElement.style.transition = 'transform 0.3s ease';
-        });
-
-        input.addEventListener('blur', function() {
-            this.parentElement.style.transform = 'scale(1)';
-        });
-    });
-
-    // Enter键快速登录
-    passwordInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            loginForm.dispatchEvent(new Event('submit'));
+    // 窗口大小改变时重置
+    window.addEventListener('resize', () => {
+        offsetX = 0;
+        offsetY = 0;
+        if (videoWrapper) {
+            videoWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
         }
     });
 });

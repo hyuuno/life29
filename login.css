@@ -1,3 +1,12 @@
+:root {
+    --wiwi-glow: rgba(144, 238, 144, 0.5);
+    --wiwi-color: #a8e6a8;
+    --yuyu-glow: rgba(135, 206, 250, 0.5);
+    --yuyu-color: #a8d8f0;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -5,369 +14,393 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    height: 100vh;
+    font-family: 'Noto Sans SC', sans-serif;
     overflow: hidden;
-    position: relative;
+    height: 100vh;
+    width: 100vw;
+    background: #0a0a0a;
 }
 
-/* 背景渐变 */
-.background-gradient {
+/* 视频背景容器 */
+.video-container {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, 
-        #FFE5EC 0%, 
-        #FFC2D1 25%, 
-        #FFB3C6 50%, 
-        #FF8FAB 75%, 
-        #FB6F92 100%);
-    animation: gradientShift 15s ease infinite;
-    z-index: -2;
-}
-
-@keyframes gradientShift {
-    0%, 100% {
-        filter: hue-rotate(0deg);
-    }
-    50% {
-        filter: hue-rotate(10deg);
-    }
-}
-
-/* 浮动的心形装饰 */
-.floating-hearts {
-    position: fixed;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
-    z-index: -1;
+    cursor: grab;
 }
 
-.heart {
+.video-container:active {
+    cursor: grabbing;
+}
+
+.video-wrapper {
     position: absolute;
-    width: 40px;
-    height: 40px;
-    opacity: 0.15;
-    animation: float 20s infinite;
+    min-width: 100%;
+    min-height: 100%;
+    transition: transform 0.1s ease-out;
 }
 
-.heart::before,
-.heart::after {
-    content: '';
+.background-video {
     position: absolute;
-    width: 20px;
-    height: 32px;
-    background: white;
-    border-radius: 20px 20px 0 0;
-}
-
-.heart::before {
-    left: 20px;
-    transform: rotate(-45deg);
-    transform-origin: 0 100%;
-}
-
-.heart::after {
-    left: 0;
-    transform: rotate(45deg);
-    transform-origin: 100% 100%;
-}
-
-.heart:nth-child(1) {
-    left: 10%;
-    animation-delay: 0s;
-    animation-duration: 18s;
-}
-
-.heart:nth-child(2) {
-    left: 30%;
-    animation-delay: 4s;
-    animation-duration: 22s;
-}
-
-.heart:nth-child(3) {
+    top: 50%;
     left: 50%;
-    animation-delay: 2s;
-    animation-duration: 20s;
-}
-
-.heart:nth-child(4) {
-    left: 70%;
-    animation-delay: 6s;
-    animation-duration: 19s;
-}
-
-.heart:nth-child(5) {
-    left: 90%;
-    animation-delay: 3s;
-    animation-duration: 21s;
-}
-
-@keyframes float {
-    0% {
-        transform: translateY(100vh) rotate(0deg) scale(0.8);
-    }
-    50% {
-        transform: translateY(50vh) rotate(180deg) scale(1);
-    }
-    100% {
-        transform: translateY(-20vh) rotate(360deg) scale(0.8);
-    }
-}
-
-/* 登录容器 */
-.login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    transform: translate(-50%, -50%);
+    min-width: 100vw;
     min-height: 100vh;
-    padding: 20px;
+    width: auto;
+    height: auto;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease;
 }
 
-.login-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border-radius: 30px;
-    padding: 50px 40px;
+.background-video.active {
+    opacity: 1;
+}
+
+/* 视频名称 - 左下角 */
+.video-name {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    font-weight: 200;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
+    z-index: 100;
+    transition: opacity 0.5s ease;
+}
+
+/* 门 Logo - 右下角 */
+.door-logo {
+    position: fixed;
+    bottom: 28px;
+    right: 30px;
+    width: 40px;
+    height: 56px;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.4s ease;
+    opacity: 0.5;
+}
+
+.door-logo:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.door-logo svg {
     width: 100%;
-    max-width: 420px;
-    box-shadow: 
-        0 20px 60px rgba(251, 111, 146, 0.3),
-        0 0 0 1px rgba(255, 255, 255, 0.5);
-    animation: slideIn 0.6s ease-out;
+    height: 100%;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
 }
 
-@keyframes slideIn {
-    from {
+/* 眼睛切换视频按钮 */
+.eye-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 90px;
+    width: 50px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+}
+
+.eye-toggle:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.eye-toggle svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    overflow: visible;
+}
+
+/* 眨眼动画 */
+.eye-lid-top,
+.eye-lid-bottom {
+    opacity: 0;
+    transition: none;
+}
+
+.eye-toggle.blinking .eye-lid-top {
+    animation: blinkTop 0.35s ease-in-out;
+}
+
+.eye-toggle.blinking .eye-lid-bottom {
+    animation: blinkBottom 0.35s ease-in-out;
+}
+
+@keyframes blinkTop {
+    0% { 
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(-30px);
     }
-    to {
+    40%, 60% { 
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-/* Logo 部分 */
-.logo-section {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.logo-circle {
-    width: 90px;
-    height: 90px;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, #FF8FAB, #FFB3C6);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 
-        0 8px 24px rgba(251, 111, 146, 0.4),
-        inset 0 -2px 8px rgba(0, 0, 0, 0.1);
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
+    100% { 
+        opacity: 0;
+        transform: translateY(-30px);
     }
 }
 
-.heart-icon {
-    width: 48px;
-    height: 48px;
-    color: white;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+@keyframes blinkBottom {
+    0% { 
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    40%, 60% { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateY(30px);
+    }
 }
 
-.app-title {
-    font-size: 36px;
-    font-weight: 700;
-    background: linear-gradient(135deg, #FF8FAB, #FB6F92);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 8px;
-    letter-spacing: -0.5px;
-}
-
-.app-subtitle {
-    font-size: 15px;
-    color: #FF8FAB;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-/* 表单样式 */
-.login-form {
-    margin-bottom: 30px;
-}
-
-.input-group {
-    margin-bottom: 24px;
-}
-
-.input-group label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-    letter-spacing: 0.3px;
-}
-
-.input-group select,
-.input-group input {
+/* 磨砂玻璃登录界面 */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    padding: 16px 20px;
-    font-size: 16px;
-    border: 2px solid #FFE5EC;
-    border-radius: 16px;
-    background: white;
-    color: #333;
-    transition: all 0.3s ease;
-    font-family: inherit;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    z-index: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
 }
 
-.input-group select:focus,
-.input-group input:focus {
-    outline: none;
-    border-color: #FFB3C6;
-    background: #FFF9FB;
-    box-shadow: 0 4px 16px rgba(251, 111, 146, 0.15);
-    transform: translateY(-2px);
+.login-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-.input-group select {
+.login-container {
+    text-align: center;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.6s ease 0.15s;
+}
+
+.login-overlay.visible .login-container {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* 用户选择 */
+.user-selection {
+    display: flex;
+    gap: 80px;
+    margin-bottom: 50px;
+    justify-content: center;
+}
+
+.user-btn {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.4);
+    background: transparent;
+    border: none;
     cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23FF8FAB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 20px;
+    padding: 12px 30px;
+    transition: all 0.5s ease;
+    position: relative;
+    letter-spacing: 3px;
 }
 
-/* 错误消息 */
+.user-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    width: 0;
+    height: 1px;
+    background: currentColor;
+    transition: all 0.4s ease;
+    transform: translateX(-50%);
+}
+
+.user-btn:hover {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.user-btn:hover::after {
+    width: 60%;
+}
+
+.user-btn.wiwi.selected {
+    color: var(--wiwi-color);
+    text-shadow: 0 0 30px var(--wiwi-glow), 0 0 60px var(--wiwi-glow);
+}
+
+.user-btn.wiwi.selected::after {
+    width: 80%;
+    background: var(--wiwi-color);
+    box-shadow: 0 0 10px var(--wiwi-glow);
+}
+
+.user-btn.yuyu.selected {
+    color: var(--yuyu-color);
+    text-shadow: 0 0 30px var(--yuyu-glow), 0 0 60px var(--yuyu-glow);
+}
+
+.user-btn.yuyu.selected::after {
+    width: 80%;
+    background: var(--yuyu-color);
+    box-shadow: 0 0 10px var(--yuyu-glow);
+}
+
+/* 密码输入框 - 极简一条线设计 */
+.password-container {
+    position: relative;
+    width: 200px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.5s ease;
+    pointer-events: none;
+}
+
+.password-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.password-input {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 16px;
+    font-weight: 200;
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    letter-spacing: 6px;
+    outline: none;
+    caret-color: rgba(255, 255, 255, 0.5);
+}
+
+.password-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+    letter-spacing: 2px;
+}
+
+.password-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.4s ease;
+}
+
+.password-line::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.6);
+    transition: all 0.4s ease;
+    transform: translateX(-50%);
+}
+
+.password-input:focus + .password-line::after {
+    width: 100%;
+}
+
+/* 错误提示 */
 .error-message {
-    color: #FF6B9D;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 12px 16px;
-    background: #FFF0F5;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: none;
-    animation: shake 0.5s ease;
+    margin-top: 25px;
+    font-size: 12px;
+    font-weight: 200;
+    color: rgba(255, 150, 150, 0.8);
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .error-message.show {
-    display: block;
+    opacity: 1;
 }
 
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
-}
-
-/* 登录按钮 */
-.login-button {
-    width: 100%;
-    padding: 18px 24px;
-    font-size: 17px;
-    font-weight: 600;
-    color: white;
-    background: linear-gradient(135deg, #FF8FAB, #FB6F92);
-    border: none;
-    border-radius: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 
-        0 8px 24px rgba(251, 111, 146, 0.4),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.login-button::before {
-    content: '';
+/* 关闭按钮 */
+.close-login {
     position: absolute;
-    top: 0;
-    left: -100%;
+    top: 30px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: all 0.4s ease;
+}
+
+.close-login:hover {
+    opacity: 0.8;
+    transform: rotate(90deg);
+}
+
+.close-login svg {
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s ease;
 }
 
-.login-button:hover::before {
-    left: 100%;
-}
-
-.login-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-        0 12px 32px rgba(251, 111, 146, 0.5),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.login-button:active {
-    transform: translateY(0);
-}
-
-.button-icon {
-    width: 20px;
-    height: 20px;
-    transition: transform 0.3s ease;
-}
-
-.login-button:hover .button-icon {
-    transform: translateX(4px);
-}
-
-/* 页脚文字 */
-.footer-text {
-    text-align: center;
-    margin-top: 30px;
-}
-
-.footer-text p {
-    font-size: 14px;
-    color: #FF8FAB;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-/* 响应式设计 */
-@media (max-width: 480px) {
-    .login-card {
-        padding: 40px 30px;
-        border-radius: 24px;
+/* 响应式 */
+@media (max-width: 600px) {
+    .user-selection {
+        gap: 50px;
     }
-
-    .app-title {
-        font-size: 32px;
+    
+    .user-btn {
+        font-size: 22px;
+        padding: 10px 20px;
     }
-
-    .logo-circle {
-        width: 80px;
-        height: 80px;
+    
+    .password-container {
+        width: 180px;
     }
-
-    .heart-icon {
-        width: 42px;
-        height: 42px;
+    
+    .video-name {
+        font-size: 11px;
+        bottom: 20px;
+        left: 20px;
+    }
+    
+    .door-logo {
+        bottom: 18px;
+        right: 20px;
+        width: 35px;
+        height: 49px;
+    }
+    
+    .eye-toggle {
+        bottom: 22px;
+        right: 70px;
+        width: 40px;
+        height: 24px;
     }
 }
