@@ -38,7 +38,22 @@ class CityPage {
             '波特兰': 'Portland', 'Portland': '波特兰',
             '迈阿密': 'Miami', 'Miami': '迈阿密',
             '亚特兰大': 'Atlanta', 'Atlanta': '亚特兰大',
-            '华盛顿': 'Washington DC', 'Washington DC': '华盛顿'
+            '华盛顿': 'Washington DC', 'Washington DC': '华盛顿',
+            // 中国城市
+            '香港': 'Hong Kong', 'Hong Kong': '香港',
+            '上海': 'Shanghai', 'Shanghai': '上海',
+            '北京': 'Beijing', 'Beijing': '北京',
+            '深圳': 'Shenzhen', 'Shenzhen': '深圳',
+            '广州': 'Guangzhou', 'Guangzhou': '广州',
+            '杭州': 'Hangzhou', 'Hangzhou': '杭州',
+            '南京': 'Nanjing', 'Nanjing': '南京',
+            '成都': 'Chengdu', 'Chengdu': '成都',
+            '重庆': 'Chongqing', 'Chongqing': '重庆',
+            '西安': 'Xi\'an', 'Xi\'an': '西安',
+            '苏州': 'Suzhou', 'Suzhou': '苏州',
+            '武汉': 'Wuhan', 'Wuhan': '武汉',
+            '澳门': 'Macau', 'Macau': '澳门',
+            '台北': 'Taipei', 'Taipei': '台北'
         };
         
         // 分页配置
@@ -54,6 +69,9 @@ class CityPage {
         
         // 上传相关
         this.uploadFiles = [];
+        
+        // 云相册数据
+        this.cloudAlbums = [];
         
         // 背景颜色配置
         this.colorPresets = {
@@ -83,10 +101,12 @@ class CityPage {
         
         await this.initCloud();
         await this.loadCityData();
+        await this.loadCloudAlbums();
         
         this.renderGallery();
         this.renderMoments();
         this.renderTimeline();
+        this.renderCloudAlbums();
         
         this.bindEvents();
         this.setupAddMoment();
@@ -1013,6 +1033,90 @@ class CityPage {
                 </div>
             </div>
         `;
+    }
+    
+    // ==========================================
+    // Cloud Album - 云相册
+    // ==========================================
+    
+    async loadCloudAlbums() {
+        try {
+            const response = await fetch('data/cloud-albums.json');
+            if (!response.ok) {
+                console.warn('Cloud albums config not found');
+                this.cloudAlbums = [];
+                return;
+            }
+            const data = await response.json();
+            
+            // 获取当前城市名和可能的别名
+            const cityName = decodeURIComponent(this.cityName);
+            const alternateName = this.cityNameMap[cityName];
+            const cityNames = alternateName ? [cityName, alternateName] : [cityName];
+            
+            // 过滤出属于当前城市的云相册
+            this.cloudAlbums = (data.albums || []).filter(album => {
+                return cityNames.some(name => 
+                    album.city === name || 
+                    album.cityEn === name ||
+                    album.city?.toLowerCase() === name.toLowerCase() ||
+                    album.cityEn?.toLowerCase() === name.toLowerCase()
+                );
+            });
+            
+            console.log(`✅ Loaded ${this.cloudAlbums.length} cloud albums for ${cityName}`);
+        } catch (e) {
+            console.error('Failed to load cloud albums:', e);
+            this.cloudAlbums = [];
+        }
+    }
+    
+    renderCloudAlbums() {
+        const container = document.getElementById('cloudAlbumContainer');
+        const list = document.getElementById('cloudAlbumList');
+        const emptyState = document.getElementById('cloudAlbumEmpty');
+        const cloudAlbumTab = document.getElementById('cloudAlbumTab');
+        
+        if (this.cloudAlbums.length === 0) {
+            if (container) container.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            // 隐藏云相册 tab 按钮（如果没有云相册）
+            // if (cloudAlbumTab) cloudAlbumTab.style.display = 'none';
+            return;
+        }
+        
+        if (container) container.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'none';
+        // 显示云相册 tab
+        // if (cloudAlbumTab) cloudAlbumTab.style.display = 'flex';
+        
+        list.innerHTML = this.cloudAlbums.map((album, index) => {
+            const formattedDate = album.createdAt ? this.formatDate(album.createdAt) : '';
+            
+            return `
+                <a href="${album.albumUrl}" target="_blank" rel="noopener noreferrer" class="cloud-album-card" data-index="${index}">
+                    <div class="cloud-album-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="cloud-album-info">
+                        <h3 class="cloud-album-name">${album.albumName || 'Google Photos 相册'}</h3>
+                        <p class="cloud-album-desc">${album.description || '点击访问 Google Photos'}</p>
+                        ${formattedDate ? `<span class="cloud-album-date">${formattedDate}</span>` : ''}
+                    </div>
+                    <div class="cloud-album-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                            <polyline points="15,3 21,3 21,9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </div>
+                </a>
+            `;
+        }).join('');
     }
     
     // ==========================================

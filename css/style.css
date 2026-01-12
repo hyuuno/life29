@@ -43,6 +43,23 @@
 [data-bg="pink"] { --color-bg: #f1e5e6; }
 [data-bg="warm"] { --color-bg: #f0e8db; }
 [data-bg="blue"] { --color-bg: #d7e3ee; }
+[data-bg="gradient"] {
+    --color-bg: transparent;
+    background: 
+        radial-gradient(ellipse 140% 120% at 10% 15%, rgba(255, 182, 193, 0.65) 0%, transparent 58%),
+        radial-gradient(ellipse 150% 130% at 92% 8%, rgba(255, 218, 185, 0.6) 0%, transparent 62%),
+        radial-gradient(ellipse 130% 145% at 82% 88%, rgba(173, 216, 230, 0.62) 0%, transparent 60%),
+        radial-gradient(ellipse 145% 125% at 18% 92%, rgba(255, 253, 208, 0.65) 0%, transparent 56%),
+        radial-gradient(ellipse 120% 135% at 52% 45%, rgba(221, 160, 221, 0.45) 0%, transparent 68%),
+        radial-gradient(ellipse 110% 100% at 35% 60%, rgba(255, 200, 220, 0.35) 0%, transparent 50%),
+        linear-gradient(135deg, 
+            rgba(255, 248, 250, 1) 0%,
+            rgba(248, 250, 255, 1) 25%,
+            rgba(250, 255, 252, 1) 50%,
+            rgba(255, 252, 248, 1) 75%,
+            rgba(252, 248, 255, 1) 100%
+        );
+}
 
 [data-theme="dark"] {
     --color-primary: #D4969B;
@@ -172,7 +189,15 @@ body {
 [data-theme="dark"] .theme-toggle .icon-sun { display: none; }
 
 /* Color Picker Dropdown */
+/* Color Picker Dropdown */
 .color-picker-dropdown { position: relative; }
+
+/* 使用特殊字符作为图标 */
+.color-icon {
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 400;
+}
 
 .color-picker-menu {
     min-width: auto;
@@ -183,20 +208,43 @@ body {
     gap: 8px;
 }
 .color-swatch-btn {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: var(--radius-full);
     border: 2px solid transparent;
     cursor: pointer;
     transition: all 0.2s;
+    padding: 0;
 }
-.color-swatch-btn:hover { transform: scale(1.1); }
-.color-swatch-btn.active { border-color: var(--color-text); }
+.color-swatch-btn:hover { 
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.color-swatch-btn.active { 
+    border-color: var(--color-text); 
+    box-shadow: 0 0 0 1px var(--color-text);
+}
 
 .color-swatch-btn[data-bg="gray"] { background: #e8e8e8; }
 .color-swatch-btn[data-bg="pink"] { background: #f1e5e6; }
 .color-swatch-btn[data-bg="warm"] { background: #f0e8db; }
 .color-swatch-btn[data-bg="blue"] { background: #d7e3ee; }
+
+/* 渐变按钮样式 */
+.color-swatch-btn[data-bg="gradient"] { 
+    background: 
+        radial-gradient(ellipse 120% 100% at 15% 20%, rgba(255, 182, 193, 0.95) 0%, transparent 50%),
+        radial-gradient(ellipse 130% 110% at 88% 12%, rgba(255, 218, 185, 0.9) 0%, transparent 55%),
+        radial-gradient(ellipse 110% 120% at 78% 85%, rgba(173, 216, 230, 0.9) 0%, transparent 52%),
+        radial-gradient(ellipse 125% 105% at 22% 90%, rgba(255, 253, 208, 0.92) 0%, transparent 48%),
+        radial-gradient(ellipse 100% 115% at 50% 48%, rgba(221, 160, 221, 0.7) 0%, transparent 60%),
+        linear-gradient(135deg, 
+            rgba(255, 245, 248, 1) 0%,
+            rgba(245, 248, 255, 1) 33%,
+            rgba(248, 255, 250, 1) 66%,
+            rgba(255, 253, 248, 1) 100%
+        );
+}
 
 [data-theme="dark"] .color-picker-dropdown { display: none; }
 
