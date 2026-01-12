@@ -1,0 +1,32 @@
+{
+  "songs": [
+    {
+      "id": "song_001",
+      "title": "カタオモイ",
+      "titleCn": "单相思",
+      "artist": "Aimer",
+      "album": "THE FIRST TAKE",
+      "language": "日语",
+      "genre": "J-Pop / Ballad",
+      "thoughts": "温柔又带着淡淡忧伤，像深夜独自看窗外的雨",
+      "duration": 285,
+      "file": "music/Aimer_-_カタオモイ_-_From_THE_FIRST_TAKE__单相思_.mp3",
+      "cover": "covers/aimer_kataomoi.svg",
+      "addedAt": "2024-12-15"
+    },
+    {
+      "id": "song_002",
+      "title": "时光",
+      "titleCn": "时光",
+      "artist": "尼格买提·热合曼",
+      "album": "时光",
+      "language": "中文",
+      "genre": "华语流行",
+      "thoughts": "听着会想起很多回忆，适合一个人发呆的时候",
+      "duration": 268,
+      "file": "music/尼格买提_热合曼_-_时光.mp3",
+      "cover": "covers/shiguang.svg",
+      "addedAt": "2024-12-15"
+    }
+  ]
+}

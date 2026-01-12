@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 🔐 认证检查脚本 - 保护页面访问 -->
+    <script src="auth-check.js"></script>
+    <title>城市 · Life29</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/city.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E💕%3C/text%3E%3C/svg%3E">
+</head>
+<body class="city-page" style="overflow-y: auto;">
+    <div class="noise-overlay"></div>
+    
+    <!-- 头部导航 -->
+    <header class="header header-city">
+        <a href="index.html" class="back-btn" title="返回地球">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+        </a>
+        <a href="index.html" class="logo">
+            <span class="logo-text">Life</span>
+            <span class="logo-number">29</span>
+        </a>
+        <div class="header-actions">
+            <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <div class="user-dropdown" id="userDropdown">
+                <button class="btn-icon user-btn" id="userBtn" title="用户">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </button>
+                <div class="dropdown-menu" id="userMenu">
+                    <div class="dropdown-label">选择用户</div>
+                    <button class="dropdown-item user-wiwi" data-user="wiwi"><span class="user-avatar">W</span><span class="user-name">wiwi</span></button>
+                    <button class="dropdown-item user-yuyu" data-user="yuyu"><span class="user-avatar">Y</span><span class="user-name">yuyu</span></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 封面区域 - 互动背景 -->
+    <section class="city-cover" id="cityCover">
+        <canvas class="cover-canvas" id="coverCanvas"></canvas>
+        <div class="cover-overlay"></div>
+        <div class="cover-content">
+            <h1 class="city-name" id="cityName">加载中...</h1>
+            <p class="city-country" id="cityCountry"></p>
+            <div class="city-stats">
+                <span class="stat-item"><span class="stat-num" id="photoCount">0</span> 张照片</span>
+                <span class="stat-divider">·</span>
+                <span class="stat-item"><span class="stat-num" id="momentCount">0</span> 篇日志</span>
+            </div>
+        </div>
+        <!-- 调色板按钮 -->
+        <div class="color-palette-dropdown" id="colorPaletteDropdown">
+            <button class="color-palette-btn" id="colorPaletteBtn" title="选择背景颜色">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.3"/>
+                    <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                </svg>
+            </button>
+            <div class="color-palette-menu" id="colorPaletteMenu">
+                <div class="palette-label">选择背景色</div>
+                <div class="palette-options">
+                    <button class="palette-option" data-color="rose" title="玫瑰粉">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(350, 60%, 80%), hsl(370, 50%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="sky" title="天空蓝">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(200, 60%, 80%), hsl(220, 50%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="mint" title="薄荷绿">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(160, 50%, 75%), hsl(180, 40%, 50%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="lavender" title="薰衣草紫">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(270, 50%, 80%), hsl(290, 40%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="peach" title="蜜桃橙">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(30, 70%, 80%), hsl(50, 60%, 55%));"></span>
+                    </button>
+                    <button class="palette-option" data-color="gold" title="金色">
+                        <span class="palette-swatch" style="background: linear-gradient(135deg, hsl(45, 60%, 80%), hsl(65, 50%, 55%));"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 添加 Moment 按钮 -->
+        <button class="add-moment-btn" id="addMomentBtn" title="添加新回忆">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+    </section>
+
+    <!-- 子页面标签 -->
+    <section class="city-tabs">
+        <div class="tabs-container">
+            <button class="tab-btn" data-tab="cloudAlbum" id="cloudAlbumTab">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                </svg>
+                <span>Cloud Album</span>
+            </button>
+            <button class="tab-btn active" data-tab="gallery">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="m21 15-5-5L5 21"/>
+                </svg>
+                <span>Gallery</span>
+            </button>
+            <button class="tab-btn" data-tab="moments">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                    <path d="M16 13H8M16 17H8M10 9H8"/>
+                </svg>
+                <span>Moments</span>
+            </button>
+            <button class="tab-btn" data-tab="timeline">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span>Activity</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- 内容区域 -->
+    <main class="city-content">
+        <!-- Cloud Album 标签页 -->
+        <div class="tab-panel" id="cloudAlbumPanel">
+            <div class="cloud-album-container" id="cloudAlbumContainer">
+                <div class="cloud-album-header">
+                    <svg class="cloud-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    </svg>
+                    <h2>Google Photos 云相册</h2>
+                    <p class="cloud-album-subtitle">点击下方链接访问完整的云端相册</p>
+                </div>
+                <div class="cloud-album-list" id="cloudAlbumList">
+                    <!-- 动态加载云相册列表 -->
+                </div>
+            </div>
+            <div class="empty-state" id="cloudAlbumEmpty" style="display: none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    <line x1="8" y1="12" x2="16" y2="12" opacity="0.5"/>
+                </svg>
+                <p>暂无云相册</p>
+                <span>此城市尚未绑定 Google Photos 相册</span>
+            </div>
+        </div>
+
+        <!-- Gallery 标签页 -->
+        <div class="tab-panel active" id="galleryPanel">
+            <div class="gallery-years" id="galleryYears"></div>
+            <div class="gallery-photos hidden" id="galleryPhotos">
+                <button class="gallery-back" id="galleryBack">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                    返回相册列表
+                </button>
+                <h3 class="gallery-year-title" id="galleryYearTitle"></h3>
+                <div class="photos-grid" id="photosGrid"></div>
+                <div class="pagination" id="galleryPagination"></div>
+            </div>
+            <div class="empty-state" id="galleryEmpty" style="display: none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="m21 15-5-5L5 21"/>
+                </svg>
+                <p>还没有照片</p>
+                <span>点击右上角 + 按钮添加回忆</span>
+            </div>
+        </div>
+
+        <!-- Moments 标签页 -->
+        <div class="tab-panel" id="momentsPanel">
+            <div class="moments-list" id="momentsList"></div>
+            <div class="pagination" id="momentsPagination"></div>
+            <div class="empty-state" id="momentsEmpty" style="display: none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                </svg>
+                <p>还没有日志</p>
+                <span>记录你们在这里的美好时光</span>
+            </div>
+        </div>
+
+        <!-- Activity 标签页 -->
+        <div class="tab-panel" id="timelinePanel">
+            <div class="timeline-container" id="timelineContainer">
+                <div class="timeline-items" id="timelineItems"></div>
+            </div>
+            <div class="empty-state" id="timelineEmpty" style="display: none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    <circle cx="12" cy="18" r="2"/>
+                </svg>
+                <p>时间线为空</p>
+                <span>上传照片或日志后会在这里显示</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加 Moment 模态框 -->
+    <div class="modal hidden" id="addMomentModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content add-moment-modal">
+            <button class="modal-close" id="closeAddMomentModal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="modal-header">
+                <h2>记录这一刻</h2>
+                <p id="addMomentCity"></p>
+            </div>
+            <form id="addMomentForm" class="add-moment-form">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="momentDate" required>
+                </div>
+                <div class="form-group">
+                    <label>照片 (可选)</label>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <input type="file" id="momentImages" accept="image/*" multiple hidden>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <path d="m21 15-5-5L5 21"/>
+                        </svg>
+                        <span>点击或拖拽上传照片</span>
+                    </div>
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="momentContent" rows="4" placeholder="写下这一刻的感受..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelAddMoment">取消</button>
+                    <button type="submit" class="btn-primary" id="submitMoment">
+                        <span class="btn-text">上传</span>
+                        <span class="btn-loading hidden">上传中...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Moment 详情模态框 -->
+    <div class="modal hidden" id="momentModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content moment-detail">
+            <button class="modal-close" id="closeMomentModal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="moment-detail-header">
+                <span class="moment-detail-date" id="momentDetailDate"></span>
+                <span class="moment-detail-user" id="momentDetailUser"></span>
+            </div>
+            <div class="moment-detail-images" id="momentDetailImages"></div>
+            <div class="moment-detail-content" id="momentDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- 图片查看器 -->
+    <div id="imageViewer" class="image-viewer hidden">
+        <div class="viewer-backdrop"></div>
+        <button class="viewer-close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M18 6 6 18M6 6l12 12"></path>
+            </svg>
+        </button>
+        <button class="viewer-nav viewer-prev">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+        </button>
+        <button class="viewer-nav viewer-next">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="m9 18 6-6-6-6"></path>
+            </svg>
+        </button>
+        <div class="viewer-content">
+            <img id="viewerImage" src="" alt="">
+            <p class="viewer-caption" id="viewerCaption"></p>
+        </div>
+        <div class="viewer-counter" id="viewerCounter"></div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="js/config.js"></script>
+    <script src="js/cloudinary-service.js"></script>
+    <script src="js/supabase-service.js"></script>
+    <script src="js/global-music.js"></script>
+    <script src="js/city-page.js"></script>
+</body>
+</html>
