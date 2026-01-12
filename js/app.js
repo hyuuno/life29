@@ -785,7 +785,6 @@ class App {
                 </div>
             `;
         }).join('');
-        }).join('');
         
         // 绑定点击事件
         container.querySelectorAll('.ranking-item').forEach(item => {
