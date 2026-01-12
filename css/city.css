@@ -1371,6 +1371,143 @@ body.city-page {
     padding: var(--space-2xl) 0;
 }
 
+/* Cloud Album Bind Form */
+.cloud-album-bind {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.bind-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--color-text-light);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-md);
+}
+
+.bind-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-md);
+    background: transparent;
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.bind-toggle-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.05);
+}
+
+.bind-form {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.bind-form.show {
+    display: flex;
+}
+
+.bind-form.show + .bind-toggle-btn {
+    display: none;
+}
+
+.bind-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.bind-input-group label {
+    font-size: 0.8125rem;
+    color: var(--color-text-light);
+}
+
+.bind-input {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.bind-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.bind-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.bind-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+    margin-top: var(--space-sm);
+}
+
+/* Cloud Album Preview Info */
+.cloud-album-preview {
+    margin-top: var(--space-lg);
+    padding: var(--space-lg);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.preview-header svg {
+    color: var(--color-primary);
+}
+
+.preview-content {
+    display: grid;
+    gap: var(--space-sm);
+}
+
+.preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8125rem;
+}
+
+.preview-label {
+    color: var(--color-text-muted);
+}
+
+.preview-value {
+    color: var(--color-text);
+    text-align: right;
+}
+
 /* ============================================
    响应式
    ============================================ */

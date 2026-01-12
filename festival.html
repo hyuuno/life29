@@ -5,289 +5,214 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 🔐 认证检查脚本 - 保护页面访问 -->
     <script src="auth-check.js"></script>
-    <title>元旦快乐 · Life29</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎆%3C/text%3E%3C/svg%3E">
+    <title>节日 · Life29</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎉%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .festival-selector {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
         
-        body {
-            font-family: 'Noto Serif SC', serif;
+        .festival-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+        }
+        
+        .festival-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--color-text);
+            margin-bottom: 8px;
+            letter-spacing: 0.1em;
+        }
+        
+        .festival-subtitle {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-bottom: 48px;
+        }
+        
+        .festival-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .festival-card {
+            position: relative;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 32px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
             overflow: hidden;
-            cursor: crosshair;
-            background: #000;
         }
         
-        .festival-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(to bottom, #0a0a15 0%, #1a1a2e 50%, #16213e 100%);
-        }
-        
-        #fireworksCanvas {
+        .festival-card::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
             right: 0;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+            height: 4px;
+            background: var(--festival-gradient, linear-gradient(90deg, #ff6b6b, #feca57));
+            opacity: 0;
+            transition: opacity 0.3s;
         }
         
-        .logo {
-            display: flex;
-            align-items: baseline;
-            gap: 2px;
-            text-decoration: none;
-        }
-        .logo-text {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.75rem;
-            font-weight: 300;
-            color: #fff;
-        }
-        .logo-number {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1rem;
-            color: #ffb7c5;
-            margin-left: 2px;
+        .festival-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+            border-color: transparent;
         }
         
-        .nav { display: flex; gap: 8px; align-items: center; }
-        .nav-link {
-            font-size: 0.875rem;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            transition: all 0.3s;
+        .festival-card:hover::before {
+            opacity: 1;
         }
-        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.1); }
-        .nav-link.active { color: #fff; background: rgba(255,255,255,0.15); }
         
-        .settings-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: rgba(255,255,255,0.8);
-            cursor: pointer;
+        .festival-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
-            margin-left: 8px;
-        }
-        .settings-btn:hover {
-            border-color: rgba(255,255,255,0.6);
-            color: #fff;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: var(--festival-bg, linear-gradient(135deg, rgba(255,107,107,0.1), rgba(254,202,87,0.1)));
         }
         
-        .settings-panel {
-            position: fixed;
-            top: 70px;
-            right: 40px;
-            width: 280px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 16px;
-            padding: 20px;
-            z-index: 200;
-            display: none;
-            color: #fff;
-        }
-        .settings-panel.show { display: block; }
-        
-        .settings-title {
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 16px;
-            letter-spacing: 0.1em;
-        }
-        
-        .setting-group { margin-bottom: 16px; }
-        .setting-group:last-child { margin-bottom: 0; }
-        
-        .setting-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.8);
+        .festival-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
             margin-bottom: 8px;
+            color: var(--color-text);
         }
-        .setting-value {
-            color: rgba(255,255,255,0.5);
+        
+        .festival-desc {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        
+        .festival-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--color-bg-elevated);
+            border-radius: 20px;
             font-size: 0.75rem;
+            color: var(--color-text-light);
         }
         
-        .setting-slider {
-            width: 100%;
-            height: 4px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
-            outline: none;
-        }
-        .setting-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-        }
-        .setting-slider::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            border: none;
+        .festival-tag svg {
+            opacity: 0.6;
         }
         
-        .setting-row {
-            display: flex;
-            gap: 12px;
+        /* 元旦卡片特殊样式 */
+        .festival-card.newyear {
+            --festival-gradient: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            --festival-bg: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(254,202,87,0.1));
         }
-        .setting-row .setting-group { flex: 1; }
         
-        .greeting {
-            position: fixed;
-            top: 45%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 50;
+        /* 春节卡片样式（预留） */
+        .festival-card.spring {
+            --festival-gradient: linear-gradient(90deg, #ff4757, #ff6b6b);
+            --festival-bg: linear-gradient(135deg, rgba(255,71,87,0.1), rgba(255,107,107,0.1));
+        }
+        
+        /* 情人节卡片样式（预留） */
+        .festival-card.valentine {
+            --festival-gradient: linear-gradient(90deg, #ff6b6b, #ff9ff3);
+            --festival-bg: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,159,243,0.1));
+        }
+        
+        /* 圣诞节卡片样式（预留） */
+        .festival-card.christmas {
+            --festival-gradient: linear-gradient(90deg, #2ecc71, #ff4757);
+            --festival-bg: linear-gradient(135deg, rgba(46,204,113,0.1), rgba(255,71,87,0.1));
+        }
+        
+        .coming-soon {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 10px;
+            background: var(--color-text-muted);
+            color: var(--color-bg);
+            border-radius: 12px;
+            font-size: 0.6875rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .festival-card.disabled {
+            opacity: 0.6;
             pointer-events: none;
         }
         
-        .greeting-year {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 8rem;
-            font-weight: 300;
-            color: #fff;
-            text-shadow: 0 4px 30px rgba(255,180,200,0.5);
-            line-height: 1;
-            animation: glow 3s ease-in-out infinite;
-        }
-        
-        .greeting-text {
-            font-size: 2rem;
-            font-weight: 300;
-            color: #fff;
-            margin-top: 10px;
-            letter-spacing: 0.3em;
-        }
-        
-        .greeting-sub {
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.7);
-            margin-top: 20px;
-            letter-spacing: 0.05em;
-            min-height: 1.5em;
-            transition: opacity 0.5s;
-        }
-        
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 4px 30px rgba(255,180,200,0.5); }
-            50% { text-shadow: 0 4px 50px rgba(255,200,150,0.8), 0 0 80px rgba(255,150,100,0.3); }
-        }
-        
-        .hint {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.5);
-            font-size: 0.75rem;
-            letter-spacing: 0.1em;
-            z-index: 50;
-        }
-        
-        .celebrate-btn {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 16px 40px;
+        .add-festival {
+            border: 2px dashed var(--color-border);
             background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
             cursor: pointer;
-            z-index: 100;
-            transition: all 0.3s;
-        }
-        .celebrate-btn:hover {
-            border-color: rgba(255,255,255,0.6);
-            transform: translateX(-50%) scale(1.05);
-            box-shadow: 0 0 30px rgba(255,150,200,0.3);
-        }
-        .celebrate-btn:active { transform: translateX(-50%) scale(0.98); }
-        
-        .celebrate-text {
-            font-family: 'Noto Serif SC', serif;
-            font-size: 1rem;
-            font-weight: 400;
-            letter-spacing: 0.1em;
-            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #5f27cd, #ff6b6b);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: shimmer 3s linear infinite;
         }
         
-        @keyframes shimmer {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
+        .add-festival:hover {
+            border-color: var(--color-primary);
+            background: rgba(var(--color-primary-rgb), 0.02);
         }
         
-        .sound-toggle {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
-            width: 50px;
-            height: 50px;
+        .add-festival-icon {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 100;
-            transition: all 0.3s;
+            background: var(--color-bg-elevated);
+            color: var(--color-text-muted);
+            margin-bottom: 12px;
         }
-        .sound-toggle:hover { background: rgba(255,255,255,0.2); }
-        .sound-toggle.muted svg { opacity: 0.4; }
+        
+        .add-festival-text {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+        }
+        
+        @media (max-width: 768px) {
+            .festival-title {
+                font-size: 2rem;
+            }
+            
+            .festival-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="festival-container">
-        <canvas id="fireworksCanvas"></canvas>
-    </div>
+    <div class="noise-overlay"></div>
     
     <header class="header">
         <a href="index.html" class="logo">
@@ -300,689 +225,114 @@
             <a href="music.html" class="nav-link">Music</a>
             <a href="relax.html" class="nav-link">Relax</a>
             <a href="festival.html" class="nav-link active">节日</a>
-            <button class="settings-btn" id="settingsBtn" title="设置">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-            </button>
         </nav>
+        <div class="header-actions">
+            <button class="btn-icon theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
     </header>
     
-    <div class="settings-panel" id="settingsPanel">
-        <div class="settings-title">烟花设置</div>
-        
-        <div class="setting-row">
-            <div class="setting-group">
-                <div class="setting-label">
-                    <span>最小大小</span>
-                    <span class="setting-value" id="minScaleValue">0.5</span>
+    <main class="festival-selector">
+        <div class="festival-content">
+            <h1 class="festival-title">Festivals</h1>
+            <p class="festival-subtitle">选择要进入的节日页面</p>
+            
+            <div class="festival-grid">
+                <!-- 元旦 / New Year -->
+                <a href="festivals/newyear.html" class="festival-card newyear">
+                    <div class="festival-icon">🎆</div>
+                    <h2 class="festival-name">元旦</h2>
+                    <p class="festival-desc">烟花绽放，迎接新的一年。点击任意位置发射烟花，享受跨年的喜悦。</p>
+                    <span class="festival-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        1月1日
+                    </span>
+                </a>
+                
+                <!-- 开发者添加区域 -->
+                <div class="festival-card add-festival" onclick="showAddGuide()">
+                    <div class="add-festival-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </div>
+                    <span class="add-festival-text">添加新节日</span>
                 </div>
-                <input type="range" class="setting-slider" id="minScale" min="0.3" max="1.5" step="0.1" value="0.5">
             </div>
-            <div class="setting-group">
-                <div class="setting-label">
-                    <span>最大大小</span>
-                    <span class="setting-value" id="maxScaleValue">1.5</span>
+        </div>
+    </main>
+    
+    <!-- 添加节日引导弹窗 -->
+    <div class="modal hidden" id="addGuideModal">
+        <div class="modal-backdrop" onclick="closeAddGuide()"></div>
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="modal-close" onclick="closeAddGuide()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div style="padding: 24px;">
+                <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; margin-bottom: 16px;">添加新节日页面</h2>
+                <p style="color: var(--color-text-muted); margin-bottom: 20px; line-height: 1.6;">
+                    你可以在 <code style="background: var(--color-bg-elevated); padding: 2px 6px; border-radius: 4px;">festivals/</code> 文件夹中创建新的节日页面。
+                </p>
+                <div style="background: var(--color-bg-elevated); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <h3 style="font-size: 0.875rem; margin-bottom: 12px; color: var(--color-text-light);">📁 文件夹结构</h3>
+                    <pre style="font-size: 0.8rem; color: var(--color-text-muted); margin: 0; line-height: 1.6;">festivals/
+├── newyear.html    # 元旦
+├── spring.html     # 春节（示例）
+├── valentine.html  # 情人节（示例）
+└── christmas.html  # 圣诞节（示例）</pre>
                 </div>
-                <input type="range" class="setting-slider" id="maxScale" min="1" max="3" step="0.1" value="1.5">
+                <div style="background: var(--color-bg-elevated); border-radius: 8px; padding: 16px;">
+                    <h3 style="font-size: 0.875rem; margin-bottom: 12px; color: var(--color-text-light);">💡 提示</h3>
+                    <ul style="font-size: 0.8rem; color: var(--color-text-muted); margin: 0; padding-left: 20px; line-height: 1.8;">
+                        <li>参考 <code>newyear.html</code> 的结构创建新页面</li>
+                        <li>记得更新 <code>festival.html</code> 添加入口卡片</li>
+                        <li>使用 <code>../</code> 前缀引用父目录资源</li>
+                    </ul>
+                </div>
             </div>
-        </div>
-        
-        <div class="setting-group">
-            <div class="setting-label">
-                <span>最大烟花数</span>
-                <span class="setting-value" id="maxRocketsValue">10</span>
-            </div>
-            <input type="range" class="setting-slider" id="maxRockets" min="5" max="15" step="1" value="10">
-        </div>
-        
-        <div class="setting-group">
-            <div class="setting-label">
-                <span>最大粒子数</span>
-                <span class="setting-value" id="maxParticlesValue">2000</span>
-            </div>
-            <input type="range" class="setting-slider" id="maxParticles" min="1000" max="3000" step="100" value="2000">
-        </div>
-        
-        <div class="settings-title" style="margin-top: 20px;">音量设置</div>
-        
-        <div class="setting-group">
-            <div class="setting-label">
-                <span>背景音乐</span>
-                <span class="setting-value" id="bgmVolumeValue">30%</span>
-            </div>
-            <input type="range" class="setting-slider" id="bgmVolume" min="0" max="100" step="5" value="30">
-        </div>
-        
-        <div class="setting-group">
-            <div class="setting-label">
-                <span>发射音效</span>
-                <span class="setting-value" id="launchVolumeValue">50%</span>
-            </div>
-            <input type="range" class="setting-slider" id="launchVolume" min="0" max="100" step="5" value="50">
-        </div>
-        
-        <div class="setting-group">
-            <div class="setting-label">
-                <span>爆炸音效</span>
-                <span class="setting-value" id="explosionVolumeValue">60%</span>
-            </div>
-            <input type="range" class="setting-slider" id="explosionVolume" min="0" max="100" step="5" value="60">
         </div>
     </div>
     
-    <div class="greeting">
-        <div class="greeting-year">2026</div>
-        <div class="greeting-text">元旦快乐</div>
-        <div class="greeting-sub" id="greetingSub">Happy New Year</div>
-    </div>
-    
-    <button class="celebrate-btn" id="celebrateBtn">
-        <span class="celebrate-text">✨ 在这一刻和爱人一起欢庆元旦！✨</span>
-    </button>
-    
-    <div class="hint">点击屏幕放烟花</div>
-    
-    <button class="sound-toggle" id="soundToggle" title="音效开关">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-        </svg>
-    </button>
-
-    <audio id="bgm" loop preload="auto">
-        <source src="audio/bgm.mp3" type="audio/mpeg">
-    </audio>
-
     <script>
-        const canvas = document.getElementById('fireworksCanvas');
-        const ctx = canvas.getContext('2d');
+        // 主题切换
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('life29-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
         
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        
-        // ============ 祝福语系统 ============
-        const blessings = [
-            "山水万程，二零二六，余生是你",
-            "岁岁更替，唯爱如初",
-            "历添新岁，与君同守",
-            "一如往常，万事胜意，岁岁有你",
-            "不偏不倚，二零二六，还是你",
-            "看遍人间四季，不如陪你一朝一夕",
-            "愿新年的雪，落在你我的白发",
-            "跨过山海，共赴二零二六的清晨",
-            "万物初新，而你是我不变量",
-            "往后余生，春赏百花冬观雪，岁岁年年",
-            "烟火向星辰，所愿皆枕边人",
-            "长路漫漫，你是我唯一的归途",
-            "晨曦初照，二零二六，爱意渐浓",
-            "新岁序开，共赏人间微光",
-            "故事还长，我们慢慢讲",
-            "一岁一礼，一寸欢喜",
-            "二零二六，世界嘈杂，你是我的安稳",
-            "初见是你，往后依然",
-            "愿新年，胜旧年，愿你我，常相见",
-            "岁岁长相守，年年共白头"
-        ];
-        
-        let currentBlessingIndex = 0;
-        const greetingSub = document.getElementById('greetingSub');
-        
-        function updateBlessing() {
-            greetingSub.style.opacity = '0';
-            setTimeout(() => {
-                currentBlessingIndex = Math.floor(Math.random() * blessings.length);
-                greetingSub.textContent = blessings[currentBlessingIndex];
-                greetingSub.style.opacity = '1';
-            }, 500);
-        }
-        
-        setInterval(updateBlessing, 5000);
-        setTimeout(() => {
-            greetingSub.textContent = blessings[Math.floor(Math.random() * blessings.length)];
-        }, 100);
-        
-        // ============ 设置系统 ============
-        const settings = {
-            minScale: 0.5,
-            maxScale: 1.5,
-            maxRockets: 10,
-            maxParticles: 2000,
-            bgmVolume: 0.3,
-            launchVolume: 0.5,
-            explosionVolume: 0.6
-        };
-        
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsPanel = document.getElementById('settingsPanel');
-        
-        settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsPanel.classList.toggle('show');
+        themeToggle?.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('life29-theme', next);
         });
         
-        document.addEventListener('click', (e) => {
-            if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
-                settingsPanel.classList.remove('show');
-            }
+        // 添加引导
+        function showAddGuide() {
+            document.getElementById('addGuideModal')?.classList.remove('hidden');
+        }
+        
+        function closeAddGuide() {
+            document.getElementById('addGuideModal')?.classList.add('hidden');
+        }
+        
+        // ESC 关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAddGuide();
         });
-        
-        function setupSlider(id, valueId, settingKey, suffix = '', multiplier = 1) {
-            const slider = document.getElementById(id);
-            const valueEl = document.getElementById(valueId);
-            
-            slider.addEventListener('input', () => {
-                const val = parseFloat(slider.value);
-                settings[settingKey] = val * multiplier;
-                valueEl.textContent = val + suffix;
-                
-                if (settingKey === 'bgmVolume') bgm.volume = settings.bgmVolume;
-                if (settingKey === 'launchVolume') updateLaunchVolume();
-                if (settingKey === 'explosionVolume') updateExplosionVolume();
-            });
-        }
-        
-        setupSlider('minScale', 'minScaleValue', 'minScale');
-        setupSlider('maxScale', 'maxScaleValue', 'maxScale');
-        setupSlider('maxRockets', 'maxRocketsValue', 'maxRockets');
-        setupSlider('maxParticles', 'maxParticlesValue', 'maxParticles');
-        setupSlider('bgmVolume', 'bgmVolumeValue', 'bgmVolume', '%', 0.01);
-        setupSlider('launchVolume', 'launchVolumeValue', 'launchVolume', '%', 0.01);
-        setupSlider('explosionVolume', 'explosionVolumeValue', 'explosionVolume', '%', 0.01);
-        
-        // ============ 音频系统 ============
-        let soundEnabled = true;
-        let audioInitialized = false;
-        const bgm = document.getElementById('bgm');
-        bgm.volume = settings.bgmVolume;
-        
-        const launchSounds = [];
-        const explosionSounds = [];
-        const SOUND_POOL_SIZE = 10;
-        
-        function initAudio() {
-            if (audioInitialized) return;
-            audioInitialized = true;
-            
-            for (let i = 0; i < SOUND_POOL_SIZE; i++) {
-                const launch = new Audio('audio/launch.mp3');
-                launch.volume = settings.launchVolume;
-                launchSounds.push(launch);
-                
-                const explosion = new Audio('audio/explosion.mp3');
-                explosion.volume = settings.explosionVolume;
-                explosionSounds.push(explosion);
-            }
-            
-            bgm.play().catch(() => {});
-        }
-        
-        function updateLaunchVolume() {
-            launchSounds.forEach(s => s.volume = settings.launchVolume);
-        }
-        
-        function updateExplosionVolume() {
-            explosionSounds.forEach(s => s.volume = settings.explosionVolume);
-        }
-        
-        let launchSoundIndex = 0;
-        let explosionSoundIndex = 0;
-        
-        function playLaunchSound() {
-            if (!soundEnabled || !audioInitialized) return;
-            const sound = launchSounds[launchSoundIndex];
-            sound.currentTime = 0;
-            sound.play().catch(() => {});
-            launchSoundIndex = (launchSoundIndex + 1) % SOUND_POOL_SIZE;
-        }
-        
-        function playExplosionSound() {
-            if (!soundEnabled || !audioInitialized) return;
-            const sound = explosionSounds[explosionSoundIndex];
-            sound.currentTime = 0;
-            sound.play().catch(() => {});
-            explosionSoundIndex = (explosionSoundIndex + 1) % SOUND_POOL_SIZE;
-        }
-        
-        // ============ 粒子系统 ============
-        let particles = [];
-        let rockets = [];
-        let trailSparks = []; // 轨迹火花
-        
-        // 火焰颜色
-        const flameColors = [
-            { r: 255, g: 200, b: 50 },   // 亮黄
-            { r: 255, g: 150, b: 0 },    // 橙色
-            { r: 255, g: 100, b: 0 },    // 深橙
-            { r: 255, g: 80, b: 30 },    // 红橙
-            { r: 255, g: 220, b: 180 },  // 淡黄白
-            { r: 255, g: 255, b: 200 },  // 亮白黄
-        ];
-        
-        function getFlameColor(intensity) {
-            // intensity: 0-1, 1 = 最亮
-            const idx = Math.floor((1 - intensity) * (flameColors.length - 1));
-            const c = flameColors[Math.min(idx, flameColors.length - 1)];
-            const brightness = 0.5 + intensity * 0.5;
-            return `rgb(${Math.floor(c.r * brightness)}, ${Math.floor(c.g * brightness)}, ${Math.floor(c.b * brightness)})`;
-        }
-        
-        class Particle {
-            constructor(x, y, color, vx, vy, size, isLine = false) {
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                this.vx = vx;
-                this.vy = vy;
-                this.size = size;
-                this.alpha = 1;
-                this.decay = 0.006 + Math.random() * 0.008;
-                this.isLine = isLine;
-                if (isLine) {
-                    this.prevX = x;
-                    this.prevY = y;
-                }
-            }
-            
-            update() {
-                if (this.isLine) {
-                    this.prevX = this.x;
-                    this.prevY = this.y;
-                }
-                this.vx *= 0.98;
-                this.vy *= 0.98;
-                this.vy += 0.012;
-                this.x += this.vx;
-                this.y += this.vy;
-                this.alpha -= this.decay;
-            }
-            
-            draw() {
-                if (this.alpha <= 0) return;
-                ctx.globalAlpha = this.alpha;
-                
-                if (this.isLine) {
-                    ctx.strokeStyle = this.color;
-                    ctx.lineWidth = this.size;
-                    ctx.lineCap = 'round';
-                    ctx.beginPath();
-                    ctx.moveTo(this.prevX, this.prevY);
-                    ctx.lineTo(this.x, this.y);
-                    ctx.stroke();
-                } else {
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        }
-        
-        // 轨迹火花类
-        class TrailSpark {
-            constructor(x, y, vx, vy) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx + (Math.random() - 0.5) * 2;
-                this.vy = vy + (Math.random() - 0.5) * 2;
-                this.alpha = 0.8 + Math.random() * 0.2;
-                this.size = 1 + Math.random() * 2;
-                this.decay = 0.02 + Math.random() * 0.03;
-                this.intensity = Math.random(); // 火花强度
-            }
-            
-            update() {
-                this.vy += 0.08; // 重力
-                this.x += this.vx;
-                this.y += this.vy;
-                this.alpha -= this.decay;
-                this.vx *= 0.95;
-                this.vy *= 0.95;
-            }
-            
-            draw() {
-                if (this.alpha <= 0) return;
-                ctx.globalAlpha = this.alpha * this.intensity;
-                ctx.fillStyle = getFlameColor(this.intensity);
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        // 火箭类 - 优化抛物线
-        class Rocket {
-            constructor(startX, startY, targetX, targetY, scale) {
-                this.x = startX;
-                this.y = startY;
-                this.targetX = targetX;
-                this.targetY = targetY;
-                this.scale = scale;
-                this.startX = startX;
-                this.startY = startY;
-                
-                const dx = targetX - startX;
-                const dy = targetY - startY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                // 减小弧度系数，确保不会飞出屏幕
-                // 弧度与水平距离成正比，但有上限
-                const horizontalDist = Math.abs(dx);
-                this.arcHeight = Math.min(horizontalDist * 0.15, 80); // 最大弧高80像素
-                
-                // 飞行时间
-                this.totalFrames = Math.floor(distance / 6) + 40;
-                this.currentFrame = 0;
-                
-                // 轨迹点
-                this.trail = [];
-                this.maxTrail = 30; // 更长的轨迹
-                
-                this.exploded = false;
-                this.colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
-                
-                // 上一帧位置（用于计算速度方向）
-                this.prevX = startX;
-                this.prevY = startY;
-            }
-            
-            update() {
-                this.currentFrame++;
-                const t = this.currentFrame / this.totalFrames;
-                
-                if (t >= 1) {
-                    this.exploded = true;
-                    return;
-                }
-                
-                this.prevX = this.x;
-                this.prevY = this.y;
-                
-                // 简单的抛物线：x线性，y带弧度
-                this.x = this.startX + (this.targetX - this.startX) * t;
-                
-                // y: 线性插值 + 抛物线弧度（向上凸起）
-                const linearY = this.startY + (this.targetY - this.startY) * t;
-                // 抛物线: 在 t=0.5 时达到最高点
-                const arc = this.arcHeight * 4 * t * (1 - t);
-                this.y = linearY - arc;
-                
-                // 确保不会飞出屏幕顶部
-                this.y = Math.max(this.y, 20);
-                
-                // 保存轨迹点（带强度信息）
-                this.trail.push({ 
-                    x: this.prevX, 
-                    y: this.prevY,
-                    intensity: 0.3 + Math.random() * 0.7 // 随机强度
-                });
-                if (this.trail.length > this.maxTrail) {
-                    this.trail.shift();
-                }
-                
-                // 生成轨迹火花
-                const vx = this.x - this.prevX;
-                const vy = this.y - this.prevY;
-                
-                // 随机生成火花
-                if (Math.random() < 0.6) {
-                    trailSparks.push(new TrailSpark(
-                        this.x - vx * 0.5,
-                        this.y - vy * 0.5,
-                        -vx * 0.3,
-                        -vy * 0.3 + 1
-                    ));
-                }
-            }
-            
-            draw() {
-                // 绘制渐变轨迹
-                if (this.trail.length > 1) {
-                    for (let i = 1; i < this.trail.length; i++) {
-                        const p = this.trail[i];
-                        const prev = this.trail[i - 1];
-                        const progress = i / this.trail.length; // 0-1，越后面越亮
-                        const intensity = p.intensity * progress;
-                        
-                        ctx.globalAlpha = intensity * 0.8;
-                        ctx.strokeStyle = getFlameColor(intensity);
-                        ctx.lineWidth = 1 + progress * 3; // 尾部细，头部粗
-                        ctx.lineCap = 'round';
-                        ctx.beginPath();
-                        ctx.moveTo(prev.x, prev.y);
-                        ctx.lineTo(p.x, p.y);
-                        ctx.stroke();
-                    }
-                    
-                    // 连接到当前位置
-                    const last = this.trail[this.trail.length - 1];
-                    ctx.globalAlpha = 0.9;
-                    ctx.strokeStyle = getFlameColor(1);
-                    ctx.lineWidth = 4;
-                    ctx.beginPath();
-                    ctx.moveTo(last.x, last.y);
-                    ctx.lineTo(this.x, this.y);
-                    ctx.stroke();
-                }
-                
-                // 火箭头部光晕
-                ctx.globalAlpha = 0.4;
-                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 15);
-                gradient.addColorStop(0, 'rgba(255, 200, 100, 1)');
-                gradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.5)');
-                gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 火箭头部亮点
-                ctx.globalAlpha = 1;
-                ctx.fillStyle = '#fff';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 内核
-                ctx.fillStyle = '#FFE4B5';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        const colorSchemes = [
-            ['#FFD700', '#FFA500', '#FF8C00', '#FFEC8B'],
-            ['#FF6B6B', '#FF4757', '#FF3838', '#FF6348'],
-            ['#FF69B4', '#FF1493', '#FFB6C1', '#FF82AB'],
-            ['#00CED1', '#00BFFF', '#1E90FF', '#87CEEB'],
-            ['#9B59B6', '#8E44AD', '#DDA0DD', '#DA70D6'],
-            ['#2ECC71', '#27AE60', '#90EE90', '#00FA9A'],
-            ['#FFFFFF', '#F5F5F5', '#E0E0E0', '#C0C0C0'],
-            ['#FF6B6B', '#FECA57', '#48DBFB', '#FF9FF3', '#54A0FF']
-        ];
-        
-        function createExplosion(x, y, colorScheme, scale) {
-            const colors = colorScheme;
-            const useLines = Math.random() > 0.4;
-            
-            const baseCount = useLines ? 40 : 50;
-            const count = Math.min(Math.floor(baseCount * scale), 100);
-            
-            if (particles.length > settings.maxParticles) {
-                particles.splice(0, particles.length - settings.maxParticles + count);
-            }
-            
-            for (let i = 0; i < count; i++) {
-                const angle = (Math.PI * 2 / count) * i + Math.random() * 0.2;
-                const speed = (1.5 + Math.random() * 2.5) * scale;
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                const size = (1 + Math.random() * 2) * scale;
-                
-                particles.push(new Particle(
-                    x, y, color,
-                    Math.cos(angle) * speed,
-                    Math.sin(angle) * speed,
-                    size,
-                    useLines
-                ));
-            }
-            
-            const sparkCount = Math.floor(12 * scale);
-            for (let i = 0; i < sparkCount; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 1.2 + 0.3;
-                particles.push(new Particle(
-                    x, y, '#FFFFFF',
-                    Math.cos(angle) * speed,
-                    Math.sin(angle) * speed,
-                    0.5 + Math.random() * 0.5,
-                    false
-                ));
-            }
-            
-            playExplosionSound();
-        }
-        
-        function getLaunchPoint() {
-            const x = Math.random() * canvas.width * 0.15 + 10;
-            const y = canvas.height + 20;
-            return { x, y };
-        }
-        
-        function launchFirework(targetX, targetY, customScale = null) {
-            if (rockets.length >= settings.maxRockets) return;
-            
-            const scale = customScale || (settings.minScale + Math.random() * (settings.maxScale - settings.minScale));
-            const start = getLaunchPoint();
-            
-            rockets.push(new Rocket(start.x, start.y, targetX, targetY, scale));
-            playLaunchSound();
-        }
-        
-        function celebrateExplosion() {
-            const count = 10 + Math.floor(Math.random() * 6);
-            
-            for (let i = 0; i < count; i++) {
-                setTimeout(() => {
-                    const x = Math.random() * canvas.width * 0.7 + canvas.width * 0.15;
-                    const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.1;
-                    const scale = settings.minScale + Math.random() * (settings.maxScale - settings.minScale);
-                    launchFirework(x, y, scale);
-                }, i * 250 + Math.random() * 150);
-            }
-        }
-        
-        // ============ 事件 ============
-        document.getElementById('soundToggle').addEventListener('click', () => {
-            initAudio();
-            soundEnabled = !soundEnabled;
-            document.getElementById('soundToggle').classList.toggle('muted', !soundEnabled);
-            
-            if (soundEnabled) {
-                bgm.play().catch(() => {});
-            } else {
-                bgm.pause();
-            }
-        });
-        
-        document.getElementById('celebrateBtn').addEventListener('click', () => {
-            initAudio();
-            celebrateExplosion();
-        });
-        
-        canvas.addEventListener('click', (e) => {
-            initAudio();
-            launchFirework(e.clientX, e.clientY);
-        });
-        
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            initAudio();
-            const touch = e.touches[0];
-            launchFirework(touch.clientX, touch.clientY);
-        });
-        
-        // 自动烟花
-        setInterval(() => {
-            if (Math.random() < 0.25 && rockets.length < settings.maxRockets) {
-                const x = Math.random() * canvas.width * 0.7 + canvas.width * 0.15;
-                const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.15;
-                const start = getLaunchPoint();
-                const scale = settings.minScale + Math.random() * (settings.maxScale - settings.minScale);
-                rockets.push(new Rocket(start.x, start.y, x, y, scale));
-            }
-        }, 2200);
-        
-        // 开场
-        setTimeout(() => {
-            const start = getLaunchPoint();
-            rockets.push(new Rocket(start.x, start.y, canvas.width * 0.4, canvas.height * 0.35, 1));
-        }, 600);
-        
-        setTimeout(() => {
-            const start = getLaunchPoint();
-            rockets.push(new Rocket(start.x, start.y, canvas.width * 0.65, canvas.height * 0.3, 1.2));
-        }, 1400);
-        
-        // ============ 动画 ============
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 轨迹火花
-            for (let i = trailSparks.length - 1; i >= 0; i--) {
-                const spark = trailSparks[i];
-                spark.update();
-                
-                if (spark.alpha <= 0) {
-                    trailSparks.splice(i, 1);
-                } else {
-                    spark.draw();
-                }
-            }
-            
-            // 限制火花数量
-            if (trailSparks.length > 500) {
-                trailSparks.splice(0, trailSparks.length - 400);
-            }
-            
-            // 火箭
-            for (let i = rockets.length - 1; i >= 0; i--) {
-                const rocket = rockets[i];
-                rocket.update();
-                rocket.draw();
-                
-                if (rocket.exploded) {
-                    createExplosion(rocket.x, rocket.y, rocket.colorScheme, rocket.scale);
-                    rockets.splice(i, 1);
-                }
-            }
-            
-            // 粒子
-            ctx.save();
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.update();
-                
-                if (p.alpha <= 0.01) {
-                    particles.splice(i, 1);
-                } else {
-                    p.draw();
-                }
-            }
-            ctx.restore();
-            ctx.globalAlpha = 1;
-            
-            requestAnimationFrame(animate);
-        }
-        
-        animate();
     </script>
+    
+    <script src="js/config.js"></script>
+    <script src="js/global-music.js"></script>
 </body>
 </html>

@@ -614,8 +614,8 @@ class CityPage {
         
         // 显示加载状态
         submitBtn.disabled = true;
-        btnText?.classList.add('hidden');
-        btnLoading?.classList.remove('hidden');
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoading) btnLoading.style.display = 'inline';
         
         try {
             // 上传图片到 Cloudinary
@@ -657,8 +657,8 @@ class CityPage {
             alert('保存失败，请重试');
         } finally {
             submitBtn.disabled = false;
-            btnText?.classList.remove('hidden');
-            btnLoading?.classList.add('hidden');
+            if (btnText) btnText.style.display = 'inline';
+            if (btnLoading) btnLoading.style.display = 'none';
         }
     }
     
@@ -1076,19 +1076,21 @@ class CityPage {
         const list = document.getElementById('cloudAlbumList');
         const emptyState = document.getElementById('cloudAlbumEmpty');
         const cloudAlbumTab = document.getElementById('cloudAlbumTab');
+        const preview = document.getElementById('cloudAlbumPreview');
+        const bindSection = document.getElementById('cloudAlbumBind');
+        
+        // Setup bind form events
+        this.setupBindAlbumForm();
         
         if (this.cloudAlbums.length === 0) {
             if (container) container.style.display = 'none';
             if (emptyState) emptyState.style.display = 'block';
-            // 隐藏云相册 tab 按钮（如果没有云相册）
-            // if (cloudAlbumTab) cloudAlbumTab.style.display = 'none';
             return;
         }
         
         if (container) container.style.display = 'block';
         if (emptyState) emptyState.style.display = 'none';
-        // 显示云相册 tab
-        // if (cloudAlbumTab) cloudAlbumTab.style.display = 'flex';
+        if (preview) preview.style.display = 'block';
         
         list.innerHTML = this.cloudAlbums.map((album, index) => {
             const formattedDate = album.createdAt ? this.formatDate(album.createdAt) : '';
@@ -1117,6 +1119,79 @@ class CityPage {
                 </a>
             `;
         }).join('');
+    }
+    
+    setupBindAlbumForm() {
+        const toggleBtn = document.getElementById('toggleBindForm');
+        const bindForm = document.getElementById('bindAlbumForm');
+        const cancelBtn = document.getElementById('cancelBindAlbum');
+        const saveBtn = document.getElementById('saveBindAlbum');
+        const addFirstBtn = document.getElementById('addFirstAlbumBtn');
+        
+        const showForm = () => {
+            bindForm?.classList.add('show');
+        };
+        
+        const hideForm = () => {
+            bindForm?.classList.remove('show');
+            // Reset inputs
+            document.getElementById('albumUrlInput').value = '';
+            document.getElementById('albumNameInput').value = '';
+            document.getElementById('albumDescInput').value = '';
+        };
+        
+        toggleBtn?.addEventListener('click', showForm);
+        addFirstBtn?.addEventListener('click', () => {
+            // Switch to container view and show form
+            const container = document.getElementById('cloudAlbumContainer');
+            const emptyState = document.getElementById('cloudAlbumEmpty');
+            if (container) container.style.display = 'block';
+            if (emptyState) emptyState.style.display = 'none';
+            showForm();
+        });
+        
+        cancelBtn?.addEventListener('click', hideForm);
+        
+        saveBtn?.addEventListener('click', () => {
+            const url = document.getElementById('albumUrlInput')?.value?.trim();
+            const name = document.getElementById('albumNameInput')?.value?.trim();
+            const desc = document.getElementById('albumDescInput')?.value?.trim();
+            
+            if (!url || !url.includes('photos.app.goo.gl')) {
+                alert('请输入有效的 Google Photos 分享链接');
+                return;
+            }
+            
+            if (!name) {
+                alert('请输入相册名称');
+                return;
+            }
+            
+            // Generate the JSON to copy
+            const cityName = decodeURIComponent(this.cityName);
+            const alternateName = this.cityNameMap[cityName];
+            
+            const albumData = {
+                city: cityName,
+                cityEn: alternateName || cityName,
+                country: this.countryName || '',
+                albumName: name,
+                albumUrl: url,
+                description: desc || `${cityName}旅行照片集`,
+                coverImage: '',
+                createdAt: new Date().toISOString().split('T')[0]
+            };
+            
+            // Copy to clipboard
+            const jsonStr = JSON.stringify(albumData, null, 2);
+            navigator.clipboard.writeText(jsonStr).then(() => {
+                alert(`相册配置已复制到剪贴板！\n\n请将以下内容添加到 data/cloud-albums.json 的 albums 数组中：\n\n${jsonStr}`);
+                hideForm();
+            }).catch(() => {
+                alert(`请手动将以下配置添加到 data/cloud-albums.json：\n\n${jsonStr}`);
+                hideForm();
+            });
+        });
     }
     
     // ==========================================

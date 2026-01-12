@@ -10,6 +10,7 @@ class App {
         this.homeCity = null;
         this.momentData = {};
         this.uploadedPhotos = [];
+        this.cloudAlbumCities = new Set(); // Cities with cloud albums
         
         // 中国城市列表
         this.chinaCities = ['北京', '上海', '天津', '重庆', '香港', '澳门', '广州', '深圳', '杭州', '南京', '苏州', '成都', '武汉', '西安', '长沙', '郑州', '青岛', '大连', '厦门', '福州', '济南', '沈阳', '哈尔滨', '长春', '南昌', '合肥', '昆明', '贵阳', '南宁', '海口', '三亚', '拉萨', '乌鲁木齐', '兰州', '银川', '西宁', '呼和浩特', '石家庄', '太原', '无锡', '宁波', '温州', '珠海', '东莞'];
@@ -26,6 +27,7 @@ class App {
             this.initTheme();
             this.initUser();
             await this.initCloud();
+            await this.loadCloudAlbumCities(); // 加载有云相册的城市
             this.initGlobe();
             await this.loadCloudMoments(); // 加载云端 moments 并更新标记
             this.initHomeControl();
@@ -35,6 +37,24 @@ class App {
             this.updateDate();
         } catch (error) {
             console.error('App init error:', error);
+        }
+    }
+    
+    async loadCloudAlbumCities() {
+        try {
+            const response = await fetch('data/cloud-albums.json');
+            if (!response.ok) return;
+            const data = await response.json();
+            
+            // Build a set of cities that have cloud albums
+            (data.albums || []).forEach(album => {
+                if (album.city) this.cloudAlbumCities.add(album.city);
+                if (album.cityEn) this.cloudAlbumCities.add(album.cityEn);
+            });
+            
+            console.log(`✅ Loaded cloud album cities:`, [...this.cloudAlbumCities]);
+        } catch (e) {
+            console.log('No cloud albums data found');
         }
     }
     
@@ -726,7 +746,8 @@ class App {
             .map(city => ({
                 ...city,
                 photoCount: city.photos?.length || 0,
-                journalCount: city.journals?.length || 0
+                journalCount: city.journals?.length || 0,
+                hasCloudAlbum: this.cloudAlbumCities.has(city.name) || this.cloudAlbumCities.has(city.nameEn)
             }))
             .sort((a, b) => {
                 if (this.currentRankingSort === 'photos') {
@@ -746,16 +767,24 @@ class App {
         
         container.innerHTML = citiesWithContent.map((city) => {
             const count = this.currentRankingSort === 'photos' ? city.photoCount : city.journalCount;
+            const cloudIcon = city.hasCloudAlbum ? `
+                <span class="cloud-album-badge" title="已绑定云相册">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    </svg>
+                </span>
+            ` : '';
             
             return `
                 <div class="ranking-item" data-id="${city.id}">
                     <div class="ranking-info">
                         <span class="ranking-country">${city.country}</span>
-                        <span class="ranking-city">${city.name}</span>
+                        <span class="ranking-city">${city.name}${cloudIcon}</span>
                     </div>
                     <div class="ranking-count">${count}</div>
                 </div>
             `;
+        }).join('');
         }).join('');
         
         // 绑定点击事件

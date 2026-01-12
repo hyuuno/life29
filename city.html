@@ -152,6 +152,70 @@
                 <div class="cloud-album-list" id="cloudAlbumList">
                     <!-- 动态加载云相册列表 -->
                 </div>
+                <!-- 绑定新相册区域 -->
+                <div class="cloud-album-bind" id="cloudAlbumBind">
+                    <div class="bind-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>绑定 Google Photos 相册</span>
+                    </div>
+                    <div class="bind-form" id="bindAlbumForm">
+                        <div class="bind-input-group">
+                            <label>相册链接</label>
+                            <input type="url" id="albumUrlInput" placeholder="https://photos.app.goo.gl/..." class="bind-input">
+                        </div>
+                        <div class="bind-input-group">
+                            <label>相册名称</label>
+                            <input type="text" id="albumNameInput" placeholder="例如：香港之旅 2024" class="bind-input">
+                        </div>
+                        <div class="bind-input-group">
+                            <label>描述（可选）</label>
+                            <input type="text" id="albumDescInput" placeholder="相册描述文字" class="bind-input">
+                        </div>
+                        <div class="bind-actions">
+                            <button type="button" class="btn-secondary" id="cancelBindAlbum">取消</button>
+                            <button type="button" class="btn-primary" id="saveBindAlbum">保存绑定</button>
+                        </div>
+                    </div>
+                    <button type="button" class="bind-toggle-btn" id="toggleBindForm">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        添加新相册
+                    </button>
+                </div>
+                <!-- 相册预览信息 -->
+                <div class="cloud-album-preview" id="cloudAlbumPreview" style="display: none;">
+                    <div class="preview-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <path d="m21 15-5-5L5 21"/>
+                        </svg>
+                        <span>Google Photos 相册信息</span>
+                    </div>
+                    <div class="preview-content" id="previewContent">
+                        <div class="preview-item">
+                            <span class="preview-label">平台</span>
+                            <span class="preview-value">Google Photos</span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">类型</span>
+                            <span class="preview-value">共享相册</span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">访问方式</span>
+                            <span class="preview-value">需要 Google 账号或公开链接</span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">功能</span>
+                            <span class="preview-value">支持查看、下载原始照片</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="empty-state" id="cloudAlbumEmpty" style="display: none;">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
@@ -159,7 +223,14 @@
                     <line x1="8" y1="12" x2="16" y2="12" opacity="0.5"/>
                 </svg>
                 <p>暂无云相册</p>
-                <span>此城市尚未绑定 Google Photos 相册</span>
+                <span>点击下方按钮绑定 Google Photos 相册</span>
+                <button type="button" class="btn-primary" id="addFirstAlbumBtn" style="margin-top: 16px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    绑定相册
+                </button>
             </div>
         </div>
 
@@ -257,8 +328,8 @@
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" id="cancelAddMoment">取消</button>
                     <button type="submit" class="btn-primary" id="submitMoment">
-                        <span class="btn-text">上传</span>
-                        <span class="btn-loading hidden">上传中...</span>
+                        <span class="btn-text">保存</span>
+                        <span class="btn-loading" style="display: none;">上传中...</span>
                     </button>
                 </div>
             </form>
