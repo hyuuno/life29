@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../auth-check.js"></script>
+    <title>情人节 · Life29</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E💝%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --rose: #e8c4c4;
+            --rose-deep: #d4a5a5;
+            --rose-light: #f5e6e6;
+            --cream: #fdfbf9;
+            --text: #5a4a4a;
+            --text-light: #8a7a7a;
+            --gold: #c9a959;
+        }
+        
+        body {
+            font-family: 'Noto Serif SC', 'Cormorant Garamond', serif;
+            background: var(--cream);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: default;
+        }
+        
+        /* 背景画布 */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* 头部导航 */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+            text-decoration: none;
+        }
+        
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text);
+        }
+        
+        .logo-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.875rem;
+            color: var(--rose-deep);
+        }
+        
+        .nav {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .nav-link {
+            font-size: 0.8125rem;
+            color: var(--text-light);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            letter-spacing: 0.02em;
+        }
+        
+        .nav-link:hover {
+            color: var(--text);
+            background: rgba(232, 196, 196, 0.3);
+        }
+        
+        .nav-link.active {
+            color: var(--text);
+            background: rgba(232, 196, 196, 0.4);
+        }
+        
+        /* 主内容区 */
+        .main {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 24px 80px;
+        }
+        
+        /* 日期显示 */
+        .date-display {
+            text-align: center;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 0.3s;
+        }
+        
+        .date-month {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .date-day {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 8rem;
+            font-weight: 300;
+            line-height: 1;
+            color: var(--text);
+            position: relative;
+        }
+        
+        .date-day::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--rose-deep), transparent);
+        }
+        
+        /* 标题区域 */
+        .title-section {
+            text-align: center;
+            margin-bottom: 60px;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 0.6s;
+        }
+        
+        .title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            font-style: italic;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+        
+        .subtitle {
+            font-size: 0.875rem;
+            font-weight: 300;
+            color: var(--text-light);
+            letter-spacing: 0.15em;
+        }
+        
+        /* 情话卡片 */
+        .quote-card {
+            position: relative;
+            max-width: 480px;
+            padding: 48px;
+            background: white;
+            border-radius: 2px;
+            box-shadow: 0 2px 40px rgba(212, 165, 165, 0.15);
+            text-align: center;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 0.9s;
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+        
+        .quote-card::before,
+        .quote-card::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--rose);
+            opacity: 0.6;
+        }
+        
+        .quote-card::before {
+            top: 16px;
+            left: 16px;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .quote-card::after {
+            bottom: 16px;
+            right: 16px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        .quote-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 60px rgba(212, 165, 165, 0.25);
+        }
+        
+        .quote-card:active {
+            transform: scale(0.98);
+        }
+        
+        .quote-mark {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            line-height: 1;
+            color: var(--rose);
+            margin-bottom: 16px;
+        }
+        
+        .quote-text {
+            font-size: 1.125rem;
+            font-weight: 300;
+            line-height: 2;
+            color: var(--text);
+            margin-bottom: 24px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s;
+        }
+        
+        .quote-author {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.875rem;
+            font-style: italic;
+            color: var(--text-light);
+            letter-spacing: 0.1em;
+        }
+        
+        .quote-hint {
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--text-light);
+            opacity: 0.6;
+            white-space: nowrap;
+        }
+        
+        /* 互动按钮组 */
+        .action-group {
+            display: flex;
+            gap: 16px;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 1.2s;
+        }
+        
+        .action-btn {
+            padding: 14px 32px;
+            background: transparent;
+            border: 1px solid var(--rose-deep);
+            border-radius: 2px;
+            font-family: inherit;
+            font-size: 0.8125rem;
+            color: var(--text);
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: var(--rose-deep);
+            color: white;
+        }
+        
+        .action-btn.primary {
+            background: var(--rose-deep);
+            color: white;
+        }
+        
+        .action-btn.primary:hover {
+            background: var(--text);
+            border-color: var(--text);
+        }
+        
+        /* 信封/情书模态框 */
+        .letter-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+        
+        .letter-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .letter-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(90, 74, 74, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        
+        .letter-content {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            background: var(--cream);
+            padding: 48px;
+            border-radius: 2px;
+            box-shadow: 0 20px 80px rgba(0,0,0,0.15);
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.4s ease;
+        }
+        
+        .letter-modal.show .letter-content {
+            transform: translateY(0) scale(1);
+        }
+        
+        .letter-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .letter-close:hover {
+            color: var(--text);
+        }
+        
+        .letter-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 300;
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 32px;
+            color: var(--text);
+        }
+        
+        .letter-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 20px;
+            border: 1px solid var(--rose);
+            border-radius: 2px;
+            background: white;
+            font-family: inherit;
+            font-size: 0.9375rem;
+            font-weight: 300;
+            line-height: 1.8;
+            color: var(--text);
+            resize: none;
+            transition: border-color 0.3s;
+        }
+        
+        .letter-textarea::placeholder {
+            color: var(--text-light);
+            opacity: 0.6;
+        }
+        
+        .letter-textarea:focus {
+            outline: none;
+            border-color: var(--rose-deep);
+        }
+        
+        .letter-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+        }
+        
+        .letter-tip {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+        
+        .letter-save {
+            padding: 12px 28px;
+            background: var(--rose-deep);
+            border: none;
+            border-radius: 2px;
+            font-family: inherit;
+            font-size: 0.8125rem;
+            color: white;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .letter-save:hover {
+            background: var(--text);
+        }
+        
+        /* 底部装饰 */
+        .footer-decoration {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            z-index: 10;
+        }
+        
+        .footer-line {
+            width: 40px;
+            height: 1px;
+            background: var(--rose);
+        }
+        
+        /* 飘落的花瓣 */
+        .petal {
+            position: fixed;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            animation: petalFall linear forwards;
+        }
+        
+        @keyframes petalFall {
+            0% {
+                opacity: 0;
+                transform: translateY(0) rotate(0deg) scale(0.5);
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(360deg) scale(0.3);
+            }
+        }
+        
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 点击产生的心形 */
+        .click-heart {
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
+            animation: heartFloat 1.5s ease-out forwards;
+        }
+        
+        @keyframes heartFloat {
+            0% {
+                opacity: 1;
+                transform: scale(0) translateY(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1) translateY(-30px);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) translateY(-80px);
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header {
+                padding: 16px 20px;
+            }
+            
+            .nav-link {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+            
+            .date-day {
+                font-size: 5rem;
+            }
+            
+            .title {
+                font-size: 1.75rem;
+            }
+            
+            .quote-card {
+                padding: 32px 24px;
+                margin: 0 16px 48px;
+            }
+            
+            .quote-text {
+                font-size: 1rem;
+            }
+            
+            .action-group {
+                flex-direction: column;
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .action-btn {
+                width: 100%;
+            }
+            
+            .letter-content {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bgCanvas"></canvas>
+    
+    <header class="header">
+        <a href="../index.html" class="logo">
+            <span class="logo-text">Life</span>
+            <span class="logo-number">29</span>
+        </a>
+        <nav class="nav">
+            <a href="../index.html" class="nav-link">地球</a>
+            <a href="../music.html" class="nav-link">Music</a>
+            <a href="../relax.html" class="nav-link">Relax</a>
+            <a href="../festival.html" class="nav-link active">节日</a>
+        </nav>
+    </header>
+    
+    <main class="main" id="main">
+        <div class="date-display">
+            <p class="date-month">February</p>
+            <p class="date-day">14</p>
+        </div>
+        
+        <div class="title-section">
+            <h1 class="title">Valentine's Day</h1>
+            <p class="subtitle">献给最珍贵的你</p>
+        </div>
+        
+        <div class="quote-card" id="quoteCard">
+            <div class="quote-mark">"</div>
+            <p class="quote-text" id="quoteText">我行过许多地方的桥，看过许多次数的云，喝过许多种类的酒，却只爱过一个正当最好年龄的人。</p>
+            <p class="quote-author" id="quoteAuthor">— 沈从文</p>
+            <span class="quote-hint">轻触换一句</span>
+        </div>
+        
+        <div class="action-group">
+            <button class="action-btn" id="petalBtn">落花纷飞</button>
+            <button class="action-btn primary" id="letterBtn">写封情书</button>
+        </div>
+    </main>
+    
+    <div class="footer-decoration">
+        <span class="footer-line"></span>
+        <span>wiwi & yuyu</span>
+        <span class="footer-line"></span>
+    </div>
+    
+    <!-- 情书模态框 -->
+    <div class="letter-modal" id="letterModal">
+        <div class="letter-backdrop" id="letterBackdrop"></div>
+        <div class="letter-content">
+            <button class="letter-close" id="letterClose">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+            <h2 class="letter-title">写给你的情书</h2>
+            <textarea class="letter-textarea" id="letterText" placeholder="亲爱的，今天我想对你说..."></textarea>
+            <div class="letter-footer">
+                <span class="letter-tip">信会保存在本地</span>
+                <button class="letter-save" id="letterSave">封缄寄出</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============ 情话数据 ============
+        const quotes = [
+            { text: "我行过许多地方的桥，看过许多次数的云，喝过许多种类的酒，却只爱过一个正当最好年龄的人。", author: "沈从文" },
+            { text: "你是我温暖的手套，冰冷的啤酒，带着阳光味道的衬衫，日复一日的梦想。", author: "村上春树" },
+            { text: "我爱你，不光因为你的样子，还因为和你在一起时，我的样子。", author: "罗伊·克里夫特" },
+            { text: "从前的日色变得慢，车、马、邮件都慢，一生只够爱一个人。", author: "木心" },
+            { text: "眼睛为她下着雨，心却为她打着伞，这就是爱情。", author: "泰戈尔" },
+            { text: "世界上最远的距离，不是生与死的距离，而是我站在你面前，你不知道我爱你。", author: "泰戈尔" },
+            { text: "遇见你之前，我没想过结婚，遇见你之后，我没想过别人。", author: "钱钟书" },
+            { text: "我将于茫茫人海中访我唯一灵魂之伴侣，得之，我幸；不得，我命。", author: "徐志摩" },
+            { text: "你的过去我来不及参与，你的未来我奉陪到底。", author: "余秋雨" },
+            { text: "纵然万劫不复，纵然相思入骨，我也待你眉眼如初，岁月如故。", author: "佚名" },
+            { text: "醒来觉得甚是爱你。", author: "朱生豪" },
+            { text: "我这一生遇到过很多人，他们如同指间的烟火，忽明忽暗，最后只沦为一抹灰烬，而你不同，你如北斗，闪耀在我的整个人生。", author: "佚名" },
+            { text: "喜欢是声色犬马，一晌贪欢；爱是过尽千帆，温酒相伴。", author: "佚名" },
+            { text: "人生若只如初见，何事秋风悲画扇。", author: "纳兰性德" },
+            { text: "山有木兮木有枝，心悦君兮君不知。", author: "《越人歌》" }
+        ];
+        
+        let currentQuoteIndex = 0;
+        
+        // ============ 情话切换 ============
+        const quoteCard = document.getElementById('quoteCard');
+        const quoteText = document.getElementById('quoteText');
+        const quoteAuthor = document.getElementById('quoteAuthor');
+        
+        function changeQuote() {
+            quoteText.style.opacity = '0';
+            
+            setTimeout(() => {
+                currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+                const quote = quotes[currentQuoteIndex];
+                quoteText.textContent = quote.text;
+                quoteAuthor.textContent = `— ${quote.author}`;
+                quoteText.style.opacity = '1';
+            }, 300);
+        }
+        
+        quoteCard.addEventListener('click', changeQuote);
+        
+        // ============ 点击产生心形 ============
+        document.addEventListener('click', (e) => {
+            // 排除按钮和卡片点击
+            if (e.target.closest('.action-btn') || e.target.closest('.letter-modal')) return;
+            
+            createClickHeart(e.clientX, e.clientY);
+        });
+        
+        function createClickHeart(x, y) {
+            const heart = document.createElement('div');
+            heart.className = 'click-heart';
+            heart.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="${getRandomColor()}" stroke="none">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+            `;
+            heart.style.left = `${x - 12}px`;
+            heart.style.top = `${y - 12}px`;
+            document.body.appendChild(heart);
+            
+            setTimeout(() => heart.remove(), 1500);
+        }
+        
+        function getRandomColor() {
+            const colors = ['#e8c4c4', '#d4a5a5', '#f5d6d6', '#c9a959', '#dbc4a9'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // ============ 花瓣效果 ============
+        const petalBtn = document.getElementById('petalBtn');
+        let petalInterval = null;
+        
+        petalBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            if (petalInterval) {
+                clearInterval(petalInterval);
+                petalInterval = null;
+                petalBtn.textContent = '落花纷飞';
+            } else {
+                petalBtn.textContent = '停止落花';
+                createPetalBurst();
+                petalInterval = setInterval(createPetal, 300);
+            }
+        });
+        
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            
+            const size = 12 + Math.random() * 12;
+            const startX = Math.random() * window.innerWidth;
+            const duration = 4 + Math.random() * 4;
+            const delay = Math.random() * 0.5;
+            
+            petal.innerHTML = `
+                <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${getRandomColor()}" opacity="0.7">
+                    <ellipse cx="12" cy="12" rx="6" ry="10" transform="rotate(${Math.random() * 360} 12 12)"/>
+                </svg>
+            `;
+            
+            petal.style.left = `${startX}px`;
+            petal.style.top = '-20px';
+            petal.style.animationDuration = `${duration}s`;
+            petal.style.animationDelay = `${delay}s`;
+            
+            document.body.appendChild(petal);
+            
+            setTimeout(() => petal.remove(), (duration + delay) * 1000);
+        }
+        
+        function createPetalBurst() {
+            for (let i = 0; i < 15; i++) {
+                setTimeout(createPetal, i * 100);
+            }
+        }
+        
+        // ============ 情书功能 ============
+        const letterBtn = document.getElementById('letterBtn');
+        const letterModal = document.getElementById('letterModal');
+        const letterBackdrop = document.getElementById('letterBackdrop');
+        const letterClose = document.getElementById('letterClose');
+        const letterText = document.getElementById('letterText');
+        const letterSave = document.getElementById('letterSave');
+        
+        // 加载保存的情书
+        const savedLetter = localStorage.getItem('life29-valentine-letter');
+        if (savedLetter) {
+            letterText.value = savedLetter;
+        }
+        
+        letterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            letterModal.classList.add('show');
+        });
+        
+        function closeLetter() {
+            letterModal.classList.remove('show');
+        }
+        
+        letterBackdrop.addEventListener('click', closeLetter);
+        letterClose.addEventListener('click', closeLetter);
+        
+        letterSave.addEventListener('click', () => {
+            const text = letterText.value.trim();
+            if (text) {
+                localStorage.setItem('life29-valentine-letter', text);
+                
+                // 保存成功动画
+                letterSave.textContent = '已寄出 ♥';
+                letterSave.style.background = 'var(--text)';
+                
+                setTimeout(() => {
+                    letterSave.textContent = '封缄寄出';
+                    letterSave.style.background = '';
+                    closeLetter();
+                }, 1500);
+            }
+        });
+        
+        // ESC 关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLetter();
+        });
+        
+        // ============ 背景画布 - 柔和光点 ============
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 光点粒子
+        const particles = [];
+        const particleCount = 30;
+        
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 1 + Math.random() * 2,
+                speedX: (Math.random() - 0.5) * 0.3,
+                speedY: (Math.random() - 0.5) * 0.3,
+                opacity: 0.1 + Math.random() * 0.2,
+                pulse: Math.random() * Math.PI * 2
+            });
+        }
+        
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.pulse += 0.02;
+                
+                // 边界处理
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+                
+                const opacity = p.opacity * (0.7 + 0.3 * Math.sin(p.pulse));
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(212, 165, 165, ${opacity})`;
+                ctx.fill();
+            });
+            
+            requestAnimationFrame(animateParticles);
+        }
+        
+        animateParticles();
+        
+        // ============ 初始花瓣 ============
+        setTimeout(() => {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(createPetal, i * 400);
+            }
+        }, 1500);
+    </script>
+</body>
+</html>
