@@ -460,22 +460,37 @@
             z-index: 5;
             opacity: 0;
             animation: petalFall linear forwards;
+            --drift: 0px;
         }
         
         @keyframes petalFall {
             0% {
                 opacity: 0;
-                transform: translateY(0) rotate(0deg) scale(0.5);
+                transform: translateY(0) translateX(0) rotate(0deg) scale(0.3);
             }
             10% {
+                opacity: 0.9;
+                transform: translateY(10vh) translateX(calc(var(--drift) * 0.2)) rotate(36deg) scale(0.8);
+            }
+            30% {
+                opacity: 0.85;
+                transform: translateY(30vh) translateX(calc(var(--drift) * 0.5)) rotate(108deg) scale(1);
+            }
+            50% {
                 opacity: 0.8;
+                transform: translateY(50vh) translateX(calc(var(--drift) * 0.8)) rotate(180deg) scale(0.95);
+            }
+            70% {
+                opacity: 0.6;
+                transform: translateY(70vh) translateX(calc(var(--drift) * 1.1)) rotate(252deg) scale(0.85);
             }
             90% {
-                opacity: 0.8;
+                opacity: 0.3;
+                transform: translateY(90vh) translateX(calc(var(--drift) * 1.3)) rotate(324deg) scale(0.6);
             }
             100% {
                 opacity: 0;
-                transform: translateY(100vh) rotate(360deg) scale(0.3);
+                transform: translateY(105vh) translateX(calc(var(--drift) * 1.5)) rotate(360deg) scale(0.3);
             }
         }
         
@@ -686,13 +701,76 @@
         }
         
         function getRandomColor() {
-            const colors = ['#e8c4c4', '#d4a5a5', '#f5d6d6', '#c9a959', '#dbc4a9'];
-            return colors[Math.floor(Math.random() * colors.length)];
+            const heartColors = ['#e8c4c4', '#d4a5a5', '#f5d6d6', '#c9a959', '#dbc4a9', '#FFB7C5', '#FFC0CB', '#E75480'];
+            return heartColors[Math.floor(Math.random() * heartColors.length)];
         }
         
         // ============ 花瓣效果 ============
         const petalBtn = document.getElementById('petalBtn');
         let petalInterval = null;
+        let petalAnimationFrame = null;
+        
+        // 春色到秋色的渐变色彩
+        const seasonColors = [
+            // 春 - 嫩粉、樱花、桃红
+            '#FFB7C5', '#FFC0CB', '#FFD1DC', '#FADADD', '#F8C8DC',
+            '#FFB6C1', '#FF91A4', '#E75480', '#DE5D83', '#FDB9C8',
+            // 初夏 - 浅紫、淡绿
+            '#E6E6FA', '#DCD0FF', '#C8A2C8', '#D8BFD8', '#E0BBE4',
+            '#98FB98', '#90EE90', '#ADDFAD', '#8FBC8F',
+            // 盛夏 - 明黄、向日葵
+            '#FFFACD', '#FAFAD2', '#FFE4B5', '#FFDAB9', '#FFE5B4',
+            // 初秋 - 橙红、琥珀
+            '#FFCC99', '#FFB347', '#FFA07A', '#FA8072', '#E9967A',
+            '#F4A460', '#D2691E', '#CD853F', '#DEB887',
+            // 深秋 - 枫红、赭石
+            '#CD5C5C', '#BC8F8F', '#C08050', '#A0522D', '#8B4513',
+            '#B8860B', '#DAA520', '#D2B48C', '#C19A6B'
+        ];
+        
+        // 花瓣形状类型
+        const petalShapes = [
+            // 椭圆形花瓣
+            (size, color, rotation) => `
+                <svg width="${size}" height="${size * 1.5}" viewBox="0 0 24 36" fill="${color}">
+                    <ellipse cx="12" cy="18" rx="10" ry="16" transform="rotate(${rotation} 12 18)" opacity="0.75"/>
+                </svg>
+            `,
+            // 心形花瓣
+            (size, color, rotation) => `
+                <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" transform="rotate(${rotation})">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" opacity="0.7"/>
+                </svg>
+            `,
+            // 圆形花瓣
+            (size, color, rotation) => `
+                <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}">
+                    <circle cx="12" cy="12" r="10" opacity="0.65"/>
+                </svg>
+            `,
+            // 尖叶花瓣
+            (size, color, rotation) => `
+                <svg width="${size}" height="${size * 1.8}" viewBox="0 0 20 36" fill="${color}">
+                    <path d="M10 0 Q20 18 10 36 Q0 18 10 0" transform="rotate(${rotation} 10 18)" opacity="0.7"/>
+                </svg>
+            `,
+            // 枫叶形
+            (size, color, rotation) => `
+                <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" transform="rotate(${rotation})">
+                    <path d="M12 2L9 9H2l5 5-2 8 7-4 7 4-2-8 5-5h-7z" opacity="0.6"/>
+                </svg>
+            `
+        ];
+        
+        function getSeasonColor() {
+            return seasonColors[Math.floor(Math.random() * seasonColors.length)];
+        }
+        
+        function getRandomPetalShape(size, color) {
+            const rotation = Math.random() * 360;
+            const shapeIndex = Math.floor(Math.random() * petalShapes.length);
+            return petalShapes[shapeIndex](size, color, rotation);
+        }
         
         petalBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -704,7 +782,14 @@
             } else {
                 petalBtn.textContent = '停止落花';
                 createPetalBurst();
-                petalInterval = setInterval(createPetal, 300);
+                // 更频繁地创建花瓣
+                petalInterval = setInterval(() => {
+                    // 每次创建2-4片花瓣
+                    const count = 2 + Math.floor(Math.random() * 3);
+                    for (let i = 0; i < count; i++) {
+                        setTimeout(createPetal, i * 50);
+                    }
+                }, 150);
             }
         });
         
@@ -712,19 +797,21 @@
             const petal = document.createElement('div');
             petal.className = 'petal';
             
-            const size = 12 + Math.random() * 12;
+            // 随机大小 - 从很小到较大
+            const size = 8 + Math.random() * 28; // 8px - 36px
             const startX = Math.random() * window.innerWidth;
-            const duration = 4 + Math.random() * 4;
-            const delay = Math.random() * 0.5;
+            const duration = 5 + Math.random() * 6;
+            const delay = Math.random() * 0.3;
+            const color = getSeasonColor();
             
-            petal.innerHTML = `
-                <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${getRandomColor()}" opacity="0.7">
-                    <ellipse cx="12" cy="12" rx="6" ry="10" transform="rotate(${Math.random() * 360} 12 12)"/>
-                </svg>
-            `;
+            // 随机水平漂移
+            const drift = (Math.random() - 0.5) * 200;
+            
+            petal.innerHTML = getRandomPetalShape(size, color);
             
             petal.style.left = `${startX}px`;
-            petal.style.top = '-20px';
+            petal.style.top = '-40px';
+            petal.style.setProperty('--drift', `${drift}px`);
             petal.style.animationDuration = `${duration}s`;
             petal.style.animationDelay = `${delay}s`;
             
@@ -734,8 +821,9 @@
         }
         
         function createPetalBurst() {
-            for (let i = 0; i < 15; i++) {
-                setTimeout(createPetal, i * 100);
+            // 初始爆发更多花瓣
+            for (let i = 0; i < 30; i++) {
+                setTimeout(createPetal, i * 60);
             }
         }
         
@@ -843,8 +931,8 @@
         
         // ============ 初始花瓣 ============
         setTimeout(() => {
-            for (let i = 0; i < 5; i++) {
-                setTimeout(createPetal, i * 400);
+            for (let i = 0; i < 12; i++) {
+                setTimeout(createPetal, i * 200);
             }
         }, 1500);
     </script>
