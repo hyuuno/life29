@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-check.js"></script>
+    <title>Life29 · 餐厅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Sans+SC:wght@200;300;400&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍽️%3C/text%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f5f5f5;
+            --text: #2a2a2a;
+            --text-light: #999;
+            --line: #ddd;
+            --accent: #2a2a2a;
+            --card-bg: #fff;
+            --input-bg: transparent;
+            --gold: #d4a853;
+            --gold-light: #e8c97a;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1a1a1a;
+            --text: #e5e5e5;
+            --text-light: #777;
+            --line: #444;
+            --accent: #e5e5e5;
+            --card-bg: #242424;
+            --input-bg: transparent;
+            --gold: #f0c75e;
+            --gold-light: #ffe08a;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Header - Fixed */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--line);
+            z-index: 100;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo {
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .logo-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .nav {
+            display: flex;
+            gap: 28px;
+        }
+
+        .nav-link {
+            font-size: 13px;
+            font-weight: 300;
+            color: var(--text-light);
+            text-decoration: none;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .theme-toggle {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            transition: color 0.2s;
+        }
+
+        .theme-toggle:hover {
+            color: var(--text);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        [data-theme="dark"] .icon-sun { display: block; }
+        [data-theme="dark"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: block; }
+
+        /* Main */
+        .main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 80px 24px 60px;
+        }
+
+        .page-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 48px;
+            letter-spacing: 3px;
+        }
+
+        /* Add Form */
+        .add-section {
+            margin-bottom: 56px;
+            padding-bottom: 48px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* Borderless inputs - only bottom line */
+        .form-input,
+        .form-textarea {
+            padding: 12px 0;
+            font-size: 14px;
+            font-family: inherit;
+            border: none;
+            border-bottom: 1px solid var(--line);
+            background: var(--input-bg);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+            border-radius: 0;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            border-bottom-color: var(--accent);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-light);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 72px;
+            line-height: 1.6;
+        }
+
+        /* Date and Rating Row */
+        .date-rating-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 32px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+
+        /* Date Picker */
+        .date-input-wrapper {
+            position: relative;
+        }
+
+        .date-display {
+            padding: 12px 0;
+            font-size: 14px;
+            font-family: inherit;
+            border: none;
+            border-bottom: 1px solid var(--line);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+
+        .date-display:hover {
+            border-bottom-color: var(--accent);
+        }
+
+        .date-display svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-light);
+        }
+
+        /* Calendar Popup */
+        .calendar-popup {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--line);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            z-index: 200;
+            display: none;
+            min-width: 300px;
+        }
+
+        .calendar-popup.show {
+            display: block;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-nav-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: opacity 0.2s;
+        }
+
+        .calendar-nav-btn:hover {
+            opacity: 0.6;
+        }
+
+        .calendar-title {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .calendar-title span {
+            color: var(--text);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            padding: 12px 20px 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-light);
+            padding: 4px;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            padding: 4px 20px 20px;
+            gap: 4px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 10px 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            transition: background 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: var(--line);
+        }
+
+        .calendar-day.other-month {
+            color: var(--text-light);
+        }
+
+        .calendar-day.selected {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .calendar-day.today {
+            font-weight: 500;
+            position: relative;
+        }
+
+        .calendar-day.today::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .calendar-day.selected.today::after {
+            background: var(--bg);
+        }
+
+        .calendar-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px 16px;
+            border-top: 1px solid var(--line);
+        }
+
+        .calendar-today-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--text);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .calendar-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .calendar-btn {
+            padding: 8px 20px;
+            font-size: 12px;
+            letter-spacing: 1px;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .calendar-btn:hover {
+            color: var(--text);
+        }
+
+        .calendar-btn.primary {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .calendar-btn.primary:hover {
+            opacity: 0.85;
+        }
+
+        /* Rating Slider */
+        .rating-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rating-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .slider-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .rating-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 2px;
+            background: var(--line);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .rating-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .rating-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .rating-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-light);
+        }
+
+        /* Large Rating Display */
+        .rating-display {
+            min-width: 72px;
+            text-align: center;
+        }
+
+        .rating-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 56px;
+            font-weight: 500;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .rating-value.gold {
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(212, 168, 83, 0.3);
+        }
+
+        .rating-value.rainbow {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-shift 3s ease infinite;
+            background-size: 400% 400%;
+        }
+
+        @keyframes rainbow-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .submit-btn {
+            margin-top: 32px;
+            padding: 14px 48px;
+            font-size: 12px;
+            font-family: inherit;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.8;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* List Section */
+        .list-section {
+            margin-top: 32px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .list-title {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 8px 0;
+            font-size: 13px;
+            font-family: inherit;
+            border: none;
+            border-bottom: 1px solid var(--line);
+            background: transparent;
+            color: var(--text);
+            outline: none;
+            width: 160px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-bottom-color: var(--accent);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .filter-select {
+            padding: 8px 24px 8px 0;
+            font-size: 13px;
+            font-family: inherit;
+            border: none;
+            border-bottom: 1px solid var(--line);
+            background: transparent;
+            color: var(--text);
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0 center;
+        }
+
+        /* Restaurant List */
+        .restaurant-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .restaurant-item {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .restaurant-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .restaurant-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .restaurant-name {
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .restaurant-meta {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .restaurant-type {
+            color: var(--text-light);
+        }
+
+        .restaurant-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+
+        .restaurant-date {
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .date-year {
+            font-size: 11px;
+            color: var(--text-light);
+            display: block;
+        }
+
+        .date-md {
+            font-size: 15px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .restaurant-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 90px;
+            justify-content: flex-end;
+        }
+
+        .rating-num {
+            font-size: 28px;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 500;
+            min-width: 36px;
+            text-align: right;
+            line-height: 1;
+        }
+
+        .rating-num.gold {
+            color: var(--gold);
+        }
+
+        .rating-num.rainbow {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-shift 3s ease infinite;
+            background-size: 400% 400%;
+        }
+
+        .rating-bar {
+            width: 40px;
+            height: 2px;
+            background: var(--line);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rating-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .rating-fill.gold {
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        }
+
+        .rating-fill.rainbow {
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+        }
+
+        .restaurant-user {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        .restaurant-note {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 12px;
+            padding-left: 0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+            font-size: 13px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid var(--line);
+        }
+
+        .page-btn {
+            padding: 8px 14px;
+            font-size: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            color: var(--text);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            color: var(--text);
+            font-weight: 500;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: var(--text-light);
+            padding: 0 8px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 28px;
+            background: var(--accent);
+            color: var(--bg);
+            font-size: 13px;
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 16px;
+            }
+
+            .nav {
+                gap: 16px;
+            }
+
+            .nav-link {
+                font-size: 12px;
+            }
+
+            .main {
+                padding: 72px 16px 48px;
+            }
+
+            .page-title {
+                font-size: 26px;
+                margin-bottom: 36px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .date-rating-row {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .rating-slider-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .rating-display {
+                order: -1;
+                margin-bottom: 8px;
+            }
+
+            .rating-value {
+                font-size: 48px;
+            }
+
+            .restaurant-right {
+                gap: 16px;
+            }
+
+            .restaurant-date,
+            .restaurant-user {
+                display: none;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .search-input {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav {
+                gap: 10px;
+                font-size: 11px;
+            }
+
+            .restaurant-rating {
+                min-width: 70px;
+            }
+
+            .rating-num {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="logo">
+            <span class="logo-text">Life</span>
+            <span class="logo-number">29</span>
+        </a>
+        <nav class="nav">
+            <a href="index.html" class="nav-link">地球</a>
+            <a href="schedule.html" class="nav-link">做咩</a>
+            <a href="restaurant.html" class="nav-link active">餐厅</a>
+            <a href="music.html" class="nav-link">Music</a>
+            <a href="relax.html" class="nav-link">Relax</a>
+            <a href="festival.html" class="nav-link">节日</a>
+        </nav>
+        <div class="header-right">
+            <button class="theme-toggle" id="themeToggle" title="切换主题">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+            <div class="user-info" id="userInfo">—</div>
+        </div>
+    </header>
+
+    <main class="main">
+        <h1 class="page-title">Restaurants</h1>
+
+        <!-- Add Form -->
+        <section class="add-section">
+            <form id="addForm">
+                <!-- Restaurant Name - Single Row -->
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label class="form-label">餐厅名</label>
+                        <input type="text" class="form-input" id="inputName" placeholder="名称" required>
+                    </div>
+                </div>
+
+                <!-- City and Type -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">城市</label>
+                        <input type="text" class="form-input" id="inputCity" placeholder="城市" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">类型</label>
+                        <input type="text" class="form-input" id="inputType" placeholder="如：韩式、日料、火锅...">
+                    </div>
+                </div>
+
+                <!-- Date and Rating Row -->
+                <div class="date-rating-row">
+                    <div class="form-group">
+                        <label class="form-label">用餐日期</label>
+                        <div class="date-input-wrapper">
+                            <div class="date-display" id="dateDisplay">
+                                <span id="dateText">选择日期</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </div>
+                            <div class="calendar-popup" id="calendarPopup">
+                                <div class="calendar-header">
+                                    <div class="calendar-title">
+                                        <span id="calendarMonth">January</span>
+                                        <span id="calendarYear">2025</span>
+                                    </div>
+                                    <div class="calendar-nav">
+                                        <button type="button" class="calendar-nav-btn" id="prevMonth">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                        </button>
+                                        <button type="button" class="calendar-nav-btn" id="nextMonth">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="calendar-weekdays">
+                                    <span class="calendar-weekday">Sun</span>
+                                    <span class="calendar-weekday">Mon</span>
+                                    <span class="calendar-weekday">Tue</span>
+                                    <span class="calendar-weekday">Wed</span>
+                                    <span class="calendar-weekday">Thu</span>
+                                    <span class="calendar-weekday">Fri</span>
+                                    <span class="calendar-weekday">Sat</span>
+                                </div>
+                                <div class="calendar-days" id="calendarDays"></div>
+                                <div class="calendar-footer">
+                                    <button type="button" class="calendar-today-btn" id="calendarToday">Today</button>
+                                    <div class="calendar-actions">
+                                        <button type="button" class="calendar-btn" id="calendarCancel">Cancel</button>
+                                        <button type="button" class="calendar-btn primary" id="calendarConfirm">Confirm</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="inputDate">
+                    </div>
+
+                    <div class="rating-group">
+                        <label class="form-label">评分</label>
+                        <div class="rating-slider-row">
+                            <div class="slider-wrapper">
+                                <input type="range" class="rating-slider" id="inputRating" min="0" max="12" value="6" step="1">
+                                <div class="slider-labels">
+                                    <span>0</span>
+                                    <span>6</span>
+                                    <span>12</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rating-display">
+                        <span class="rating-value" id="ratingValue">6</span>
+                    </div>
+                </div>
+
+                <!-- Note -->
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-textarea" id="inputNote" placeholder="口味、环境、服务、价格..." rows="3"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">添加</button>
+            </form>
+        </section>
+
+        <!-- List -->
+        <section class="list-section">
+            <div class="list-header">
+                <span class="list-title">记录 (<span id="totalCount">0</span>)</span>
+                <div class="filter-group">
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索餐厅或城市">
+                    <select class="filter-select" id="filterUser">
+                        <option value="">全部</option>
+                        <option value="wiwi">wiwi</option>
+                        <option value="yuyu">yuyu</option>
+                    </select>
+                    <select class="filter-select" id="filterSort">
+                        <option value="date-desc">日期 ↓</option>
+                        <option value="date-asc">日期 ↑</option>
+                        <option value="rating-desc">评分 ↓</option>
+                        <option value="rating-asc">评分 ↑</option>
+                    </select>
+                </div>
+            </div>
+            <div class="restaurant-list" id="restaurantList">
+                <div class="loading">加载中...</div>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script>
+        // ==========================================
+        // Restaurant Page Script
+        // ==========================================
+
+        let supabaseClient = null;
+        let currentUser = '';
+        let restaurants = [];
+        let currentPage = 1;
+        const pageSize = 20;
+
+        // Calendar state
+        let calendarDate = new Date();
+        let selectedDate = new Date();
+        let tempSelectedDate = new Date();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = sessionStorage.getItem('life29_user') || 'wiwi';
+            document.getElementById('userInfo').textContent = currentUser;
+
+            initTheme();
+            await initSupabase();
+            initCalendar();
+            initRatingSlider();
+            await loadRestaurants();
+            setupEventListeners();
+        });
+
+        // ==========================================
+        // Theme
+        // ==========================================
+        function initTheme() {
+            const saved = localStorage.getItem('life29_theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('life29_theme', next);
+        }
+
+        // ==========================================
+        // Supabase
+        // ==========================================
+        async function initSupabase() {
+            try {
+                const { createClient } = supabase;
+                supabaseClient = createClient(CONFIG.supabase.url, CONFIG.supabase.anonKey);
+                console.log('✅ Supabase connected');
+            } catch (e) {
+                console.error('Supabase init error:', e);
+            }
+        }
+
+        // ==========================================
+        // Calendar
+        // ==========================================
+        function initCalendar() {
+            selectedDate = new Date();
+            tempSelectedDate = new Date(selectedDate);
+            calendarDate = new Date(selectedDate);
+            updateDateDisplay();
+            renderCalendar();
+        }
+
+        function updateDateDisplay() {
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            document.getElementById('dateText').textContent = `${year}/${month}/${day}`;
+            document.getElementById('inputDate').value = `${year}-${month}-${day}`;
+        }
+
+        function renderCalendar() {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('calendarMonth').textContent = months[month];
+            document.getElementById('calendarYear').textContent = year;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            const container = document.getElementById('calendarDays');
+            container.innerHTML = '';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const btn = createDayButton(day, 'other-month', new Date(year, month - 1, day));
+                container.appendChild(btn);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                let className = '';
+                
+                if (date.getTime() === today.getTime()) {
+                    className += ' today';
+                }
+                
+                if (tempSelectedDate && 
+                    date.getFullYear() === tempSelectedDate.getFullYear() &&
+                    date.getMonth() === tempSelectedDate.getMonth() &&
+                    date.getDate() === tempSelectedDate.getDate()) {
+                    className += ' selected';
+                }
+
+                const btn = createDayButton(day, className.trim(), date);
+                container.appendChild(btn);
+            }
+
+            const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+            const nextDays = totalCells - (firstDay + daysInMonth);
+            for (let day = 1; day <= nextDays; day++) {
+                const btn = createDayButton(day, 'other-month', new Date(year, month + 1, day));
+                container.appendChild(btn);
+            }
+        }
+
+        function createDayButton(day, className, date) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'calendar-day ' + className;
+            btn.textContent = day;
+            btn.addEventListener('click', () => {
+                tempSelectedDate = new Date(date);
+                renderCalendar();
+            });
+            return btn;
+        }
+
+        function openCalendar() {
+            tempSelectedDate = new Date(selectedDate);
+            calendarDate = new Date(selectedDate);
+            renderCalendar();
+            document.getElementById('calendarPopup').classList.add('show');
+        }
+
+        function closeCalendar() {
+            document.getElementById('calendarPopup').classList.remove('show');
+        }
+
+        function confirmDate() {
+            selectedDate = new Date(tempSelectedDate);
+            updateDateDisplay();
+            closeCalendar();
+        }
+
+        function goToToday() {
+            tempSelectedDate = new Date();
+            calendarDate = new Date();
+            renderCalendar();
+        }
+
+        // ==========================================
+        // Rating Slider
+        // ==========================================
+        function initRatingSlider() {
+            updateRatingDisplay(6);
+        }
+
+        function updateRatingDisplay(value) {
+            const display = document.getElementById('ratingValue');
+            const val = parseInt(value);
+            display.textContent = val;
+            
+            display.classList.remove('gold', 'rainbow');
+            
+            if (val >= 9 && val <= 10) {
+                display.classList.add('gold');
+            } else if (val > 10) {
+                display.classList.add('rainbow');
+            }
+        }
+
+        // ==========================================
+        // Load Data
+        // ==========================================
+        async function loadRestaurants() {
+            if (!supabaseClient) {
+                showEmptyState('未连接数据库');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('restaurants')
+                    .select('*')
+                    .order('eat_date', { ascending: false });
+
+                if (error) throw error;
+
+                restaurants = data || [];
+                renderList();
+            } catch (e) {
+                console.error('Load error:', e);
+                showEmptyState('加载失败');
+            }
+        }
+
+        function renderList() {
+            const container = document.getElementById('restaurantList');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filterUser = document.getElementById('filterUser').value;
+            const filterSort = document.getElementById('filterSort').value;
+
+            let filtered = [...restaurants];
+            
+            if (searchTerm) {
+                filtered = filtered.filter(r => 
+                    (r.name || '').toLowerCase().includes(searchTerm) ||
+                    (r.city || '').toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filterUser) {
+                filtered = filtered.filter(r => r.user === filterUser);
+            }
+
+            filtered.sort((a, b) => {
+                switch (filterSort) {
+                    case 'rating-desc':
+                        return (b.rating || 0) - (a.rating || 0);
+                    case 'rating-asc':
+                        return (a.rating || 0) - (b.rating || 0);
+                    case 'date-asc':
+                        return new Date(a.eat_date || 0) - new Date(b.eat_date || 0);
+                    case 'date-desc':
+                    default:
+                        return new Date(b.eat_date || 0) - new Date(a.eat_date || 0);
+                }
+            });
+
+            document.getElementById('totalCount').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                showEmptyState('暂无记录');
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(filtered.length / pageSize);
+            if (currentPage > totalPages) currentPage = totalPages;
+            
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filtered.slice(start, end);
+
+            container.innerHTML = pageData.map(r => {
+                const rating = r.rating || 0;
+                const fillWidth = Math.min((rating / 12) * 100, 100);
+                const isGold = rating >= 9 && rating <= 10;
+                const isRainbow = rating > 10;
+                const ratingClass = isRainbow ? 'rainbow' : (isGold ? 'gold' : '');
+                const dateInfo = formatDateParts(r.eat_date);
+
+                return `
+                    <div class="restaurant-item">
+                        <div class="restaurant-main">
+                            <div class="restaurant-info">
+                                <div class="restaurant-name">${escapeHtml(r.name || '未知')}</div>
+                                <div class="restaurant-meta">
+                                    <span>${escapeHtml(r.city || '—')}</span>
+                                    ${r.type ? `<span class="restaurant-type">${escapeHtml(r.type)}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="restaurant-right">
+                                <div class="restaurant-date">
+                                    <span class="date-year">${dateInfo.year}</span>
+                                    <span class="date-md">${dateInfo.month}/${dateInfo.day}</span>
+                                </div>
+                                <div class="restaurant-rating">
+                                    <div class="rating-bar">
+                                        <div class="rating-fill ${ratingClass}" style="width: ${fillWidth}%"></div>
+                                    </div>
+                                    <span class="rating-num ${ratingClass}">${rating}</span>
+                                </div>
+                                <div class="restaurant-user">${escapeHtml(r.user || '—')}</div>
+                            </div>
+                        </div>
+                        ${r.note ? `<div class="restaurant-note">${escapeHtml(r.note)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            const container = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            
+            html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">←</button>`;
+            
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    html += `<span class="page-info">...</span>`;
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span class="page-info">...</span>`;
+                }
+                html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">→</button>`;
+
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderList();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showEmptyState(msg) {
+            document.getElementById('restaurantList').innerHTML = 
+                `<div class="empty-state">${msg}</div>`;
+        }
+
+        function formatDateParts(dateStr) {
+            if (!dateStr) return { year: '—', month: '—', day: '—' };
+            const date = new Date(dateStr);
+            return {
+                year: date.getFullYear(),
+                month: String(date.getMonth() + 1).padStart(2, '0'),
+                day: String(date.getDate()).padStart(2, '0')
+            };
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, m => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[m]);
+        }
+
+        // ==========================================
+        // Event Listeners
+        // ==========================================
+        function setupEventListeners() {
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            document.getElementById('addForm').addEventListener('submit', handleSubmit);
+
+            document.getElementById('inputRating').addEventListener('input', (e) => {
+                updateRatingDisplay(e.target.value);
+            });
+
+            document.getElementById('dateDisplay').addEventListener('click', openCalendar);
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                calendarDate.setMonth(calendarDate.getMonth() - 1);
+                renderCalendar();
+            });
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                calendarDate.setMonth(calendarDate.getMonth() + 1);
+                renderCalendar();
+            });
+            document.getElementById('calendarToday').addEventListener('click', goToToday);
+            document.getElementById('calendarCancel').addEventListener('click', closeCalendar);
+            document.getElementById('calendarConfirm').addEventListener('click', confirmDate);
+
+            document.addEventListener('click', (e) => {
+                const popup = document.getElementById('calendarPopup');
+                const display = document.getElementById('dateDisplay');
+                if (!popup.contains(e.target) && !display.contains(e.target)) {
+                    closeCalendar();
+                }
+            });
+
+            document.getElementById('searchInput').addEventListener('input', debounce(() => {
+                currentPage = 1;
+                renderList();
+            }, 300));
+            
+            document.getElementById('filterUser').addEventListener('change', () => {
+                currentPage = 1;
+                renderList();
+            });
+            
+            document.getElementById('filterSort').addEventListener('change', () => {
+                currentPage = 1;
+                renderList();
+            });
+        }
+
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // ==========================================
+        // Form Submit
+        // ==========================================
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('inputName').value.trim();
+            const city = document.getElementById('inputCity').value.trim();
+            const type = document.getElementById('inputType').value.trim();
+            const rating = parseInt(document.getElementById('inputRating').value);
+            const eatDate = document.getElementById('inputDate').value;
+            const note = document.getElementById('inputNote').value.trim();
+
+            if (!name || !city || !eatDate) {
+                showToast('请填写必填项');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '提交中...';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('restaurants')
+                    .insert([{
+                        name: name,
+                        city: city,
+                        type: type || null,
+                        rating: rating,
+                        eat_date: eatDate,
+                        note: note || null,
+                        user: currentUser
+                    }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                restaurants.unshift(data);
+                currentPage = 1;
+                renderList();
+
+                document.getElementById('addForm').reset();
+                document.getElementById('inputRating').value = 6;
+                updateRatingDisplay(6);
+                initCalendar();
+
+                showToast('添加成功');
+            } catch (e) {
+                console.error('Submit error:', e);
+                showToast('提交失败');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '添加';
+            }
+        }
+
+        // ==========================================
+        // Toast
+        // ==========================================
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>
