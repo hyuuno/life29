@@ -7,7 +7,6 @@
 -- 1. 创建表（如果尚未创建）
 -- ==========================================
 -- 注意：如果表已存在，可以跳过此部分
--- 如果需要添加 type 字段到现有表，请使用下方的 ALTER TABLE 语句
 
 /*
 create table public.restaurants (
@@ -15,20 +14,30 @@ create table public.restaurants (
   created_at timestamp with time zone not null default now(),
   name text null,
   city text null,
-  rating bigint null,
+  rating_env bigint null,
   note text null,
   eat_date date null,
   "user" text null,
   type text null,
+  rating_service bigint null,
+  rating_flavor bigint null,
   constraint restaurants_pkey primary key (id)
 ) TABLESPACE pg_default;
 */
 
 -- ==========================================
--- 2. 如果表已存在，添加 type 字段
+-- 2. 如果需要从旧表迁移，添加新评分字段
 -- ==========================================
--- 如果表已存在但没有 type 字段，运行以下语句：
+-- ALTER TABLE public.restaurants ADD COLUMN IF NOT EXISTS rating_flavor bigint null;
+-- ALTER TABLE public.restaurants ADD COLUMN IF NOT EXISTS rating_env bigint null;
+-- ALTER TABLE public.restaurants ADD COLUMN IF NOT EXISTS rating_service bigint null;
 -- ALTER TABLE public.restaurants ADD COLUMN IF NOT EXISTS type text null;
+
+-- 如果旧表有 rating 字段，可以迁移数据到新字段：
+-- UPDATE public.restaurants SET rating_flavor = rating, rating_env = rating, rating_service = rating WHERE rating IS NOT NULL;
+
+-- 删除旧的 rating 字段（可选）：
+-- ALTER TABLE public.restaurants DROP COLUMN IF EXISTS rating;
 
 -- ==========================================
 -- 3. 启用 RLS (Row Level Security)

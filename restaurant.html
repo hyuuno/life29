@@ -177,6 +177,10 @@
             grid-template-columns: 1fr;
         }
 
+        .form-row.triple {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
         .form-group {
             display: flex;
             flex-direction: column;
@@ -223,15 +227,6 @@
             resize: vertical;
             min-height: 72px;
             line-height: 1.6;
-        }
-
-        /* Date and Rating Row */
-        .date-rating-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 32px;
-            align-items: end;
-            margin-bottom: 24px;
         }
 
         /* Date Picker */
@@ -435,26 +430,105 @@
             opacity: 0.85;
         }
 
-        /* Rating Slider */
-        .rating-group {
+        /* Rating Section */
+        .ratings-section {
+            margin-bottom: 24px;
+        }
+
+        .ratings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .ratings-title {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .ratings-avg {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .avg-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .avg-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            font-weight: 500;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .avg-value.gold {
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(212, 168, 83, 0.3);
+        }
+
+        .avg-value.rainbow {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-shift 3s ease infinite;
+            background-size: 400% 400%;
+        }
+
+        @keyframes rainbow-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .ratings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .rating-item {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        .rating-slider-row {
+        .rating-item-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 20px;
         }
 
-        .slider-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid var(--line);
+        .rating-item-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .rating-item-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            font-weight: 500;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .rating-item-value.gold {
+            color: var(--gold);
+        }
+
+        .rating-item-value.rainbow {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .rating-slider {
@@ -470,8 +544,8 @@
         .rating-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             background: var(--accent);
             border-radius: 50%;
             cursor: pointer;
@@ -483,52 +557,20 @@
         }
 
         .rating-slider::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             background: var(--accent);
             border-radius: 50%;
             cursor: pointer;
             border: none;
         }
 
-        .slider-labels {
+        .slider-scale {
             display: flex;
             justify-content: space-between;
             font-size: 10px;
             color: var(--text-light);
-        }
-
-        /* Large Rating Display */
-        .rating-display {
-            min-width: 72px;
-            text-align: center;
-        }
-
-        .rating-value {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 56px;
-            font-weight: 500;
-            line-height: 1;
-            transition: all 0.3s;
-        }
-
-        .rating-value.gold {
-            color: var(--gold);
-            text-shadow: 0 0 20px rgba(212, 168, 83, 0.3);
-        }
-
-        .rating-value.rainbow {
-            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: rainbow-shift 3s ease infinite;
-            background-size: 400% 400%;
-        }
-
-        @keyframes rainbow-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            margin-top: 4px;
         }
 
         .submit-btn {
@@ -685,45 +727,65 @@
             font-family: 'Cormorant Garamond', serif;
         }
 
-        .restaurant-rating {
+        /* Multi-rating display */
+        .restaurant-ratings {
             display: flex;
             align-items: center;
+            gap: 16px;
+        }
+
+        .mini-ratings {
+            display: flex;
             gap: 8px;
-            min-width: 90px;
-            justify-content: flex-end;
+            font-size: 11px;
+            color: var(--text-light);
         }
 
-        .rating-num {
-            font-size: 28px;
+        .mini-rating {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .mini-rating-icon {
+            font-size: 10px;
+        }
+
+        .mini-rating-val {
             font-family: 'Cormorant Garamond', serif;
+            font-size: 13px;
             font-weight: 500;
-            min-width: 36px;
-            text-align: right;
-            line-height: 1;
+            color: var(--text);
         }
 
-        .rating-num.gold {
+        .mini-rating-val.gold {
             color: var(--gold);
         }
 
-        .rating-num.rainbow {
-            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+        .mini-rating-val.rainbow {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: rainbow-shift 3s ease infinite;
-            background-size: 400% 400%;
         }
 
-        .rating-bar {
-            width: 40px;
+        .restaurant-avg {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 80px;
+            justify-content: flex-end;
+        }
+
+        .avg-bar {
+            width: 36px;
             height: 2px;
             background: var(--line);
             position: relative;
             overflow: hidden;
         }
 
-        .rating-fill {
+        .avg-fill {
             position: absolute;
             left: 0;
             top: 0;
@@ -732,12 +794,34 @@
             transition: width 0.3s ease;
         }
 
-        .rating-fill.gold {
+        .avg-fill.gold {
             background: linear-gradient(90deg, var(--gold), var(--gold-light));
         }
 
-        .rating-fill.rainbow {
+        .avg-fill.rainbow {
             background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+        }
+
+        .avg-num {
+            font-size: 28px;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 500;
+            min-width: 40px;
+            text-align: right;
+            line-height: 1;
+        }
+
+        .avg-num.gold {
+            color: var(--gold);
+        }
+
+        .avg-num.rainbow {
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-shift 3s ease infinite;
+            background-size: 400% 400%;
         }
 
         .restaurant-user {
@@ -863,23 +947,15 @@
                 gap: 20px;
             }
 
-            .date-rating-row {
+            .ratings-grid {
                 grid-template-columns: 1fr;
-                gap: 24px;
+                gap: 20px;
             }
 
-            .rating-slider-row {
+            .ratings-header {
                 flex-direction: column;
-                align-items: stretch;
-            }
-
-            .rating-display {
-                order: -1;
-                margin-bottom: 8px;
-            }
-
-            .rating-value {
-                font-size: 48px;
+                align-items: flex-start;
+                gap: 12px;
             }
 
             .restaurant-right {
@@ -887,7 +963,8 @@
             }
 
             .restaurant-date,
-            .restaurant-user {
+            .restaurant-user,
+            .mini-ratings {
                 display: none;
             }
 
@@ -906,11 +983,11 @@
                 font-size: 11px;
             }
 
-            .restaurant-rating {
-                min-width: 70px;
+            .restaurant-avg {
+                min-width: 60px;
             }
 
-            .rating-num {
+            .avg-num {
                 font-size: 24px;
             }
         }
@@ -958,20 +1035,16 @@
                     </div>
                 </div>
 
-                <!-- City and Type -->
-                <div class="form-row">
+                <!-- City, Type, Date -->
+                <div class="form-row triple">
                     <div class="form-group">
                         <label class="form-label">城市</label>
                         <input type="text" class="form-input" id="inputCity" placeholder="城市" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">类型</label>
-                        <input type="text" class="form-input" id="inputType" placeholder="如：韩式、日料、火锅...">
+                        <input type="text" class="form-input" id="inputType" placeholder="韩式、日料...">
                     </div>
-                </div>
-
-                <!-- Date and Rating Row -->
-                <div class="date-rating-row">
                     <div class="form-group">
                         <label class="form-label">用餐日期</label>
                         <div class="date-input-wrapper">
@@ -1020,23 +1093,42 @@
                         </div>
                         <input type="hidden" id="inputDate">
                     </div>
+                </div>
 
-                    <div class="rating-group">
-                        <label class="form-label">评分</label>
-                        <div class="rating-slider-row">
-                            <div class="slider-wrapper">
-                                <input type="range" class="rating-slider" id="inputRating" min="0" max="12" value="6" step="1">
-                                <div class="slider-labels">
-                                    <span>0</span>
-                                    <span>6</span>
-                                    <span>12</span>
-                                </div>
-                            </div>
+                <!-- Ratings Section -->
+                <div class="ratings-section">
+                    <div class="ratings-header">
+                        <span class="ratings-title">评分</span>
+                        <div class="ratings-avg">
+                            <span class="avg-label">均分</span>
+                            <span class="avg-value" id="avgValue">6.0</span>
                         </div>
                     </div>
-
-                    <div class="rating-display">
-                        <span class="rating-value" id="ratingValue">6</span>
+                    <div class="ratings-grid">
+                        <div class="rating-item">
+                            <div class="rating-item-header">
+                                <span class="rating-item-label">🍜 口味</span>
+                                <span class="rating-item-value" id="flavorValue">6</span>
+                            </div>
+                            <input type="range" class="rating-slider" id="inputFlavor" min="0" max="12" value="6" step="1">
+                            <div class="slider-scale"><span>0</span><span>12</span></div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-item-header">
+                                <span class="rating-item-label">🌿 环境</span>
+                                <span class="rating-item-value" id="envValue">6</span>
+                            </div>
+                            <input type="range" class="rating-slider" id="inputEnv" min="0" max="12" value="6" step="1">
+                            <div class="slider-scale"><span>0</span><span>12</span></div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-item-header">
+                                <span class="rating-item-label">💁 服务</span>
+                                <span class="rating-item-value" id="serviceValue">6</span>
+                            </div>
+                            <input type="range" class="rating-slider" id="inputService" min="0" max="12" value="6" step="1">
+                            <div class="slider-scale"><span>0</span><span>12</span></div>
+                        </div>
                     </div>
                 </div>
 
@@ -1044,7 +1136,7 @@
                 <div class="form-row single">
                     <div class="form-group">
                         <label class="form-label">备注</label>
-                        <textarea class="form-textarea" id="inputNote" placeholder="口味、环境、服务、价格..." rows="3"></textarea>
+                        <textarea class="form-textarea" id="inputNote" placeholder="推荐菜品、特别体验..." rows="3"></textarea>
                     </div>
                 </div>
 
@@ -1106,7 +1198,7 @@
             initTheme();
             await initSupabase();
             initCalendar();
-            initRatingSlider();
+            initRatingSliders();
             await loadRestaurants();
             setupEventListeners();
         });
@@ -1248,23 +1340,44 @@
         }
 
         // ==========================================
-        // Rating Slider
+        // Rating Sliders
         // ==========================================
-        function initRatingSlider() {
-            updateRatingDisplay(6);
+        function initRatingSliders() {
+            updateRatingDisplays();
         }
 
-        function updateRatingDisplay(value) {
-            const display = document.getElementById('ratingValue');
-            const val = parseInt(value);
-            display.textContent = val;
+        function updateRatingDisplays() {
+            const flavor = parseInt(document.getElementById('inputFlavor').value);
+            const env = parseInt(document.getElementById('inputEnv').value);
+            const service = parseInt(document.getElementById('inputService').value);
+
+            updateSingleRating('flavorValue', flavor);
+            updateSingleRating('envValue', env);
+            updateSingleRating('serviceValue', service);
+
+            // Calculate average
+            const avg = ((flavor + env + service) / 3).toFixed(1);
+            const avgEl = document.getElementById('avgValue');
+            avgEl.textContent = avg;
+
+            avgEl.classList.remove('gold', 'rainbow');
+            const avgNum = parseFloat(avg);
+            if (avgNum >= 9 && avgNum <= 10) {
+                avgEl.classList.add('gold');
+            } else if (avgNum > 10) {
+                avgEl.classList.add('rainbow');
+            }
+        }
+
+        function updateSingleRating(elementId, value) {
+            const el = document.getElementById(elementId);
+            el.textContent = value;
             
-            display.classList.remove('gold', 'rainbow');
-            
-            if (val >= 9 && val <= 10) {
-                display.classList.add('gold');
-            } else if (val > 10) {
-                display.classList.add('rainbow');
+            el.classList.remove('gold', 'rainbow');
+            if (value >= 9 && value <= 10) {
+                el.classList.add('gold');
+            } else if (value > 10) {
+                el.classList.add('rainbow');
             }
         }
 
@@ -1293,6 +1406,13 @@
             }
         }
 
+        function calcAvg(r) {
+            const f = r.rating_flavor || 0;
+            const e = r.rating_env || 0;
+            const s = r.rating_service || 0;
+            return (f + e + s) / 3;
+        }
+
         function renderList() {
             const container = document.getElementById('restaurantList');
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -1315,9 +1435,9 @@
             filtered.sort((a, b) => {
                 switch (filterSort) {
                     case 'rating-desc':
-                        return (b.rating || 0) - (a.rating || 0);
+                        return calcAvg(b) - calcAvg(a);
                     case 'rating-asc':
-                        return (a.rating || 0) - (b.rating || 0);
+                        return calcAvg(a) - calcAvg(b);
                     case 'date-asc':
                         return new Date(a.eat_date || 0) - new Date(b.eat_date || 0);
                     case 'date-desc':
@@ -1342,12 +1462,24 @@
             const pageData = filtered.slice(start, end);
 
             container.innerHTML = pageData.map(r => {
-                const rating = r.rating || 0;
-                const fillWidth = Math.min((rating / 12) * 100, 100);
-                const isGold = rating >= 9 && rating <= 10;
-                const isRainbow = rating > 10;
-                const ratingClass = isRainbow ? 'rainbow' : (isGold ? 'gold' : '');
+                const flavor = r.rating_flavor || 0;
+                const env = r.rating_env || 0;
+                const service = r.rating_service || 0;
+                const avg = ((flavor + env + service) / 3);
+                const avgDisplay = avg.toFixed(1);
+                const fillWidth = Math.min((avg / 12) * 100, 100);
+                
+                const isGold = avg >= 9 && avg <= 10;
+                const isRainbow = avg > 10;
+                const avgClass = isRainbow ? 'rainbow' : (isGold ? 'gold' : '');
+                
                 const dateInfo = formatDateParts(r.eat_date);
+
+                const getRatingClass = (val) => {
+                    if (val >= 9 && val <= 10) return 'gold';
+                    if (val > 10) return 'rainbow';
+                    return '';
+                };
 
                 return `
                     <div class="restaurant-item">
@@ -1364,11 +1496,27 @@
                                     <span class="date-year">${dateInfo.year}</span>
                                     <span class="date-md">${dateInfo.month}/${dateInfo.day}</span>
                                 </div>
-                                <div class="restaurant-rating">
-                                    <div class="rating-bar">
-                                        <div class="rating-fill ${ratingClass}" style="width: ${fillWidth}%"></div>
+                                <div class="restaurant-ratings">
+                                    <div class="mini-ratings">
+                                        <span class="mini-rating">
+                                            <span class="mini-rating-icon">🍜</span>
+                                            <span class="mini-rating-val ${getRatingClass(flavor)}">${flavor}</span>
+                                        </span>
+                                        <span class="mini-rating">
+                                            <span class="mini-rating-icon">🌿</span>
+                                            <span class="mini-rating-val ${getRatingClass(env)}">${env}</span>
+                                        </span>
+                                        <span class="mini-rating">
+                                            <span class="mini-rating-icon">💁</span>
+                                            <span class="mini-rating-val ${getRatingClass(service)}">${service}</span>
+                                        </span>
                                     </div>
-                                    <span class="rating-num ${ratingClass}">${rating}</span>
+                                    <div class="restaurant-avg">
+                                        <div class="avg-bar">
+                                            <div class="avg-fill ${avgClass}" style="width: ${fillWidth}%"></div>
+                                        </div>
+                                        <span class="avg-num ${avgClass}">${avgDisplay}</span>
+                                    </div>
                                 </div>
                                 <div class="restaurant-user">${escapeHtml(r.user || '—')}</div>
                             </div>
@@ -1463,10 +1611,12 @@
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             document.getElementById('addForm').addEventListener('submit', handleSubmit);
 
-            document.getElementById('inputRating').addEventListener('input', (e) => {
-                updateRatingDisplay(e.target.value);
+            // Rating sliders
+            ['inputFlavor', 'inputEnv', 'inputService'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateRatingDisplays);
             });
 
+            // Calendar
             document.getElementById('dateDisplay').addEventListener('click', openCalendar);
             document.getElementById('prevMonth').addEventListener('click', () => {
                 calendarDate.setMonth(calendarDate.getMonth() - 1);
@@ -1488,6 +1638,7 @@
                 }
             });
 
+            // Filters
             document.getElementById('searchInput').addEventListener('input', debounce(() => {
                 currentPage = 1;
                 renderList();
@@ -1521,8 +1672,10 @@
             const name = document.getElementById('inputName').value.trim();
             const city = document.getElementById('inputCity').value.trim();
             const type = document.getElementById('inputType').value.trim();
-            const rating = parseInt(document.getElementById('inputRating').value);
             const eatDate = document.getElementById('inputDate').value;
+            const flavor = parseInt(document.getElementById('inputFlavor').value);
+            const env = parseInt(document.getElementById('inputEnv').value);
+            const service = parseInt(document.getElementById('inputService').value);
             const note = document.getElementById('inputNote').value.trim();
 
             if (!name || !city || !eatDate) {
@@ -1541,8 +1694,10 @@
                         name: name,
                         city: city,
                         type: type || null,
-                        rating: rating,
                         eat_date: eatDate,
+                        rating_flavor: flavor,
+                        rating_env: env,
+                        rating_service: service,
                         note: note || null,
                         user: currentUser
                     }])
@@ -1555,9 +1710,12 @@
                 currentPage = 1;
                 renderList();
 
+                // Reset form
                 document.getElementById('addForm').reset();
-                document.getElementById('inputRating').value = 6;
-                updateRatingDisplay(6);
+                document.getElementById('inputFlavor').value = 6;
+                document.getElementById('inputEnv').value = 6;
+                document.getElementById('inputService').value = 6;
+                updateRatingDisplays();
                 initCalendar();
 
                 showToast('添加成功');
