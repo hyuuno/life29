@@ -555,6 +555,23 @@ body:has(.music-main) {
     border-color: var(--color-text-muted);
 }
 
+/* 歌曲数量显示 */
+.song-count {
+    display: flex;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    background: rgba(var(--color-bg-card-rgb, 255, 255, 255), 0.5);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    font-family: var(--font-display);
+}
+
+[data-theme="dark"] .song-count {
+    background: rgba(40, 40, 40, 0.5);
+}
+
 /* 4x4 专辑网格 */
 .album-grid {
     display: grid;

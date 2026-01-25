@@ -143,10 +143,38 @@ class MusicPage {
     }
     
     shuffleOrder() {
-        this.displayOrder = [...Array(16).keys()];
-        for (let i = this.displayOrder.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [this.displayOrder[i], this.displayOrder[j]] = [this.displayOrder[j], this.displayOrder[i]];
+        // 如果歌曲数少于等于16，直接打乱显示顺序
+        if (this.songs.length <= 16) {
+            this.displayOrder = [...Array(this.songs.length).keys()];
+            // Fisher-Yates shuffle
+            for (let i = this.displayOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [this.displayOrder[i], this.displayOrder[j]] = [this.displayOrder[j], this.displayOrder[i]];
+            }
+            // 补齐到16个位置（空位用-1表示）
+            while (this.displayOrder.length < 16) {
+                this.displayOrder.push(-1);
+            }
+        } else {
+            // 从所有歌曲中随机选择16首不重复的歌曲
+            const allIndices = [...Array(this.songs.length).keys()];
+            // Fisher-Yates shuffle
+            for (let i = allIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
+            }
+            // 取前16个
+            this.displayOrder = allIndices.slice(0, 16);
+        }
+        
+        // 更新歌曲数量显示
+        this.updateSongCount();
+    }
+    
+    updateSongCount() {
+        const countEl = document.getElementById('songCountDisplay');
+        if (countEl) {
+            countEl.textContent = `${this.songs.length} 首`;
         }
     }
     
@@ -634,9 +662,11 @@ class MusicPage {
         const placeholderColors = this.generatePlaceholderColors(16);
         
         this.displayOrder.forEach((orderIndex, gridIndex) => {
-            const song = this.songs[orderIndex];
             const item = document.createElement('div');
             item.className = 'album-item';
+            
+            // 处理空位（orderIndex 为 -1 或者没有对应歌曲）
+            const song = orderIndex >= 0 ? this.songs[orderIndex] : null;
             item.dataset.index = orderIndex;
             
             if (song) {
@@ -676,6 +706,7 @@ class MusicPage {
         });
         
         this.updatePlayingState();
+        this.updateSongCount();
         
         // 同步sidebar高度与album grid
         this.syncSidebarHeight();

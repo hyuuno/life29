@@ -459,6 +459,157 @@ class SupabaseService {
             throw e;
         }
     }
+    
+    // ==========================================
+    // Cloud Album 操作
+    // ==========================================
+    
+    /**
+     * 获取所有云相册
+     */
+    async getAlbums() {
+        if (!this.isConnected()) return [];
+        
+        try {
+            const { data, error } = await this.client
+                .from('album')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error('Failed to fetch albums:', e);
+            return [];
+        }
+    }
+    
+    /**
+     * 获取指定城市的云相册
+     * @param {string[]} cityNames - 城市名称数组（可能包含中文和英文）
+     * @param {string} country - 国家名称（可选）
+     */
+    async getAlbumsByCityNames(cityNames, country = null) {
+        if (!this.isConnected()) return [];
+        if (!cityNames || cityNames.length === 0) return [];
+        
+        try {
+            let query = this.client
+                .from('album')
+                .select('*')
+                .in('city', cityNames)
+                .order('created_at', { ascending: false });
+            
+            if (country) {
+                query = query.eq('country', country);
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error('Failed to fetch albums by city names:', e);
+            return [];
+        }
+    }
+    
+    /**
+     * 添加新云相册
+     * @param {Object} albumData - 相册数据
+     */
+    async addAlbum(albumData) {
+        if (!this.isConnected()) {
+            console.warn('Supabase not connected');
+            return null;
+        }
+        
+        try {
+            const { data, error } = await this.client
+                .from('album')
+                .insert([{
+                    ablum_link: albumData.albumUrl,  // 注意：数据库中是 ablum_link (typo)
+                    album_name: albumData.albumName,
+                    country: albumData.country || null,
+                    city: albumData.city || null
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
+            console.log('✅ Album added:', data);
+            return data;
+        } catch (e) {
+            console.error('Failed to add album:', e);
+            return null;
+        }
+    }
+    
+    /**
+     * 删除云相册
+     * @param {string} albumLink - 相册链接（主键）
+     */
+    async deleteAlbum(albumLink) {
+        if (!this.isConnected()) return false;
+        
+        try {
+            const { error } = await this.client
+                .from('album')
+                .delete()
+                .eq('ablum_link', albumLink);  // 注意：数据库中是 ablum_link (typo)
+            
+            if (error) throw error;
+            console.log('✅ Album deleted:', albumLink);
+            return true;
+        } catch (e) {
+            console.error('Failed to delete album:', e);
+            return false;
+        }
+    }
+    
+    /**
+     * 获取音乐库总数
+     */
+    async getMusicCount() {
+        if (!this.isConnected()) return 0;
+        
+        try {
+            const { count, error } = await this.client
+                .from('music_library')
+                .select('*', { count: 'exact', head: true });
+            
+            if (error) throw error;
+            return count || 0;
+        } catch (e) {
+            console.error('Failed to get music count:', e);
+            return 0;
+        }
+    }
+    
+    /**
+     * 获取随机歌曲（用于 reroll）
+     * @param {number} limit - 数量限制
+     */
+    async getRandomMusic(limit = 16) {
+        if (!this.isConnected()) return [];
+        
+        try {
+            // 获取所有歌曲
+            const { data, error } = await this.client
+                .from('music_library')
+                .select('*');
+            
+            if (error) throw error;
+            if (!data || data.length === 0) return [];
+            
+            // 在客户端随机选择
+            const shuffled = [...data].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, limit);
+        } catch (e) {
+            console.error('Failed to get random music:', e);
+            return [];
+        }
+    }
 }
 
 // 全局实例

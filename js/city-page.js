@@ -408,7 +408,9 @@ class CityPage {
     
     async initCloud() {
         if (window.supabaseService) {
-            await window.supabaseService.init();
+            this.isCloudMode = await window.supabaseService.init();
+        } else {
+            this.isCloudMode = false;
         }
         // cloudinaryService 不需要 init
     }
@@ -1040,6 +1042,32 @@ class CityPage {
     // ==========================================
     
     async loadCloudAlbums() {
+        // 获取当前城市名和可能的别名
+        const cityName = decodeURIComponent(this.cityName);
+        const alternateName = this.cityNameMap[cityName];
+        const cityNames = alternateName ? [cityName, alternateName] : [cityName];
+        
+        // 优先从云端数据库加载
+        if (this.isCloudMode && window.supabaseService?.isConnected()) {
+            try {
+                const cloudAlbums = await window.supabaseService.getAlbumsByCityNames(cityNames, this.countryName);
+                this.cloudAlbums = cloudAlbums.map(album => ({
+                    city: album.city,
+                    cityEn: this.cityNameMap[album.city] || album.city,
+                    country: album.country || '',
+                    albumName: album.album_name || 'Google Photos 相册',
+                    albumUrl: album.ablum_link,  // 注意：数据库中是 ablum_link (typo)
+                    description: `${album.city || cityName}旅行照片集`,
+                    createdAt: album.created_at
+                }));
+                console.log(`☁️ Loaded ${this.cloudAlbums.length} cloud albums from database for ${cityName}`);
+                return;
+            } catch (e) {
+                console.error('Failed to load cloud albums from database:', e);
+            }
+        }
+        
+        // 回退到 JSON 文件
         try {
             const response = await fetch('data/cloud-albums.json');
             if (!response.ok) {
@@ -1048,11 +1076,6 @@ class CityPage {
                 return;
             }
             const data = await response.json();
-            
-            // 获取当前城市名和可能的别名
-            const cityName = decodeURIComponent(this.cityName);
-            const alternateName = this.cityNameMap[cityName];
-            const cityNames = alternateName ? [cityName, alternateName] : [cityName];
             
             // 过滤出属于当前城市的云相册
             this.cloudAlbums = (data.albums || []).filter(album => {
@@ -1064,7 +1087,7 @@ class CityPage {
                 );
             });
             
-            console.log(`✅ Loaded ${this.cloudAlbums.length} cloud albums for ${cityName}`);
+            console.log(`📁 Loaded ${this.cloudAlbums.length} cloud albums from JSON for ${cityName}`);
         } catch (e) {
             console.error('Failed to load cloud albums:', e);
             this.cloudAlbums = [];
@@ -1152,7 +1175,7 @@ class CityPage {
         
         cancelBtn?.addEventListener('click', hideForm);
         
-        saveBtn?.addEventListener('click', () => {
+        saveBtn?.addEventListener('click', async () => {
             const url = document.getElementById('albumUrlInput')?.value?.trim();
             const name = document.getElementById('albumNameInput')?.value?.trim();
             const desc = document.getElementById('albumDescInput')?.value?.trim();
@@ -1167,30 +1190,75 @@ class CityPage {
                 return;
             }
             
-            // Generate the JSON to copy
+            // 获取城市信息
             const cityName = decodeURIComponent(this.cityName);
-            const alternateName = this.cityNameMap[cityName];
             
-            const albumData = {
-                city: cityName,
-                cityEn: alternateName || cityName,
-                country: this.countryName || '',
-                albumName: name,
-                albumUrl: url,
-                description: desc || `${cityName}旅行照片集`,
-                coverImage: '',
-                createdAt: new Date().toISOString().split('T')[0]
-            };
-            
-            // Copy to clipboard
-            const jsonStr = JSON.stringify(albumData, null, 2);
-            navigator.clipboard.writeText(jsonStr).then(() => {
-                alert(`相册配置已复制到剪贴板！\n\n请将以下内容添加到 data/cloud-albums.json 的 albums 数组中：\n\n${jsonStr}`);
-                hideForm();
-            }).catch(() => {
-                alert(`请手动将以下配置添加到 data/cloud-albums.json：\n\n${jsonStr}`);
-                hideForm();
-            });
+            // 检查云端是否连接
+            if (this.isCloudMode && window.supabaseService?.isConnected()) {
+                // 直接保存到数据库
+                saveBtn.disabled = true;
+                saveBtn.textContent = '保存中...';
+                
+                try {
+                    const result = await window.supabaseService.addAlbum({
+                        albumUrl: url,
+                        albumName: name,
+                        city: cityName,
+                        country: this.countryName || ''
+                    });
+                    
+                    if (result) {
+                        // 添加到本地数组
+                        this.cloudAlbums.push({
+                            city: cityName,
+                            cityEn: this.cityNameMap[cityName] || cityName,
+                            country: this.countryName || '',
+                            albumName: name,
+                            albumUrl: url,
+                            description: desc || `${cityName}旅行照片集`,
+                            createdAt: new Date().toISOString()
+                        });
+                        
+                        // 重新渲染
+                        this.renderCloudAlbums();
+                        
+                        alert('✅ 相册已保存到云端！');
+                        hideForm();
+                    } else {
+                        throw new Error('保存失败');
+                    }
+                } catch (e) {
+                    console.error('Failed to save album:', e);
+                    alert('保存失败：' + e.message);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '保存绑定';
+                }
+            } else {
+                // 回退到复制 JSON 的方式
+                const alternateName = this.cityNameMap[cityName];
+                
+                const albumData = {
+                    city: cityName,
+                    cityEn: alternateName || cityName,
+                    country: this.countryName || '',
+                    albumName: name,
+                    albumUrl: url,
+                    description: desc || `${cityName}旅行照片集`,
+                    coverImage: '',
+                    createdAt: new Date().toISOString().split('T')[0]
+                };
+                
+                // Copy to clipboard
+                const jsonStr = JSON.stringify(albumData, null, 2);
+                navigator.clipboard.writeText(jsonStr).then(() => {
+                    alert(`云端未连接，相册配置已复制到剪贴板！\n\n请将以下内容添加到 data/cloud-albums.json 的 albums 数组中：\n\n${jsonStr}`);
+                    hideForm();
+                }).catch(() => {
+                    alert(`云端未连接，请手动将以下配置添加到 data/cloud-albums.json：\n\n${jsonStr}`);
+                    hideForm();
+                });
+            }
         });
     }
     
