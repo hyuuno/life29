@@ -73,8 +73,8 @@ body {
     transform: translateY(-50%);
 
     /* 最小 1000px */
-    width: max(1000px, 70vh);
-    height: max(1000px, 70vh);
+    width: max(1200px, 84vh);
+    height: max(1200px, 84vh);
 
     z-index: 2;
     pointer-events: none;
@@ -95,10 +95,10 @@ body {
 .screen-video {
     position: absolute;
     /* 向外扩展 6% 确保填满取景器四边，overflow:hidden 由父级裁切 */
-    top: -6%;
-    left: -6%;
-    width: 112%;
-    height: 112%;
+    top: -11%;
+    left: -11%;
+    width: 122%;
+    height: 122%;
     object-fit: cover;
     opacity: 0;
     transition: opacity 0.8s ease;
