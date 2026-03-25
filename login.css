@@ -9,9 +9,9 @@
         /* 相机PNG内屏幕区域位置（相对2000x2000图像的百分比）
      * 来源: cameraframe_b.png 蓝色抠图 */
     --screen-left:   20.08%;
-    --screen-top:    32.00%;
+    --screen-top:    31.58%;
     --screen-width:  61.93%;
-    --screen-height: 35.40%;
+    --screen-height: 36.65%;
 }
 
 * {
@@ -120,30 +120,7 @@ body {
     z-index: 1;
 }
 
-/* 相机 HUD：仅保留 REC 闪烁指示 */
-.camera-hud {
-    position: absolute;
-    top:  27.83%;
-    left: 15.92%;
-    z-index: 2;
-    padding: 0;
-    pointer-events: none;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: clamp(8px, 1.4vmin, 13px);
-    letter-spacing: 0.08em;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-}
-
-.hud-rec {
-    display: inline-block;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: bold;
-    animation: recBlink 1.5s step-end infinite;
-}
-
-@keyframes recBlink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
+50%       { opacity: 0; }
 }
 
 /* ─── 视频名称 - 左下角 ─── */
