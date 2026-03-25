@@ -8,10 +8,10 @@
 
         /* 相机PNG内屏幕区域位置（相对2000x2000图像的百分比）
      * 来源: cameraframe_b.png 蓝色抠图 */
-    --screen-left:   20.50%;
-    --screen-top:    35.33%;
-    --screen-width:  61.10%;
-    --screen-height: 28.73%;
+    --screen-left:   20.08%;
+    --screen-top:    32.00%;
+    --screen-width:  61.93%;
+    --screen-height: 35.40%;
 }
 
 * {
@@ -69,7 +69,7 @@ body {
     position: fixed;
     top: 50%;
     /* 机身右侧边缘与 .bottom-controls (right:20px) 对齐 */
-    right: 10px;
+    right: -15px;
     transform: translateY(-50%);
 
     /* 最小 1000px */
@@ -123,12 +123,10 @@ body {
 /* 相机 HUD：仅保留 REC 闪烁指示 */
 .camera-hud {
     position: absolute;
-    top: var(--screen-top);
-    left: var(--screen-left);
-    width: var(--screen-width);
-    height: var(--screen-height);
+    top:  27.83%;
+    left: 15.92%;
     z-index: 2;
-    padding: 8% 8%;
+    padding: 0;
     pointer-events: none;
     font-family: 'Courier New', Courier, monospace;
     font-size: clamp(8px, 1.4vmin, 13px);
