@@ -67,17 +67,14 @@ body {
 /* ─── ② 相机取景器 ─── */
 .camera-display {
     position: fixed;
-    /* 垂直居中，水平贴右边缘 */
     top: 50%;
-    /* PNG 2000×2000 相机主体占右侧约80%宽度，
-       向右偏移让机身右侧贴近视窗右边缘 */
-    right: -8vw;
+    /* 相机PNG右侧约20%是透明空白，right:-20%让机身实体贴紧视窗右边缘 */
+    right: -20%;
     transform: translateY(-50%);
 
-    /* 相机图片为正方形 2000×2000，
-       大小超过视窗高度的 55%（确保占页面一半以上） */
-    width: clamp(520px, 62vh, 92vw);
-    height: clamp(520px, 62vh, 92vw);
+    /* 最小1000px，响应式跟随视窗放大 */
+    width: max(1000px, 70vh);
+    height: max(1000px, 70vh);
 
     z-index: 2;
     pointer-events: none;
@@ -488,11 +485,9 @@ body {
 /* ─── 响应式：窄屏手机 ─── */
 @media (max-width: 600px) {
     .camera-display {
-        right: auto;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: clamp(340px, 95vw, 520px);
-        height: clamp(340px, 95vw, 520px);
+        right: -25%;
+        width: max(1000px, 95vw);
+        height: max(1000px, 95vw);
     }
     .user-selection { gap: 50px; }
     .user-btn { font-size: 22px; padding: 10px 20px; }
