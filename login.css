@@ -68,11 +68,11 @@ body {
 .camera-display {
     position: fixed;
     top: 50%;
-    /* 相机PNG右侧约20%是透明空白，right:-20%让机身实体贴紧视窗右边缘 */
-    right: -20%;
+    /* 机身右侧边缘与 .bottom-controls (right:20px) 对齐 */
+    right: 20px;
     transform: translateY(-50%);
 
-    /* 最小1000px，响应式跟随视窗放大 */
+    /* 最小 1000px */
     width: max(1000px, 70vh);
     height: max(1000px, 70vh);
 
@@ -94,9 +94,11 @@ body {
 
 .screen-video {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    /* 向外扩展 6% 确保填满取景器四边，overflow:hidden 由父级裁切 */
+    top: -6%;
+    left: -6%;
+    width: 112%;
+    height: 112%;
     object-fit: cover;
     opacity: 0;
     transition: opacity 0.8s ease;
@@ -118,7 +120,7 @@ body {
     z-index: 1;
 }
 
-/* 仿相机 HUD 文字叠层 */
+/* 相机 HUD：仅保留 REC 闪烁指示 */
 .camera-hud {
     position: absolute;
     top: var(--screen-top);
@@ -126,53 +128,24 @@ body {
     width: var(--screen-width);
     height: var(--screen-height);
     z-index: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 6% 8%;
+    padding: 8% 8%;
     pointer-events: none;
     font-family: 'Courier New', Courier, monospace;
-    color: rgba(255, 255, 255, 0.55);
-    font-size: clamp(7px, 1.3vmin, 11px);
-    letter-spacing: 0.05em;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-}
-
-.hud-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    font-size: clamp(8px, 1.4vmin, 13px);
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
 
 .hud-rec {
-    color: rgba(255, 80, 80, 0.8);
+    display: inline-block;
+    color: rgba(255, 255, 255, 0.9);
     font-weight: bold;
     animation: recBlink 1.5s step-end infinite;
 }
 
 @keyframes recBlink {
     0%, 100% { opacity: 1; }
-    50%       { opacity: 0.2; }
-}
-
-.hud-time {
-    font-variant-numeric: tabular-nums;
-}
-
-.hud-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-}
-
-.hud-date {
-    font-variant-numeric: tabular-nums;
-}
-
-.hud-label {
-    opacity: 0.7;
-    font-family: 'Noto Sans SC', sans-serif;
-    font-weight: 200;
+    50%       { opacity: 0; }
 }
 
 /* ─── 视频名称 - 左下角 ─── */

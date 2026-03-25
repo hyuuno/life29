@@ -87,28 +87,6 @@ function getRandomVideoIndex(excludeIndex) {
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// ── HUD 时钟 ─────────────────────────────────────────
-function startHudClock() {
-    const hudTime = document.getElementById('hudTime');
-    const hudDate = document.getElementById('hudDate');
-    if (!hudTime || !hudDate) return;
-
-    function tick() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        hudTime.textContent = `${h}:${m}:${s}`;
-
-        const mo = String(now.getMonth() + 1).padStart(2, '0');
-        const d  = String(now.getDate()).padStart(2, '0');
-        const y  = now.getFullYear();
-        hudDate.textContent = `${mo}/${d}/${y}`;
-    }
-    tick();
-    setInterval(tick, 1000);
-}
-
 // ── 核心：切换视频（同时切换屏幕视频 + 模糊背景视频） ──
 function switchVideo(index) {
     const scrVideos = document.querySelectorAll('.screen-video');
@@ -150,7 +128,6 @@ function switchVideo(index) {
         videoName.style.opacity = '0';
         setTimeout(() => { videoName.textContent = name; videoName.style.opacity = '1'; }, 300);
     }
-    if (hudLabel) hudLabel.textContent = name;
 }
 
 // ── DOM 加载完成 ───────────────────────────────────────
@@ -169,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const soundToggle     = document.getElementById('soundToggle');
     const bgmAudio        = document.getElementById('bgmAudio');
     const numKeys         = document.querySelectorAll('.num-key');
-    const hudLabel        = document.getElementById('hudLabel');
 
     // 随机初始视频
     currentVideoIndex = Math.floor(Math.random() * VIDEO_CONFIG.length);
@@ -200,11 +176,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // 更新标签
     const initialName = VIDEO_CONFIG[currentVideoIndex].name;
     if (videoName)  videoName.textContent  = initialName;
-    if (hudLabel)   hudLabel.textContent   = initialName;
-
-    // 启动 HUD 时钟
-    startHudClock();
-
     // ── 随机切换按钮 ──
     randomToggle?.addEventListener('click', () => {
         switchVideo(getRandomVideoIndex(currentVideoIndex));
