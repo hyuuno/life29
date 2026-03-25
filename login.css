@@ -8,10 +8,10 @@
 
         /* 相机PNG内屏幕区域位置（相对2000x2000图像的百分比）
      * 来源: cameraframe_b.png 蓝色抠图 */
-    --screen-left:   20.75%;
-    --screen-top:    37.00%;
-    --screen-width:  60.60%;
-    --screen-height: 25.40%;
+    --screen-left:   20.50%;
+    --screen-top:    35.33%;
+    --screen-width:  61.10%;
+    --screen-height: 28.73%;
 }
 
 * {
@@ -69,7 +69,7 @@ body {
     position: fixed;
     top: 50%;
     /* 机身右侧边缘与 .bottom-controls (right:20px) 对齐 */
-    right: 20px;
+    right: 10px;
     transform: translateY(-50%);
 
     /* 最小 1000px */
