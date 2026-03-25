@@ -6,11 +6,12 @@
     --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-border: rgba(255, 255, 255, 0.15);
 
-    /* 相机PNG内屏幕区域位置（相对2000x2000图像的百分比） */
-    --screen-left: 19.5%;
-    --screen-top: 32.4%;
-    --screen-width: 61.25%;
-    --screen-height: 33.85%;
+        /* 相机PNG内屏幕区域位置（相对2000x2000图像的百分比）
+     * 来源: cameraframe_b.png 蓝色抠图 */
+    --screen-left:   20.75%;
+    --screen-top:    37.00%;
+    --screen-width:  60.60%;
+    --screen-height: 25.40%;
 }
 
 * {
@@ -66,14 +67,17 @@ body {
 /* ─── ② 相机取景器 ─── */
 .camera-display {
     position: fixed;
-    /* 居中定位 */
+    /* 垂直居中，水平贴右边缘 */
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    /* PNG 2000×2000 相机主体占右侧约80%宽度，
+       向右偏移让机身右侧贴近视窗右边缘 */
+    right: -8vw;
+    transform: translateY(-50%);
 
-    /* 相机图片为正方形 2000×2000 */
-    width: min(72vmin, 680px);
-    height: min(72vmin, 680px);
+    /* 相机图片为正方形 2000×2000，
+       大小超过视窗高度的 55%（确保占页面一半以上） */
+    width: clamp(520px, 62vh, 92vw);
+    height: clamp(520px, 62vh, 92vw);
 
     z-index: 2;
     pointer-events: none;
@@ -481,8 +485,15 @@ body {
     height: 100%;
 }
 
-/* ─── 响应式 ─── */
+/* ─── 响应式：窄屏手机 ─── */
 @media (max-width: 600px) {
+    .camera-display {
+        right: auto;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: clamp(340px, 95vw, 520px);
+        height: clamp(340px, 95vw, 520px);
+    }
     .user-selection { gap: 50px; }
     .user-btn { font-size: 22px; padding: 10px 20px; }
     .password-container { width: 180px; }
@@ -491,3 +502,4 @@ body {
     .sound-toggle, .random-toggle { width: 18px; height: 18px; }
     .door-logo { width: 15px; height: 20px; }
 }
+
