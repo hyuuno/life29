@@ -9,36 +9,69 @@
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    <!-- 黑色背景 -->
     <div class="dark-background"></div>
 
-    <!-- 视频背景 -->
-    <div class="video-container" id="videoContainer">
-        <div class="video-wrapper" id="videoWrapper">
-            <video class="background-video active" id="video0" muted playsinline preload="auto">
+    <!-- ① 高斯模糊全屏背景视频 -->
+    <div class="blur-bg-container" id="blurBgContainer">
+        <video class="blur-video" id="bgvideo0" muted playsinline preload="auto">
+            <source src="videos/jinmenbridge.mp4" type="video/mp4">
+        </video>
+        <video class="blur-video" id="bgvideo1" muted playsinline preload="auto">
+            <source src="videos/lego.mp4" type="video/mp4">
+        </video>
+        <video class="blur-video" id="bgvideo2" muted playsinline preload="auto">
+            <source src="videos/flower.mp4" type="video/mp4">
+        </video>
+        <video class="blur-video" id="bgvideo3" muted playsinline preload="auto">
+            <source src="videos/theater.mp4" type="video/mp4">
+        </video>
+        <video class="blur-video" id="bgvideo4" muted playsinline preload="auto">
+            <source src="videos/minisoda.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- ② 相机取景器（视频在相机屏幕内播放） -->
+    <div class="camera-display" id="cameraDisplay">
+        <!-- 屏幕内视频（坐标与PNG透明区域对齐） -->
+        <div class="camera-screen-area">
+            <video class="screen-video active" id="scrvideo0" muted playsinline preload="auto">
                 <source src="videos/jinmenbridge.mp4" type="video/mp4">
             </video>
-            <video class="background-video" id="video1" muted playsinline preload="auto">
+            <video class="screen-video" id="scrvideo1" muted playsinline preload="auto">
                 <source src="videos/lego.mp4" type="video/mp4">
             </video>
-            <video class="background-video" id="video2" muted playsinline preload="auto">
+            <video class="screen-video" id="scrvideo2" muted playsinline preload="auto">
                 <source src="videos/flower.mp4" type="video/mp4">
             </video>
-            <video class="background-video" id="video3" muted playsinline preload="auto">
+            <video class="screen-video" id="scrvideo3" muted playsinline preload="auto">
                 <source src="videos/theater.mp4" type="video/mp4">
             </video>
-            <video class="background-video" id="video4" muted playsinline preload="auto">
+            <video class="screen-video" id="scrvideo4" muted playsinline preload="auto">
                 <source src="videos/minisoda.mp4" type="video/mp4">
             </video>
         </div>
+
+        <!-- 相机边框叠层（屏幕区域镂空透明） -->
+        <img src="images/cameraframe_transparent.png" class="camera-frame-img" alt="" draggable="false">
+
+        <!-- 仿相机 HUD 叠层 -->
+        <div class="camera-hud">
+            <div class="hud-top">
+                <span class="hud-rec">● REC</span>
+                <span class="hud-time" id="hudTime">00:00</span>
+            </div>
+            <div class="hud-bottom">
+                <span class="hud-date" id="hudDate">00/00/0000</span>
+                <span class="hud-label" id="hudLabel">金门大桥</span>
+            </div>
+        </div>
     </div>
 
-    <!-- 视频名称显示 - 左下角 -->
+    <!-- 视频名称 - 左下角 -->
     <div class="video-name" id="videoName">金门大桥</div>
 
     <!-- 底部控制栏 -->
     <div class="bottom-controls">
-        <!-- 声音控制 -->
         <div class="sound-toggle" id="soundToggle" title="BGM">
             <svg class="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -51,21 +84,16 @@
             </svg>
         </div>
 
-        <!-- 随机切换按钮 - 线条风格 -->
         <div class="random-toggle" id="randomToggle" title="随机切换">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
             </svg>
         </div>
 
-        <!-- 门 Logo -->
         <div class="door-logo" id="doorLogo" title="登录">
             <svg viewBox="0 0 100 120" fill="none">
-                <!-- 门框 -->
                 <path d="M20 15 L20 115 M80 15 L80 115 M20 15 L80 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                <!-- 开着的门 -->
                 <path d="M25 20 L25 110 L55 100 L55 30 Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
-                <!-- 门把手 -->
                 <ellipse cx="48" cy="68" rx="3" ry="5" fill="currentColor"/>
             </svg>
         </div>
@@ -73,22 +101,17 @@
 
     <!-- 磨砂登录界面 -->
     <div class="login-overlay" id="loginOverlay">
-        <!-- 关闭按钮 -->
         <div class="close-login" id="closeLogin">
             <svg viewBox="0 0 40 40" fill="none">
                 <line x1="12" y1="12" x2="28" y2="28" stroke="white" stroke-width="1.5"/>
                 <line x1="28" y1="12" x2="12" y2="28" stroke="white" stroke-width="1.5"/>
             </svg>
         </div>
-
         <div class="login-container">
-            <!-- 用户选择 -->
             <div class="user-selection">
                 <button class="user-btn wiwi" data-user="wiwi">wiwi</button>
                 <button class="user-btn yuyu" data-user="yuyu">yuyu</button>
             </div>
-
-            <!-- 密码输入 - 数字键盘 -->
             <div class="password-container" id="passwordContainer">
                 <div class="pin-dots" id="pinDots">
                     <span class="pin-dot"></span>
@@ -121,13 +144,10 @@
                     </button>
                 </div>
             </div>
-
-            <!-- 错误提示 -->
             <div class="error-message" id="errorMessage"></div>
         </div>
     </div>
 
-    <!-- BGM音频 -->
     <audio id="bgmAudio" loop>
         <source src="audio/bgm.mp3" type="audio/mpeg">
     </audio>

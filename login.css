@@ -5,6 +5,12 @@
     --yuyu-color: #a8d8f0;
     --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-border: rgba(255, 255, 255, 0.15);
+
+    /* 相机PNG内屏幕区域位置（相对2000x2000图像的百分比） */
+    --screen-left: 19.5%;
+    --screen-top: 32.4%;
+    --screen-width: 61.25%;
+    --screen-height: 33.85%;
 }
 
 * {
@@ -21,57 +27,154 @@ body {
     background: #000;
 }
 
-/* 纯黑色背景 */
+/* ─── 纯黑底层 ─── */
 .dark-background {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: #000;
     z-index: 0;
 }
 
-/* 视频背景容器 */
-.video-container {
+/* ─── ① 全屏高斯模糊背景视频 ─── */
+.blur-bg-container {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     z-index: 1;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.video-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-.background-video {
+.blur-video {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(1.08); /* scale 避免模糊边缘露出 */
     min-width: 100%;
     min-height: 100%;
     width: auto;
     height: auto;
     object-fit: cover;
     opacity: 0;
-    transition: opacity 1s ease;
+    filter: blur(28px);
+    transition: opacity 1.2s ease;
     pointer-events: none;
 }
 
-.background-video.active {
+.blur-video.active {
+    opacity: 0.75;
+}
+
+/* ─── ② 相机取景器 ─── */
+.camera-display {
+    position: fixed;
+    /* 居中定位 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    /* 相机图片为正方形 2000×2000 */
+    width: min(72vmin, 680px);
+    height: min(72vmin, 680px);
+
+    z-index: 2;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* 相机屏幕区域 - 坐标与PNG透明区域精确对齐 */
+.camera-screen-area {
+    position: absolute;
+    top: var(--screen-top);
+    left: var(--screen-left);
+    width: var(--screen-width);
+    height: var(--screen-height);
+    overflow: hidden;
+    border-radius: 3px;
+}
+
+.screen-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.screen-video.active {
     opacity: 1;
 }
 
-/* 视频名称 - 左下角 */
+/* 相机边框图片覆盖在屏幕视频上方 */
+.camera-frame-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* 仿相机 HUD 文字叠层 */
+.camera-hud {
+    position: absolute;
+    top: var(--screen-top);
+    left: var(--screen-left);
+    width: var(--screen-width);
+    height: var(--screen-height);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6% 8%;
+    pointer-events: none;
+    font-family: 'Courier New', Courier, monospace;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: clamp(7px, 1.3vmin, 11px);
+    letter-spacing: 0.05em;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.hud-rec {
+    color: rgba(255, 80, 80, 0.8);
+    font-weight: bold;
+    animation: recBlink 1.5s step-end infinite;
+}
+
+@keyframes recBlink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+}
+
+.hud-time {
+    font-variant-numeric: tabular-nums;
+}
+
+.hud-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.hud-date {
+    font-variant-numeric: tabular-nums;
+}
+
+.hud-label {
+    opacity: 0.7;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-weight: 200;
+}
+
+/* ─── 视频名称 - 左下角 ─── */
 .video-name {
     position: fixed;
     bottom: 25px;
@@ -79,14 +182,14 @@ body {
     font-family: 'Noto Sans SC', sans-serif;
     font-size: 11px;
     font-weight: 200;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.45);
     letter-spacing: 1px;
     z-index: 100;
     transition: opacity 0.5s ease;
     text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-/* 底部控制栏 */
+/* ─── 底部控制栏 ─── */
 .bottom-controls {
     position: fixed;
     bottom: 20px;
@@ -97,7 +200,6 @@ body {
     z-index: 100;
 }
 
-/* 声音控制 */
 .sound-toggle {
     width: 20px;
     height: 20px;
@@ -107,9 +209,7 @@ body {
     color: white;
 }
 
-.sound-toggle:hover {
-    opacity: 0.8;
-}
+.sound-toggle:hover { opacity: 0.8; }
 
 .sound-toggle svg {
     width: 100%;
@@ -117,19 +217,10 @@ body {
     filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
-.sound-toggle .sound-off {
-    display: none;
-}
+.sound-toggle .sound-off { display: none; }
+.sound-toggle.muted .sound-on { display: none; }
+.sound-toggle.muted .sound-off { display: block; }
 
-.sound-toggle.muted .sound-on {
-    display: none;
-}
-
-.sound-toggle.muted .sound-off {
-    display: block;
-}
-
-/* 随机切换按钮 - 线条风格 */
 .random-toggle {
     width: 20px;
     height: 20px;
@@ -139,9 +230,7 @@ body {
     color: white;
 }
 
-.random-toggle:hover {
-    opacity: 0.8;
-}
+.random-toggle:hover { opacity: 0.8; }
 
 .random-toggle svg {
     width: 100%;
@@ -149,7 +238,6 @@ body {
     filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
-/* 门图标 */
 .door-logo {
     width: 18px;
     height: 24px;
@@ -159,9 +247,7 @@ body {
     color: white;
 }
 
-.door-logo:hover {
-    opacity: 0.8;
-}
+.door-logo:hover { opacity: 0.8; }
 
 .door-logo svg {
     width: 100%;
@@ -169,13 +255,10 @@ body {
     filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
-/* 磨砂玻璃登录界面 */
+/* ─── 磨砂玻璃登录界面 ─── */
 .login-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
@@ -205,7 +288,6 @@ body {
     opacity: 1;
 }
 
-/* 用户选择 */
 .user-selection {
     display: flex;
     gap: 80px;
@@ -239,13 +321,8 @@ body {
     transform: translateX(-50%);
 }
 
-.user-btn:hover {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.user-btn:hover::after {
-    width: 60%;
-}
+.user-btn:hover { color: rgba(255, 255, 255, 0.7); }
+.user-btn:hover::after { width: 60%; }
 
 .user-btn.wiwi.selected {
     color: var(--wiwi-color);
@@ -269,7 +346,6 @@ body {
     box-shadow: 0 0 10px var(--yuyu-glow);
 }
 
-/* 密码输入 - 数字键盘 */
 .password-container {
     position: relative;
     width: 200px;
@@ -286,7 +362,6 @@ body {
     pointer-events: auto;
 }
 
-/* PIN 圆点显示 */
 .pin-dots {
     display: flex;
     justify-content: center;
@@ -317,11 +392,10 @@ body {
 
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-4px); }
-    40%, 80% { transform: translateX(4px); }
+    20%, 60%  { transform: translateX(-4px); }
+    40%, 80%  { transform: translateX(4px); }
 }
 
-/* 数字键盘 */
 .numpad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -364,24 +438,16 @@ body {
     background: transparent;
 }
 
-.num-key.clear:hover {
-    color: rgba(255, 150, 150, 0.9);
-}
-
-.num-key.confirm:hover {
-    color: rgba(150, 255, 150, 0.9);
-}
+.num-key.clear:hover  { color: rgba(255, 150, 150, 0.9); }
+.num-key.confirm:hover { color: rgba(150, 255, 150, 0.9); }
 
 .num-key svg {
     opacity: 0.6;
     transition: opacity 0.2s;
 }
 
-.num-key:hover svg {
-    opacity: 1;
-}
+.num-key:hover svg { opacity: 1; }
 
-/* 错误提示 */
 .error-message {
     margin-top: 25px;
     font-size: 12px;
@@ -392,11 +458,8 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.error-message.show {
-    opacity: 1;
-}
+.error-message.show { opacity: 1; }
 
-/* 关闭按钮 */
 .close-login {
     position: absolute;
     top: 30px;
@@ -418,41 +481,13 @@ body {
     height: 100%;
 }
 
-/* 响应式 */
+/* ─── 响应式 ─── */
 @media (max-width: 600px) {
-    .user-selection {
-        gap: 50px;
-    }
-    
-    .user-btn {
-        font-size: 22px;
-        padding: 10px 20px;
-    }
-    
-    .password-container {
-        width: 180px;
-    }
-    
-    .video-name {
-        font-size: 10px;
-        bottom: 18px;
-        left: 18px;
-    }
-    
-    .bottom-controls {
-        bottom: 15px;
-        right: 15px;
-        gap: 12px;
-    }
-    
-    .sound-toggle,
-    .random-toggle {
-        width: 18px;
-        height: 18px;
-    }
-    
-    .door-logo {
-        width: 15px;
-        height: 20px;
-    }
+    .user-selection { gap: 50px; }
+    .user-btn { font-size: 22px; padding: 10px 20px; }
+    .password-container { width: 180px; }
+    .video-name { font-size: 10px; bottom: 18px; left: 18px; }
+    .bottom-controls { bottom: 15px; right: 15px; gap: 12px; }
+    .sound-toggle, .random-toggle { width: 18px; height: 18px; }
+    .door-logo { width: 15px; height: 20px; }
 }

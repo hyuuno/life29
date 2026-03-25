@@ -1,11 +1,8 @@
-// 安全验证模块 - 密码不以明文存储
+// 安全验证模块
 const SecureAuth = (function() {
-    // 简单的混淆验证 - 通过数学运算验证
-    // 验证逻辑: 输入的四位数字相乘等于特定值，且满足特定条件
     const v = function(p) {
         if (p.length !== 4) return false;
         const d = p.split('').map(Number);
-        // 9*5*2*9 = 810, 9+5+2+9 = 25, 第一位=第四位, 第三位最小
         const m = d[0] * d[1] * d[2] * d[3];
         const s = d[0] + d[1] + d[2] + d[3];
         return m === 810 && s === 25 && d[0] === d[3] && d[2] < d[0] && d[2] < d[1] && d[2] < d[3];
@@ -22,17 +19,16 @@ const VIDEO_CONFIG = [
     { id: 'video4', name: 'minisoda' }
 ];
 
-// 状态管理
+// 状态
 let currentVideoIndex = 0;
 let selectedUser = null;
 let isMuted = true;
 let enteredPin = '';
 
-// 检查是否已登录
+// ── 登录状态 ──────────────────────────────────────────
 function checkLoginStatus() {
     const isLoggedIn = sessionStorage.getItem('life29_logged_in');
     const currentUser = sessionStorage.getItem('life29_user');
-    
     if (isLoggedIn === 'true' && currentUser) {
         if (window.location.pathname.includes('login.html')) {
             window.location.href = 'index.html';
@@ -42,7 +38,6 @@ function checkLoginStatus() {
     return false;
 }
 
-// 登录函数
 function login(username, pin) {
     if (SecureAuth.verify(pin)) {
         sessionStorage.setItem('life29_logged_in', 'true');
@@ -53,7 +48,6 @@ function login(username, pin) {
     return false;
 }
 
-// 登出函数
 function logout() {
     sessionStorage.removeItem('life29_logged_in');
     sessionStorage.removeItem('life29_user');
@@ -61,231 +55,234 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-// 获取当前用户
 function getCurrentUser() {
     return sessionStorage.getItem('life29_user');
 }
 
-// 显示错误消息
+// ── 错误 / PIN ────────────────────────────────────────
 function showError(message) {
     const errorDiv = document.getElementById('errorMessage');
     if (errorDiv) {
         errorDiv.textContent = message;
         errorDiv.classList.add('show');
-        setTimeout(() => {
-            errorDiv.classList.remove('show');
-        }, 3000);
+        setTimeout(() => errorDiv.classList.remove('show'), 3000);
     }
 }
 
-// 更新 PIN 圆点显示
 function updatePinDots() {
-    const dots = document.querySelectorAll('.pin-dot');
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('filled', index < enteredPin.length);
+    document.querySelectorAll('.pin-dot').forEach((dot, i) => {
+        dot.classList.toggle('filled', i < enteredPin.length);
         dot.classList.remove('error');
     });
 }
 
-// PIN 错误动画
 function showPinError() {
-    const dots = document.querySelectorAll('.pin-dot');
-    dots.forEach(dot => {
-        dot.classList.add('error');
-    });
-    setTimeout(() => {
-        enteredPin = '';
-        updatePinDots();
-    }, 400);
+    document.querySelectorAll('.pin-dot').forEach(dot => dot.classList.add('error'));
+    setTimeout(() => { enteredPin = ''; updatePinDots(); }, 400);
 }
 
-// 获取随机视频索引（排除当前视频）
+// ── 随机索引 ──────────────────────────────────────────
 function getRandomVideoIndex(excludeIndex) {
-    const availableIndices = VIDEO_CONFIG
-        .map((_, index) => index)
-        .filter(index => index !== excludeIndex);
-    return availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    const pool = VIDEO_CONFIG.map((_, i) => i).filter(i => i !== excludeIndex);
+    return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// 切换视频
+// ── HUD 时钟 ─────────────────────────────────────────
+function startHudClock() {
+    const hudTime = document.getElementById('hudTime');
+    const hudDate = document.getElementById('hudDate');
+    if (!hudTime || !hudDate) return;
+
+    function tick() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        hudTime.textContent = `${h}:${m}:${s}`;
+
+        const mo = String(now.getMonth() + 1).padStart(2, '0');
+        const d  = String(now.getDate()).padStart(2, '0');
+        const y  = now.getFullYear();
+        hudDate.textContent = `${mo}/${d}/${y}`;
+    }
+    tick();
+    setInterval(tick, 1000);
+}
+
+// ── 核心：切换视频（同时切换屏幕视频 + 模糊背景视频） ──
 function switchVideo(index) {
-    const videos = document.querySelectorAll('.background-video');
+    const scrVideos = document.querySelectorAll('.screen-video');
+    const bgVideos  = document.querySelectorAll('.blur-video');
     const videoName = document.getElementById('videoName');
-    
-    videos[currentVideoIndex].classList.remove('active');
-    videos[currentVideoIndex].pause();
-    
+    const hudLabel  = document.getElementById('hudLabel');
+
+    // 1. 退出当前视频
+    const prevScr = scrVideos[currentVideoIndex];
+    const prevBg  = bgVideos[currentVideoIndex];
+
+    prevScr.classList.remove('active');
+    prevBg.classList.remove('active');
+
+    setTimeout(() => {
+        prevScr.pause();
+        prevBg.pause();
+    }, 1200);
+
+    // 2. 切入新视频
     currentVideoIndex = index;
-    
-    const newVideo = videos[currentVideoIndex];
-    newVideo.currentTime = 0;
-    newVideo.classList.add('active');
-    newVideo.play().catch(e => console.log('Video play failed:', e));
-    
+
+    const newScr = scrVideos[currentVideoIndex];
+    const newBg  = bgVideos[currentVideoIndex];
+
+    // 重置到同一时间点，保持同步
+    newScr.currentTime = 0;
+    newBg.currentTime  = 0;
+
+    newScr.classList.add('active');
+    newBg.classList.add('active');
+
+    newScr.play().catch(() => {});
+    newBg.play().catch(() => {});
+
+    // 3. 更新标签
+    const name = VIDEO_CONFIG[currentVideoIndex].name;
     if (videoName) {
         videoName.style.opacity = '0';
-        setTimeout(() => {
-            videoName.textContent = VIDEO_CONFIG[currentVideoIndex].name;
-            videoName.style.opacity = '1';
-        }, 300);
+        setTimeout(() => { videoName.textContent = name; videoName.style.opacity = '1'; }, 300);
     }
+    if (hudLabel) hudLabel.textContent = name;
 }
 
-// DOM加载完成后执行
-document.addEventListener('DOMContentLoaded', function() {
-    if (checkLoginStatus()) {
-        return;
-    }
+// ── DOM 加载完成 ───────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    if (checkLoginStatus()) return;
 
-    const videos = document.querySelectorAll('.background-video');
-    const randomToggle = document.getElementById('randomToggle');
-    const doorLogo = document.getElementById('doorLogo');
-    const loginOverlay = document.getElementById('loginOverlay');
-    const closeLogin = document.getElementById('closeLogin');
-    const userBtns = document.querySelectorAll('.user-btn');
+    const scrVideos       = document.querySelectorAll('.screen-video');
+    const bgVideos        = document.querySelectorAll('.blur-video');
+    const randomToggle    = document.getElementById('randomToggle');
+    const doorLogo        = document.getElementById('doorLogo');
+    const loginOverlay    = document.getElementById('loginOverlay');
+    const closeLogin      = document.getElementById('closeLogin');
+    const userBtns        = document.querySelectorAll('.user-btn');
     const passwordContainer = document.getElementById('passwordContainer');
-    const videoName = document.getElementById('videoName');
-    const soundToggle = document.getElementById('soundToggle');
-    const bgmAudio = document.getElementById('bgmAudio');
-    const numKeys = document.querySelectorAll('.num-key');
+    const videoName       = document.getElementById('videoName');
+    const soundToggle     = document.getElementById('soundToggle');
+    const bgmAudio        = document.getElementById('bgmAudio');
+    const numKeys         = document.querySelectorAll('.num-key');
+    const hudLabel        = document.getElementById('hudLabel');
 
-    // 随机选择初始视频
+    // 随机初始视频
     currentVideoIndex = Math.floor(Math.random() * VIDEO_CONFIG.length);
-    
+
     // 初始化所有视频
-    videos.forEach((video, index) => {
-        video.classList.remove('active');
-        video.load();
-        
-        if (index === currentVideoIndex) {
-            video.classList.add('active');
-            video.play().catch(e => console.log('Initial video play failed:', e));
+    scrVideos.forEach((vid, i) => {
+        vid.classList.remove('active');
+        vid.load();
+        if (i === currentVideoIndex) {
+            vid.classList.add('active');
+            vid.play().catch(() => {});
         }
-        
-        video.addEventListener('ended', () => {
-            if (index === currentVideoIndex) {
-                const nextIndex = getRandomVideoIndex(currentVideoIndex);
-                switchVideo(nextIndex);
-            }
+        // 视频播完 -> 随机切换
+        vid.addEventListener('ended', () => {
+            if (i === currentVideoIndex) switchVideo(getRandomVideoIndex(currentVideoIndex));
         });
     });
-    
-    if (videoName) {
-        videoName.textContent = VIDEO_CONFIG[currentVideoIndex].name;
-    }
 
-    // 随机按钮点击
-    if (randomToggle) {
-        randomToggle.addEventListener('click', () => {
-            const nextIndex = getRandomVideoIndex(currentVideoIndex);
-            switchVideo(nextIndex);
-        });
-    }
+    bgVideos.forEach((vid, i) => {
+        vid.classList.remove('active');
+        vid.load();
+        if (i === currentVideoIndex) {
+            vid.classList.add('active');
+            vid.play().catch(() => {});
+        }
+    });
 
-    // 声音控制
-    if (soundToggle && bgmAudio) {
-        soundToggle.addEventListener('click', () => {
-            isMuted = !isMuted;
-            soundToggle.classList.toggle('muted', isMuted);
-            
-            if (isMuted) {
-                bgmAudio.pause();
-            } else {
-                bgmAudio.volume = 0.3;
-                bgmAudio.play().catch(() => {});
-            }
-        });
-    }
+    // 更新标签
+    const initialName = VIDEO_CONFIG[currentVideoIndex].name;
+    if (videoName)  videoName.textContent  = initialName;
+    if (hudLabel)   hudLabel.textContent   = initialName;
 
-    // 门 Logo 点击
-    if (doorLogo) {
-        doorLogo.addEventListener('click', () => {
-            loginOverlay.classList.add('visible');
-        });
-    }
+    // 启动 HUD 时钟
+    startHudClock();
 
-    // 关闭登录界面
-    if (closeLogin) {
-        closeLogin.addEventListener('click', () => {
+    // ── 随机切换按钮 ──
+    randomToggle?.addEventListener('click', () => {
+        switchVideo(getRandomVideoIndex(currentVideoIndex));
+    });
+
+    // ── 声音控制 ──
+    soundToggle?.addEventListener('click', () => {
+        isMuted = !isMuted;
+        soundToggle.classList.toggle('muted', isMuted);
+        if (isMuted) {
+            bgmAudio?.pause();
+        } else {
+            if (bgmAudio) { bgmAudio.volume = 0.3; bgmAudio.play().catch(() => {}); }
+        }
+    });
+
+    // ── 门 Logo → 打开登录 ──
+    doorLogo?.addEventListener('click', () => loginOverlay.classList.add('visible'));
+
+    // ── 关闭登录 ──
+    closeLogin?.addEventListener('click', () => {
+        loginOverlay.classList.remove('visible');
+        resetLoginForm();
+    });
+
+    loginOverlay?.addEventListener('click', (e) => {
+        if (e.target === loginOverlay) {
             loginOverlay.classList.remove('visible');
             resetLoginForm();
-        });
-    }
+        }
+    });
 
-    // 点击背景关闭
-    if (loginOverlay) {
-        loginOverlay.addEventListener('click', (e) => {
-            if (e.target === loginOverlay) {
-                loginOverlay.classList.remove('visible');
-                resetLoginForm();
-            }
-        });
-    }
-
-    // 用户选择
+    // ── 用户选择 ──
     userBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             userBtns.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedUser = btn.dataset.user;
-            
             passwordContainer.classList.add('visible');
             enteredPin = '';
             updatePinDots();
         });
     });
 
-    // 数字键盘点击
+    // ── 数字键盘 ──
     numKeys.forEach(key => {
         key.addEventListener('click', () => {
-            const num = key.dataset.num;
+            const num    = key.dataset.num;
             const action = key.dataset.action;
-            
             if (num !== undefined) {
-                // 数字键
                 if (enteredPin.length < 4) {
                     enteredPin += num;
                     updatePinDots();
-                    
-                    // 自动提交
-                    if (enteredPin.length === 4) {
-                        setTimeout(performLogin, 150);
-                    }
+                    if (enteredPin.length === 4) setTimeout(performLogin, 150);
                 }
             } else if (action === 'clear') {
-                // 清除
                 enteredPin = '';
                 updatePinDots();
             } else if (action === 'confirm') {
-                // 确认
                 performLogin();
             }
         });
     });
 
-    // 重置登录表单
+    // ── 重置表单 ──
     function resetLoginForm() {
         userBtns.forEach(b => b.classList.remove('selected'));
-        if (passwordContainer) passwordContainer.classList.remove('visible');
+        passwordContainer?.classList.remove('visible');
         enteredPin = '';
         updatePinDots();
         selectedUser = null;
-        const errorDiv = document.getElementById('errorMessage');
-        if (errorDiv) errorDiv.classList.remove('show');
+        document.getElementById('errorMessage')?.classList.remove('show');
     }
 
-    // 执行登录
+    // ── 执行登录 ──
     function performLogin() {
-        if (!selectedUser) {
-            showError('请先选择用户');
-            return;
-        }
-        
-        if (enteredPin.length !== 4) {
-            showError('请输入4位密码');
-            return;
-        }
-
+        if (!selectedUser) { showError('请先选择用户'); return; }
+        if (enteredPin.length !== 4) { showError('请输入4位密码'); return; }
         if (login(selectedUser, enteredPin)) {
             window.location.href = 'index.html';
         } else {
@@ -294,34 +291,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 键盘支持
+    // ── 键盘支持 ──
     document.addEventListener('keydown', (e) => {
-        if (loginOverlay && loginOverlay.classList.contains('visible')) {
-            if (e.key === 'Escape') {
-                loginOverlay.classList.remove('visible');
-                resetLoginForm();
-            } else if (passwordContainer.classList.contains('visible')) {
-                if (e.key >= '0' && e.key <= '9' && enteredPin.length < 4) {
-                    enteredPin += e.key;
-                    updatePinDots();
-                    if (enteredPin.length === 4) {
-                        setTimeout(performLogin, 150);
-                    }
-                } else if (e.key === 'Backspace') {
-                    enteredPin = enteredPin.slice(0, -1);
-                    updatePinDots();
-                } else if (e.key === 'Enter') {
-                    performLogin();
-                }
+        if (!loginOverlay?.classList.contains('visible')) return;
+        if (e.key === 'Escape') {
+            loginOverlay.classList.remove('visible');
+            resetLoginForm();
+        } else if (passwordContainer.classList.contains('visible')) {
+            if (e.key >= '0' && e.key <= '9' && enteredPin.length < 4) {
+                enteredPin += e.key;
+                updatePinDots();
+                if (enteredPin.length === 4) setTimeout(performLogin, 150);
+            } else if (e.key === 'Backspace') {
+                enteredPin = enteredPin.slice(0, -1);
+                updatePinDots();
+            } else if (e.key === 'Enter') {
+                performLogin();
             }
         }
     });
 });
 
-// 导出函数
-window.Life29Auth = {
-    checkLoginStatus,
-    login,
-    logout,
-    getCurrentUser
-};
+// 导出
+window.Life29Auth = { checkLoginStatus, login, logout, getCurrentUser };
