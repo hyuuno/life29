@@ -144,6 +144,12 @@
             --festival-bg: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,159,243,0.1));
         }
         
+        /* 生日卡片样式 */
+        .festival-card.birthday {
+            --festival-gradient: linear-gradient(90deg, #f9ca24, #ff7979, #9b59b6);
+            --festival-bg: linear-gradient(135deg, rgba(249,202,36,0.1), rgba(255,121,121,0.1));
+        }
+
         /* 圣诞节卡片样式（预留） */
         .festival-card.christmas {
             --festival-gradient: linear-gradient(90deg, #2ecc71, #ff4757);
@@ -272,6 +278,22 @@
                     </span>
                 </a>
                 
+                <!-- 生日 / Happy Birthday -->
+                <a href="festivals/happy_birthday/happy_birthday.html" class="festival-card birthday">
+                    <div class="festival-icon">🎂</div>
+                    <h2 class="festival-name">生日快乐</h2>
+                    <p class="festival-desc">献给小余的生日惊喜。照片墙、便利店、飞机窗、雪与星空……一场穿越回忆的旅程。</p>
+                    <span class="festival-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        5月29日
+                    </span>
+                </a>
+
                 <!-- 开发者添加区域 -->
                 <div class="festival-card add-festival" onclick="showAddGuide()">
                     <div class="add-festival-icon">
